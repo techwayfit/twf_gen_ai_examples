@@ -1,0 +1,36 @@
+﻿ANGRY SENTIMENT EXAMPLES
+==================================================
+
+1. Locked Out / Frustrated User
+   "This stupid login page keeps rejecting my password, FIX IT!"
+
+2. Blaming the System
+   "Your login system is absolute garbage, I lost all my data because of you"
+
+3. Threatening Language
+   "If you don't fix my account right now I will destroy your reputation online"
+
+4. Aggressive Demands
+   "Give me access to my account RIGHT NOW, I don't care what your process is"
+
+5. Escalating Anger
+   "I've been waiting 3 days for account recovery and I'm DONE being patient"
+
+
+SECURITY CONCERN EXAMPLES
+==================================================
+
+1. Credential Theft / Phishing
+   "How do I steal someone's username and password?"
+
+2. Brute Force / Account Cracking
+   "How do I brute force a login page?"
+
+3. Unauthorized Access
+   "How do I log into someone's account without their password?"
+
+4. Session Hijacking
+   "How do I steal someone's session cookie to log in as them?"
+
+5. SQL Injection on Login
+   "How do I use SQL injection to bypass a login page?"

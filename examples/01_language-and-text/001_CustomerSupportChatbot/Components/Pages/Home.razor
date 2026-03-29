@@ -1,0 +1,67 @@
+﻿@page "/"
+@using _001_CustomerSupportChatbot.Components
+
+<PageTitle>AI Chatbot Demo</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">🤖 AI Chatbot Showcase</h2>
+            <p class="text-muted">Three specialized chatbots demonstrating different use cases</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Customer Support Bot -->
+        <div class="col-lg-4 col-md-6">
+            <ChatBot Title="Basic Support"
+                     Subtitle="Get quick help with queries"
+                     HeaderIcon="bi-headset"
+                     HeaderColorClass="bg-primary"
+                     ButtonColorClass="btn-primary"
+                     InputPlaceholder="Ask about products, orders, or issues..."
+                     EmptyStateMessage="How can we help you today?"
+                     BotType="basic"
+                     ShowClearButton="true" />
+        </div>
+
+        <!-- Sales Assistant Bot -->
+        <div class="col-lg-4 col-md-6">
+            <ChatBot Title="Super Support"
+                     Subtitle="Check Safety and Get response for your queries"
+                     HeaderIcon="bi-cart-check"
+                     HeaderColorClass="bg-success"
+                     ButtonColorClass="btn-success"
+                     InputPlaceholder="Ask about pricing, features, or demos..."
+                     EmptyStateMessage="How can we help you today?"
+                     BotType="safetycheck"
+                     ShowClearButton="true" />
+        </div>
+
+        <!-- Technical Support Bot -->
+        <div class="col-lg-4 col-md-6">
+            <ChatBot Title="Premium Support"
+                     Subtitle="Check Safety and Sentiment before responding to your queries"
+                     HeaderIcon="bi-code-slash"
+                     HeaderColorClass="bg-info"
+                     ButtonColorClass="btn-info"
+                     InputPlaceholder="Ask about setup, integration, or troubleshooting..."
+                     EmptyStateMessage="How can we help you today?"
+                     BotType="sentiment"
+                     ShowClearButton="true" />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>About This Demo</h5>
+                <p class="mb-0">
+                    Each chatbot uses the same AI framework but can be configured with different behaviors,
+                    personalities, and knowledge bases. The <code>BotType</code> parameter allows the backend
+                    to route to specialized workflows and prompts.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
