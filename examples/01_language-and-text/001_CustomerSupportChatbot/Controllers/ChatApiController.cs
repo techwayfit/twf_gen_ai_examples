@@ -105,9 +105,9 @@ public class ChatApiController : ControllerBase
     }
     private Workflow BuildWorkflow(string apiKey, out LlmConfig llmConfig)
     {
-        //llmConfig = LlmConfig.OpenAI(apiKey);
-        var model=_configuration["OpenAI:Model"] ?? "gpt-3.5-turbo";
-         var endpoint=_configuration["OpenAI:Endpoint"] ?? "https://api.openai.com/v1/chat/completions";
+        var openAIConfig = LlmConfig.OpenAI(apiKey);
+        var model=_configuration["OpenAI:Model"] ?? openAIConfig.Model;
+         var endpoint=_configuration["OpenAI:Endpoint"] ?? openAIConfig.ApiEndpoint;
         llmConfig= LlmConfig.LmServer(
             model: model,
             apiKey: apiKey,

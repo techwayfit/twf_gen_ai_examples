@@ -1,42 +1,59 @@
-# Customer Support Chatbot
+# 001 - Customer Support Chatbot
 
-A multi-turn customer support chatbot built with Blazor and the Twf AI Framework that demonstrates:
+## Project Overview
 
-- **Conversation memory management** - Maintains context across multiple turns
-- **Intent classification** - Understands user sentiment and intent
-- **Confidence thresholds** - Escalates to empathetic responses when anger is detected
-- **Safety checks** - Validates input before processing
-- **Human-in-the-loop design** - Ready for integration with CRM systems
+This example builds a multi-turn customer support chatbot for a fictional company, **TechWayFit Inc.**, using ASP.NET Core Blazor Server and the **Twf AI Framework**. The chatbot exposes a REST API consumed by an interactive chat UI and processes each message through a composable, node-based AI workflow.
 
-## Features
+Three progressively richer workflow modes can be selected at runtime:
 
-- ?? **AI-Powered Responses** - Uses OpenAI GPT models for intelligent conversation
-- ?? **Real-time Chat** - Interactive Blazor Server chat interface
-- ?? **Sentiment Analysis** - Detects angry customers and adjusts response tone
-- ??? **Safety Guardrails** - Filters unsafe or inappropriate messages
-- ?? **Session Management** - Maintains conversation history per session
-- ?? **Bootstrap UI** - Clean, responsive chat widget using Bootstrap 5.3.3 from CDN
-- ? **Rich Formatting** - Supports bold, italic, lists, and structured responses
+| Bot Mode | Description |
+|---|---|
+| `basic` | Single LLM call — prompt → response |
+| `safetycheck` | Safety classification before responding; rejects harmful messages |
+| `sentiment` *(default)* | Safety check → sentiment analysis → empathetic escalation or standard response |
+
+## Objective
+
+The goal is to demonstrate real-world patterns that every production AI chat system needs:
+
+- **Composable workflow pipelines** — chain `FilterNode`, `PromptBuilderNode`, `LlmNode`, `OutputParserNode`, and custom `AddStep` lambdas in a readable, testable graph
+- **Input validation** — enforce non-empty messages and a 500-character length limit before any LLM call
+- **Content safety** — use a fast, token-limited LLM call to classify messages as safe/unsafe before spending tokens on a full response
+- **Sentiment-driven routing** — score customer sentiment (1–10); automatically escalate to an empathetic senior-support persona when anger score ≥ 7
+- **Multi-turn conversation memory** — `MaintainHistory = true` on `LlmNode` keeps the full dialogue in context across turns
+- **Configuration layering / secret management** — `appsettings.local.json` overrides keep API keys out of source control
+- **Retry resilience** — `NodeOptions.WithRetry(2)` wraps every LLM node for transient failure recovery
+
+## Key Features
+
+- **AI-Powered Responses** — Uses OpenAI-compatible GPT models (configurable model and endpoint)
+- **Real-time Chat** — Interactive Blazor Server chat interface with no page reloads
+- **Sentiment Analysis** — Detects angry customers (score ≥ 7 on a 1–10 scale) and routes to an empathetic persona
+- **Safety Guardrails** — A dedicated LLM classifier rejects harmful, abusive, or phishing-style messages before the main LLM ever sees them
+- **Session Management** — Per-session `WorkflowContext` maintains conversation history across turns
+- **Bootstrap UI** — Responsive chat widget via Bootstrap 5.3.3 CDN; color-coded badges and sentiment icons
+- **Rich Formatting** — Markdown-like bold, bullet, and numbered-list rendering in chat bubbles
 
 ## Project Structure
 
 ```
 001_CustomerSupportChatbot/
-??? Components/
-? ??? Pages/
-?   ? ??? Home.razor   # Chat interface with rich HTML formatting
-?   ?   ??? Error.razor
-?   ??? Layout/
-?   ?   ??? MainLayout.razor
-?   ?   ??? NavMenu.razor
-?   ??? App.razor      # Bootstrap CDN configuration
-??? Controllers/
-?   ??? ChatApiController.cs        # API endpoint for chat
-??? wwwroot/         # Static assets
-??? Program.cs    # App configuration
-??? appsettings.json        # Configuration (API keys)
-??? appsettings.Development.json
-??? appsettings.local.json  # Local overrides (gitignored)
+├── Components/
+│   ├── Pages/
+│   │   ├── Home.razor          # Chat UI — message bubbles, badges, sentiment icons
+│   │   └── Error.razor
+│   ├── Layout/
+│   │   ├── MainLayout.razor
+│   │   └── NavMenu.razor
+│   └── App.razor               # Bootstrap CDN configuration
+├── Controllers/
+│   └── ChatApiController.cs    # POST /api/ChatApi/message — orchestrates workflows
+├── wwwroot/                    # Static assets (app.css)
+├── Constants.cs                # All prompt templates and message strings
+├── Program.cs                  # App / DI configuration
+├── appsettings.json            # Base configuration (committed)
+├── appsettings.Development.json
+└── appsettings.local.json      # API key overrides (gitignored)
 ```
 
 ## Setup
@@ -69,7 +86,7 @@ Edit `appsettings.json` and add your OpenAI API key:
 }
 ```
 
-**?? Security Note:** 
+**Security Note:**
 - For local development, use `appsettings.local.json` to keep your API key out of source control
 - For production, use environment variables or Azure Key Vault instead of hardcoding API keys
 - Never commit API keys to version control
@@ -97,20 +114,19 @@ The chat interface supports rich HTML formatting:
 
 - **Bold text** - Use `**text**` in LLM responses
 - *Italic text* - Use `*text*` in LLM responses
-- ?? Bullet lists - Auto-formatted with `-` prefix
-- ?? Numbered lists - Auto-formatted with `1.`, `2.`, etc.
-- ?? Paragraphs - Double line breaks create new paragraphs
+- Bullet lists - Auto-formatted with `-` prefix
+- Numbered lists - Auto-formatted with `1.`, `2.`, etc.
+- Paragraphs - Double line breaks create new paragraphs
 
 ### Visual Indicators
 
-- ?? **Color-coded response badges:**
-  - ?? Standard - Green badge
-  - ?? Escalation - Yellow badge
-  - ?? Rejected - Red badge
-- ?? **Sentiment icons:**
-  - Positive, Neutral, Negative, Angry
-- ? **Timestamps** - Each message shows send time
-- ?? **Message bubbles** - Different styles for user vs bot
+- **Color-coded response badges:**
+  - Standard - Green badge
+  - Escalation - Yellow badge
+  - Rejected - Red badge
+- **Sentiment icons:** Positive, Neutral, Negative, Angry
+- **Timestamps** - Each message shows send time
+- **Message bubbles** - Different styles for user vs bot
 
 ### Dependencies
 
@@ -122,29 +138,47 @@ No local Bootstrap files are needed - everything loads from CDN for faster updat
 
 ## How It Works
 
-### Workflow Pipeline
+### Simple Flow (`basic` mode)
 
-```
-User Message
-?
-Input Validation (length, non-empty)
- ?
-Safety Check (LLM)
- ?? SAFE ? Sentiment Analysis (LLM)
-    ?  ?? ANGRY ? Escalation Response (empathetic, formatted)
- ?    ?? NORMAL ? Standard Response (helpful, formatted)
-    ?? UNSAFE ? Rejection Message
-```
+The simplest path — input validation followed by a single prompt-and-LLM call. No safety or sentiment branching.
 
-### API Endpoint
+![Simple workflow diagram](eaxmple_1_simple_flow.png)
+
+| Node | Type | Purpose |
+|---|---|---|
+| Validate Input | `FilterNode` | Reject empty or oversized messages |
+| Create Prompt | `PromptBuilderNode` | Inject company name and user message into template |
+| Open AI Call | `LlmNode` | Generate the support response |
+
+---
+
+### Full Flow (`sentiment` mode — default)
+
+The production-ready pipeline. Two classification checks gate the main response, and a conditional branch routes angry customers to an empathetic escalation path.
+
+![Full workflow diagram](example_1_full_flow.png)
+
+| Stage | Nodes | Purpose |
+|---|---|---|
+| **Safety Checker** | `PromptBuilderNode` → `LlmNode` → `OutputParserNode` | Classify message as safe/unsafe |
+| **Condition** | `Is User Input is safe?` | Branch on safety result |
+| **Sentiment Checker** | `PromptBuilderNode` → `LlmNode` → `OutputParserNode` | Score sentiment (positive / neutral / negative / angry, 1–10) |
+| **Condition** | `Is User Angry?` | Branch when sentiment == "angry" or score ≥ 7 |
+| **Angry Sentiment Response** | `PromptBuilderNode` → `LlmNode` → `OutputParserNode` | Empathetic escalation response with `MaintainHistory = true` |
+| **Normal Sentiment Response** | `PromptBuilderNode` → `LlmNode` → `OutputParserNode` | Standard helpful response with `MaintainHistory = true` |
+| **Log Error** | `LogNode` | Captures any upstream failure before returning to End |
+
+
+### API Endpoints
 
 **POST** `/api/ChatApi/message`
 
-Request:
+Request body:
 ```json
 {
-  "sessionId": "optional-session-id",
-  "message": "I need help with my order"
+  "sessionId": "optional-existing-session-id",
+  "message": "I need help with my order",
+  "botType": "basic | safetycheck | sentiment"
 }
 ```
 
@@ -153,13 +187,13 @@ Response:
 {
   "sessionId": "unique-session-id",
   "message": "I'd be happy to help you with your order...",
-  "responseType": "standard",
-  "sentiment": "neutral",
-  "timestamp": "2024-01-15T10:30:00Z"
+  "responseType": "standard | escalation | rejected",
+  "sentiment": "positive | neutral | negative | angry",
+  "timestamp": "2025-01-15T10:30:00Z"
 }
 ```
 
-**DELETE** `/api/ChatApi/session/{sessionId}` - Clear session history
+**DELETE** `/api/ChatApi/session/{sessionId}` — clears in-memory conversation history for a session
 
 ## Customization
 
@@ -242,16 +276,27 @@ This example demonstrates:
 
 ## Next Steps
 
-- [ ] Integrate with a real CRM API (Salesforce, HubSpot, etc.)
-- [ ] Add database for persistent conversation history
-- [ ] Implement human agent handoff
-- [ ] Add FAQ matching before LLM call
-- [ ] Track order numbers and pull real order data
-- [ ] Add authentication and user profiles
-- [ ] Deploy to Azure App Service
-- [ ] Add file upload support for screenshots
-- [ ] Implement typing indicators
-- [ ] Add message search/filter
+### Extend the Workflow — Real-World Challenges
+
+Try extending this example to handle real-world scenarios. Each one maps to a new node or branch in the workflow pipeline:
+
+- [ ] **Add a topic relevance check** *(recommended first extension)*
+  
+  Right now the bot answers any question — ask *"Who is the current US president?"* and the LLM will happily respond. In a real support bot that's a problem. Add a `TopicClassifier` node immediately after the safety check. Prompt a small LLM call to decide whether the message is relevant to **TechWayFit Inc.** support topics. If not, return a polite redirect:
+  *"I can only help with TechWayFit account and product questions. For anything else, please use a general search engine."*
+  
+  This mirrors the same pattern as the safety check — a fast classification call that gates the main response.
+
+- [ ] **Add FAQ matching before the LLM call** — check common questions against a static list first; only fall back to LLM if no match is found (reduces cost and latency)
+- [ ] **Integrate with a real CRM API** (Salesforce, HubSpot, etc.) — look up the customer's account and inject real order/ticket data into the prompt context
+- [ ] **Add a confidence score gate** — if the LLM's sentiment score is 5–6 (borderline), route to a "soft escalation" path instead of standard/full escalation
+- [ ] **Track order numbers** — extract order IDs from the message using a regex or LLM extraction node, then pull live order status from a backend API
+- [ ] **Implement human agent handoff** — when `response_type == "escalation"`, push the conversation to a live agent queue (e.g., Zendesk, Teams)
+- [ ] **Add database for persistent conversation history** — replace the in-memory `_sessions` dictionary with a database so history survives restarts
+- [ ] **Add authentication and user profiles** — tie sessions to authenticated users so the bot can personalise responses
+- [ ] **Deploy to Azure App Service** — add managed identity and Azure Key Vault for secret management in production
+- [ ] **Add file upload support** — let customers attach screenshots or receipts for context
+- [ ] **Implement typing indicators and message search**
 
 ## License
 
