@@ -1,0 +1,50 @@
+@page "/"
+
+<PageTitle>Email Drafting Assistant</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">✉️ Email Drafting Assistant</h2>
+            <p class="text-muted">Manage your inbox and compose professional AI-assisted emails</p>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Inbox card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow h-100 border-0">
+                <div class="card-body d-flex flex-column align-items-center text-center p-4">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 mb-3">
+                        <i class="bi bi-inbox-fill text-primary" style="font-size:2rem;"></i>
+                    </div>
+                    <h5 class="card-title fw-semibold">Inbox</h5>
+                    <p class="card-text text-muted small flex-grow-1">
+                        Browse, search, and read your support emails. View full threads and reply to messages.
+                    </p>
+                    <a href="/inbox" class="btn btn-primary mt-2 px-4">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Open Inbox
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Draft email card -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow h-100 border-0">
+                <div class="card-body d-flex flex-column align-items-center text-center p-4">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 mb-3">
+                        <i class="bi bi-pencil-square text-success" style="font-size:2rem;"></i>
+                    </div>
+                    <h5 class="card-title fw-semibold">AI Draft</h5>
+                    <p class="card-text text-muted small flex-grow-1">
+                        Describe what you need to say and let AI compose a professional email draft for you.
+                    </p>
+                    <a href="/draft" class="btn btn-success mt-2 px-4">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Compose
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

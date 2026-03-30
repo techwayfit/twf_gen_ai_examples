@@ -1,0 +1,179 @@
+@page "/draft"
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Draft Email — Email Drafting Assistant</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h4 class="fw-semibold"><i class="bi bi-pencil-square text-success me-2"></i>AI Email Composer</h4>
+            <p class="text-muted small">Describe your email and let AI draft it for you.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope-fill me-2"></i> Compose Email Draft
+                    </h5>
+                    <small class="opacity-75">Fill in the details and let AI draft your email</small>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Recipient</label>
+                        <input type="text" class="form-control" placeholder="e.g. project manager, client, HR team..."
+                               @bind="recipient" @bind:event="oninput" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tone</label>
+                        <select class="form-select" @bind="tone">
+                            <option value="professional">Professional</option>
+                            <option value="friendly">Friendly</option>
+                            <option value="formal">Formal</option>
+                            <option value="apologetic">Apologetic</option>
+                            <option value="persuasive">Persuasive</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email Context / Instructions</label>
+                        <textarea class="form-control" rows="4"
+                                  placeholder="Describe what the email should be about. E.g. 'Request a meeting next week to discuss Q2 budget review'"
+                                  @bind="context" @bind:event="oninput"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success px-4" @onclick="GenerateDraft"
+                                disabled="@(isLoading || string.IsNullOrWhiteSpace(context))">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </span>
+                                <span>Drafting…</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-send-fill me-2"></i>
+                                <span>Generate Draft</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="ClearAll" disabled="@isLoading">
+                            <i class="bi bi-x-circle me-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger mt-3 d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @errorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(draftResult))
+            {
+                <div class="card shadow-lg mt-4">
+                    <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">
+                                <i class="bi bi-file-earmark-text-fill me-2"></i> Generated Draft
+                            </h5>
+                            <small class="opacity-75">@resultTimestamp.ToLocalTime().ToString("MMM d, yyyy 'at' HH:mm")</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-light" @onclick="CopyToClipboard">
+                            <i class="bi bi-clipboard me-1"></i> Copy
+                        </button>
+                    </div>
+                    <div class="card-body p-4">
+                        <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">@draftResult</pre>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string context = string.Empty;
+    private string recipient = string.Empty;
+    private string tone = "professional";
+    private string draftResult = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+    private DateTime resultTimestamp;
+
+    private async Task GenerateDraft()
+    {
+        if (string.IsNullOrWhiteSpace(context)) return;
+
+        isLoading = true;
+        errorMessage = string.Empty;
+        draftResult = string.Empty;
+
+        try
+        {
+            var request = new
+            {
+                Context = context,
+                Recipient = string.IsNullOrWhiteSpace(recipient) ? null : recipient,
+                Tone = tone
+            };
+
+            var response = await Http.PostAsJsonAsync("api/aiservice/draft", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<EmailDraftViewModel>();
+                draftResult = result?.Draft ?? string.Empty;
+                resultTimestamp = result?.Timestamp ?? DateTime.UtcNow;
+            }
+            else
+            {
+                var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+                errorMessage = error?.Error ?? "Failed to generate the email draft.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ClearAll()
+    {
+        context = string.Empty;
+        recipient = string.Empty;
+        tone = "professional";
+        draftResult = string.Empty;
+        errorMessage = string.Empty;
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", draftResult);
+    }
+
+    private class EmailDraftViewModel
+    {
+        public string Draft { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+
+    private class ErrorResponse
+    {
+        public string? Error { get; set; }
+    }
+}

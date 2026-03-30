@@ -1,0 +1,402 @@
+@page "/inbox"
+@rendermode InteractiveServer
+@inject EmailService EmailSvc
+@inject IJSRuntime JS
+@using _002_EmailDraftingAssistant.Models
+@using _002_EmailDraftingAssistant.Services
+
+<PageTitle>Inbox — Email Drafting Assistant</PageTitle>
+
+<!-- ── Toolbar ─────────────────────────────────────────────────────── -->
+<div class="inbox-toolbar border-bottom bg-white px-3 py-2 d-flex align-items-center gap-2 flex-wrap">
+    <span class="fw-semibold me-2" style="font-size:1.1rem;">
+        <i class="bi bi-inbox-fill text-primary me-1"></i> Inbox
+        @if (_unreadCount > 0)
+        {
+            <span class="badge bg-primary ms-1">@_unreadCount</span>
+        }
+    </span>
+
+    <!-- search -->
+    <div class="input-group" style="max-width:340px;">
+        <span class="input-group-text bg-white border-end-0">
+            <i class="bi bi-search text-muted"></i>
+        </span>
+        <input type="text" class="form-control border-start-0 ps-0"
+               placeholder="Search messages…"
+               @bind="_searchKeyword" @bind:event="oninput"
+               @onkeyup="OnSearchKeyUp" />
+        @if (!string.IsNullOrEmpty(_searchKeyword))
+        {
+            <button class="btn btn-outline-secondary" @onclick="ClearSearch">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        }
+    </div>
+
+    <!-- unread filter -->
+    <div class="form-check form-switch mb-0 ms-1">
+        <input class="form-check-input" type="checkbox" id="unreadOnly"
+               @bind="_showUnreadOnly" @bind:after="ApplyFilters" />
+        <label class="form-check-label text-muted small" for="unreadOnly">Unread only</label>
+    </div>
+
+    <span class="ms-auto text-muted small">@_filtered.Count message@(_filtered.Count == 1 ? "" : "s")</span>
+</div>
+
+<!-- ── Two-panel layout ──────────────────────────────────────────────── -->
+<div class="inbox-layout">
+
+    <!-- Left: message list -->
+    <div class="inbox-list @(_selected != null && _showDetailOnMobile ? "d-none d-md-flex" : "")">
+        @if (_filtered.Count == 0)
+        {
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-envelope-open" style="font-size:2.5rem;"></i>
+                <p class="mt-3">No messages found</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var email in _filtered)
+            {
+                <div class="msg-row @(email.MessageId == _selected?.MessageId ? "msg-row--active" : "") @(email.IsUnread ? "msg-row--unread" : "")"
+                     @onclick="() => OpenEmail(email)">
+
+                    <!-- avatar -->
+                    <div class="msg-avatar @GetAvatarClass(email)">
+                        @InitialsOf(email.SenderName)
+                    </div>
+
+                    <div class="msg-meta">
+                        <div class="d-flex justify-content-between align-items-baseline">
+                            <span class="msg-sender">@email.SenderName</span>
+                            <span class="msg-date text-muted small">@FormatDate(email.Date)</span>
+                        </div>
+                        <div class="msg-subject @(email.IsUnread ? "fw-semibold" : "")">@email.Subject</div>
+                        <div class="msg-preview text-muted small">@Preview(email.Body)</div>
+                        @if (!string.IsNullOrEmpty(email.Company))
+                        {
+                            <span class="badge bg-light text-secondary border mt-1" style="font-size:.7rem;">@email.Company</span>
+                        }
+                        @if (!string.IsNullOrEmpty(email.TicketNumber))
+                        {
+                            <span class="badge bg-light text-primary border mt-1 ms-1" style="font-size:.7rem;">@email.TicketNumber</span>
+                        }
+                    </div>
+
+                    @if (email.IsUnread)
+                    {
+                        <div class="msg-unread-dot"></div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Right: detail / empty state -->
+    <div class="inbox-detail @(_selected == null ? "inbox-detail--empty" : "") @(_selected != null && _showDetailOnMobile ? "" : "d-none d-md-flex")">
+
+        @if (_selected == null)
+        {
+            <div class="text-center text-muted my-auto">
+                <i class="bi bi-envelope-open-fill" style="font-size:3rem; opacity:.3;"></i>
+                <p class="mt-3">Select a message to read</p>
+            </div>
+        }
+        else
+        {
+            <!-- detail header -->
+            <div class="detail-header border-bottom pb-3 mb-0">
+                <!-- Back button (mobile) -->
+                <button class="btn btn-sm btn-outline-secondary d-md-none mb-2"
+                        @onclick="CloseDetail">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </button>
+
+                <h5 class="mb-3 fw-semibold">@_selected.Subject</h5>
+
+                <div class="d-flex align-items-start gap-3">
+                    <div class="msg-avatar @GetAvatarClass(_selected) flex-shrink-0">
+                        @InitialsOf(_selected.SenderName)
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">@_selected.SenderName
+                            <span class="fw-normal text-muted small">&lt;@_selected.SenderEmail&gt;</span>
+                        </div>
+                        <div class="small text-muted">
+                            To: <span class="text-body">support@techwayfit.com</span>
+                        </div>
+                        <div class="small text-muted mt-1">
+                            <i class="bi bi-clock me-1"></i>@_selected.Date.ToString("ddd, MMM d, yyyy 'at' HH:mm")
+                            @if (!string.IsNullOrEmpty(_selected.Company))
+                            {
+                                <span class="ms-2"><i class="bi bi-building me-1"></i>@_selected.Company</span>
+                            }
+                            @if (!string.IsNullOrEmpty(_selected.TicketNumber))
+                            {
+                                <span class="ms-2"><i class="bi bi-ticket-fill me-1"></i>@_selected.TicketNumber</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="d-flex gap-1 flex-shrink-0">
+                        <button class="btn btn-sm btn-outline-secondary" title="Reply" @onclick="ShowReply">
+                            <i class="bi bi-reply-fill"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" title="Mark as @(_selected.IsUnread ? "read" : "unread")"
+                                @onclick="ToggleRead">
+                            <i class="bi @(_selected.IsUnread ? "bi-envelope-open" : "bi-envelope-fill")"></i>
+                        </button>
+                    </div>
+                </div>
+
+                @if (_selected.Labels.Count > 0)
+                {
+                    <div class="mt-2">
+                        @foreach (var lbl in _selected.Labels)
+                        {
+                            <span class="badge bg-secondary-subtle text-secondary border me-1">@lbl</span>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- body -->
+            <div class="detail-body">
+                <pre class="email-body-text">@_selected.Body</pre>
+            </div>
+
+            <!-- ── Thread section ─────────────────────────────── -->
+            @if (_thread.Count > 1)
+            {
+                <div class="border-top pt-3 mt-2 px-3">
+                    <button class="btn btn-sm btn-link text-muted px-0 mb-2"
+                            @onclick="ToggleThread">
+                        <i class="bi bi-chat-square-text me-1"></i>
+                        @(_showThread ? "Hide" : "Show") @(_thread.Count - 1) more message@(_thread.Count - 1 == 1 ? "" : "s") in this thread
+                    </button>
+
+                    @if (_showThread)
+                    {
+                        @foreach (var msg in _thread.Where(m => m.MessageId != _selected.MessageId).OrderByDescending(m => m.Date))
+                        {
+                            <div class="card mb-2 border-0 bg-light">
+                                <div class="card-body py-2 px-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-semibold small">@msg.SenderName</span>
+                                        <span class="text-muted small">@FormatDate(msg.Date)</span>
+                                    </div>
+                                    <pre class="email-body-text email-body-text--small mt-1 mb-0">@msg.Body</pre>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+
+            <!-- ── Reply panel ─────────────────────────────────── -->
+            @if (_showReplyPanel)
+            {
+                <div class="reply-panel border-top mt-2 pt-3 px-3 pb-3">
+                    <div class="card border shadow-sm">
+                        <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold small">
+                                <i class="bi bi-reply-fill text-primary me-1"></i> Reply
+                            </span>
+                            <button class="btn btn-sm btn-link text-muted p-0" @onclick="() => _showReplyPanel = false">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light">To</span>
+                                    <input type="text" class="form-control" @bind="_replyTo" />
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light">Subject</span>
+                                    <input type="text" class="form-control" @bind="_replySubject" />
+                                </div>
+                            </div>
+                            <textarea class="form-control mb-3" rows="5"
+                                      placeholder="Write your reply…"
+                                      @bind="_replyBody"></textarea>
+
+                            @if (_replySent)
+                            {
+                                <div class="alert alert-success py-2 mb-2">
+                                    <i class="bi bi-check-circle-fill me-2"></i> Reply sent successfully!
+                                </div>
+                            }
+
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm px-4"
+                                        disabled="@(string.IsNullOrWhiteSpace(_replyBody) || _replySent)"
+                                        @onclick="SendReply">
+                                    <i class="bi bi-send-fill me-1"></i> Send
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => _showReplyPanel = false">
+                                    Discard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+</div>
+
+@code {
+    // ── State ───────────────────────────────────────────────────────────
+    private List<EmailMessage> _all      = new();
+    private List<EmailMessage> _filtered = new();
+    private EmailMessage?      _selected;
+    private List<EmailMessage> _thread   = new();
+    private int                _unreadCount;
+
+    // filters
+    private string  _searchKeyword  = string.Empty;
+    private bool    _showUnreadOnly = false;
+
+    // detail UI
+    private bool _showDetailOnMobile = false;
+    private bool _showThread         = false;
+
+    // reply
+    private bool   _showReplyPanel = false;
+    private string _replyTo        = string.Empty;
+    private string _replySubject   = string.Empty;
+    private string _replyBody      = string.Empty;
+    private bool   _replySent      = false;
+
+    // ── Lifecycle ───────────────────────────────────────────────────────
+    protected override void OnInitialized()
+    {
+        _all         = EmailSvc.GetAll().OrderByDescending(e => e.Date).ToList();
+        _filtered    = _all;
+        _unreadCount = _all.Count(e => e.IsUnread);
+    }
+
+    // ── Filtering ──────────────────────────────────────────────────────
+    private void ApplyFilters()
+    {
+        IEnumerable<EmailMessage> q = _all;
+
+        if (!string.IsNullOrWhiteSpace(_searchKeyword))
+            q = q.Where(e =>
+                e.Subject.Contains(_searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                e.Body.Contains(_searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                e.SenderName.Contains(_searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                e.SenderEmail.Contains(_searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                e.Company.Contains(_searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                e.TicketNumber.Contains(_searchKeyword, StringComparison.OrdinalIgnoreCase));
+
+        if (_showUnreadOnly)
+            q = q.Where(e => e.IsUnread);
+
+        _filtered = q.ToList();
+
+        // deselect if selected is no longer in results
+        if (_selected != null && !_filtered.Any(e => e.MessageId == _selected.MessageId))
+            _selected = null;
+    }
+
+    private void OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        ApplyFilters();
+    }
+
+    private void ClearSearch()
+    {
+        _searchKeyword = string.Empty;
+        ApplyFilters();
+    }
+
+    // ── Email actions ──────────────────────────────────────────────────
+    private void OpenEmail(EmailMessage email)
+    {
+        _selected            = email;
+        _showDetailOnMobile  = true;
+        _showThread          = false;
+        _showReplyPanel      = false;
+        _replySent           = false;
+        _thread              = EmailSvc.GetThread(email.ThreadId);
+
+        // mark as read (in-memory only for test data)
+        email.IsUnread  = false;
+        _unreadCount    = _all.Count(e => e.IsUnread);
+    }
+
+    private void CloseDetail()
+    {
+        _showDetailOnMobile = false;
+        _selected = null;
+    }
+
+    private void ToggleRead()
+    {
+        if (_selected == null) return;
+        _selected.IsUnread = !_selected.IsUnread;
+        _unreadCount = _all.Count(e => e.IsUnread);
+    }
+
+    private void ToggleThread() => _showThread = !_showThread;
+
+    // ── Reply ──────────────────────────────────────────────────────────
+    private void ShowReply()
+    {
+        if (_selected == null) return;
+        _showReplyPanel = true;
+        _replySent      = false;
+        _replyTo        = _selected.SenderEmail;
+        _replySubject   = _selected.Subject.StartsWith("Re:", StringComparison.OrdinalIgnoreCase)
+                            ? _selected.Subject
+                            : $"Re: {_selected.Subject}";
+        _replyBody      = string.Empty;
+    }
+
+    private async Task SendReply()
+    {
+        // Simulate send — no actual delivery for test data
+        await Task.Delay(400);
+        _replySent = true;
+        await Task.Delay(2000);
+        _showReplyPanel = false;
+        _replySent = false;
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────
+    private static string Preview(string body)
+    {
+        var first = body.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
+        return first.Length > 90 ? first[..90] + "…" : first;
+    }
+
+    private static string FormatDate(DateTime dt)
+    {
+        var today = DateTime.Today;
+        if (dt.Date == today)      return dt.ToString("HH:mm");
+        if (dt.Date == today.AddDays(-1)) return "Yesterday";
+        if (dt.Date >= today.AddDays(-6)) return dt.ToString("ddd");
+        if (dt.Year == today.Year) return dt.ToString("MMM d");
+        return dt.ToString("MMM d, yyyy");
+    }
+
+    private static string InitialsOf(string name)
+    {
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[^1][0]}".ToUpper()
+            : name.Length > 0 ? name[0].ToString().ToUpper() : "?";
+    }
+
+    private static readonly string[] AvatarColors =
+        { "av-blue", "av-green", "av-purple", "av-orange", "av-teal", "av-rose" };
+
+    private static string GetAvatarClass(EmailMessage e) =>
+        AvatarColors[Math.Abs(e.SenderEmail.GetHashCode()) % AvatarColors.Length];
+}
