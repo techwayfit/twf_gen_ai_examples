@@ -2,8 +2,11 @@
 @rendermode InteractiveServer
 @inject EmailService EmailSvc
 @inject IJSRuntime JS
+@inject HttpClient Http
 @using _002_EmailDraftingAssistant.Models
 @using _002_EmailDraftingAssistant.Services
+@using System.Text
+@using System.Text.Json
 
 <PageTitle>Inbox — Email Drafting Assistant</PageTitle>
 
@@ -143,6 +146,9 @@
                         <button class="btn btn-sm btn-outline-secondary" title="Reply" @onclick="ShowReply">
                             <i class="bi bi-reply-fill"></i>
                         </button>
+                        <button class="btn btn-sm btn-outline-primary" title="Reply with AI" @onclick="ShowAiReply">
+                            <i class="bi bi-stars me-1"></i> Reply with AI
+                        </button>
                         <button class="btn btn-sm btn-outline-secondary" title="Mark as @(_selected.IsUnread ? "read" : "unread")"
                                 @onclick="ToggleRead">
                             <i class="bi @(_selected.IsUnread ? "bi-envelope-open" : "bi-envelope-fill")"></i>
@@ -191,6 +197,93 @@
                             </div>
                         }
                     }
+                </div>
+            }
+
+            <!-- ── AI Reply panel ──────────────────────────────── -->
+            @if (_showAiReplyPanel)
+            {
+                <div class="reply-panel border-top mt-2 pt-3 px-3 pb-3">
+                    <div class="card border shadow-sm">
+                        <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold small">
+                                <i class="bi bi-stars text-primary me-1"></i> Reply with AI
+                            </span>
+                            <button class="btn btn-sm btn-link text-muted p-0"
+                                    @onclick="CloseAiReplyPanel">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- Tone selector -->
+                            <div class="mb-3 d-flex align-items-center gap-3">
+                                <label class="form-label mb-0 fw-semibold small text-muted text-nowrap">
+                                    <i class="bi bi-sliders me-1"></i> Tone:
+                                </label>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    @foreach (var tone in _availableTones)
+                                    {
+                                        <button class="btn btn-sm @(_selectedTone == tone ? "btn-primary" : "btn-outline-secondary")"
+                                                @onclick="() => _selectedTone = tone">
+                                            @tone
+                                        </button>
+                                    }
+                                </div>
+                                <button class="btn btn-sm btn-success ms-auto"
+                                        disabled="@_isGeneratingDraft"
+                                        @onclick="GenerateAiDraft">
+                                    @if (_isGeneratingDraft)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        <span>Generating…</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-stars me-1"></i>
+                                        <span>Generate Draft</span>
+                                    }
+                                </button>
+                            </div>
+
+                            <!-- Draft output area -->
+                            <div class="position-relative">
+                                <textarea class="form-control font-monospace"
+                                          style="min-height:180px; font-size:.85rem; resize:vertical;"
+                                          placeholder="Your AI-drafted reply will appear here…"
+                                          @bind="_aiDraftText"></textarea>
+                                @if (_isGeneratingDraft)
+                                {
+                                    <div class="position-absolute bottom-0 start-0 ms-2 mb-2">
+                                        <span class="badge bg-primary-subtle text-primary border">
+                                            <span class="spinner-grow spinner-grow-sm me-1" role="status"></span>
+                                            Writing…
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(_aiDraftError))
+                            {
+                                <div class="alert alert-danger py-2 mt-2 mb-0 small">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> @_aiDraftError
+                                </div>
+                            }
+
+                            <!-- Action buttons -->
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-primary btn-sm"
+                                        disabled="@(string.IsNullOrWhiteSpace(_aiDraftText) || _isGeneratingDraft)"
+                                        @onclick="UseAiDraft">
+                                    <i class="bi bi-pencil-fill me-1"></i> Edit &amp; Send
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm"
+                                        disabled="@_isGeneratingDraft"
+                                        @onclick="CloseAiReplyPanel">
+                                    Discard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             }
 
@@ -273,6 +366,16 @@
     private string _replyBody      = string.Empty;
     private bool   _replySent      = false;
 
+    // AI reply
+    private bool   _showAiReplyPanel  = false;
+    private string _selectedTone      = "Professional";
+    private string _aiDraftText       = string.Empty;
+    private string _aiDraftError      = string.Empty;
+    private bool   _isGeneratingDraft = false;
+
+    private static readonly string[] _availableTones =
+        ["Professional", "Friendly", "Empathetic", "Formal", "Concise"];
+
     // ── Lifecycle ───────────────────────────────────────────────────────
     protected override void OnInitialized()
     {
@@ -323,7 +426,10 @@
         _showDetailOnMobile  = true;
         _showThread          = false;
         _showReplyPanel      = false;
+        _showAiReplyPanel    = false;
         _replySent           = false;
+        _aiDraftText         = string.Empty;
+        _aiDraftError        = string.Empty;
         _thread              = EmailSvc.GetThread(email.ThreadId);
 
         // mark as read (in-memory only for test data)
@@ -357,6 +463,105 @@
                             ? _selected.Subject
                             : $"Re: {_selected.Subject}";
         _replyBody      = string.Empty;
+    }
+
+    // ── AI Reply ────────────────────────────────────────────────────────
+    private void ShowAiReply()
+    {
+        if (_selected == null) return;
+        _showAiReplyPanel = true;
+        _showReplyPanel   = false;
+        _aiDraftText      = string.Empty;
+        _aiDraftError     = string.Empty;
+    }
+
+    private void CloseAiReplyPanel()
+    {
+        _showAiReplyPanel = false;
+        _aiDraftText      = string.Empty;
+        _aiDraftError     = string.Empty;
+    }
+
+    private void UseAiDraft()
+    {
+        if (_selected == null) return;
+        _showAiReplyPanel = false;
+        _showReplyPanel   = true;
+        _replySent        = false;
+        _replyTo          = _selected.SenderEmail;
+        _replySubject     = _selected.Subject.StartsWith("Re:", StringComparison.OrdinalIgnoreCase)
+                                ? _selected.Subject
+                                : $"Re: {_selected.Subject}";
+        _replyBody        = _aiDraftText;
+    }
+
+    private async Task GenerateAiDraft()
+    {
+        if (_selected == null) return;
+
+        _isGeneratingDraft = true;
+        _aiDraftText       = string.Empty;
+        _aiDraftError      = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var requestBody = JsonSerializer.Serialize(new
+            {
+                MessageId = _selected.MessageId,
+                Tone      = _selectedTone
+            });
+
+            using var httpReq = new HttpRequestMessage(HttpMethod.Post, "api/AIService/draft-reply")
+            {
+                Content = new StringContent(requestBody, Encoding.UTF8, "application/json")
+            };
+
+            using var response = await Http.SendAsync(
+                httpReq, HttpCompletionOption.ResponseHeadersRead);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _aiDraftError = $"Server error: {(int)response.StatusCode}";
+                return;
+            }
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new StreamReader(stream);
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data: ")) continue;
+
+                var payload = line[6..].Trim();
+                if (payload == "[DONE]") break;
+
+                using var doc = JsonDocument.Parse(payload);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("error", out var errProp))
+                {
+                    _aiDraftError = errProp.GetString() ?? "AI service error.";
+                    break;
+                }
+
+                if (root.TryGetProperty("delta", out var deltaProp))
+                {
+                    _aiDraftText += deltaProp.GetString();
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _aiDraftError = $"Connection error: {ex.Message}";
+        }
+        finally
+        {
+            _isGeneratingDraft = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task SendReply()

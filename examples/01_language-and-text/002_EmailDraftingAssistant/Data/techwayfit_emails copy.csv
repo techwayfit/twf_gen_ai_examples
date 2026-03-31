@@ -1,0 +1,1248 @@
+MessageId,ThreadId,TicketNumber,Date,From,SenderName,SenderEmail,Company,Subject,Body,IsUnread,Labels
+MSG0063,THR1024,TWF-1024,2025-01-02 06:19:26,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,REOPEN - Ticket #1024 - Problem persists,"The fix applied to ticket #1024 was only a temporary workaround. The root cause was not addressed and the ERP Integration Service is failing again. Please reopen and escalate to L2 support.
+
+Grace Otieno | AfriTech Solutions",True,INBOX
+MSG0115,THR1015,TWF-1015,2025-01-03 04:30:23,Hassan Malik <hassan.malik@clients.com>,Hassan Malik,hassan.malik@clients.com,Crescent Tech,Request to Close Ticket #1015,"Dear TechWayFit,
+
+The issue with Network Infrastructure Setup has been sorted out. Kindly close ticket #1015 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Hassan Malik",False,INBOX
+MSG0015,THR1012,TWF-1012,2025-01-05 18:39:35,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1012. Please investigate and issue a refund.
+
+Tom Harris",False,INBOX
+MSG0212,THR1044,TWF-1044,2025-01-07 05:30:41,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,"Re: Ticket #1044 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1044 regarding Firewall & Security Suite has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Elena Sokolova",True,INBOX
+MSG0213,THR1046,TWF-1046,2025-01-09 06:20:56,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Excellent Service on Ticket #1046,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1046. Your engineer was knowledgeable, responsive, and resolved our Endpoint Protection Suite issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Grace Otieno | AfriTech Solutions",True,INBOX
+MSG0195,THR1017,TWF-1017,2025-01-10 07:14:22,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,Formal Complaint - SLA Breach on Ticket #1017,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1017. We signed up for a 4-hour response SLA and it has been 12 days without a proper resolution. We expect compensation as per our contract.
+
+Sandra Jones",True,INBOX
+MSG0033,THR1012,TWF-1012,2025-01-16 18:26:19,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Closing Ticket #1012 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1012. The ERP Integration Service is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Tom Harris | BlueStar IT",True,INBOX
+MSG0151,THR1038,TWF-1038,2025-01-17 06:02:23,Yasmin Ali <yasmin.ali@clientx.com>,Yasmin Ali,yasmin.ali@clientx.com,FutureTech ME,Re: Ticket #1038 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1038. It has been 3 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Yasmin Ali | FutureTech ME",True,INBOX
+MSG0065,THR1031,TWF-1031,2025-01-18 13:18:43,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,This is a disaster - Ticket #1031,"Your support is an absolute disaster. 14 days, 7 engineers, and the Cloud Migration Package is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Sarah Thompson | CloudNova Inc",True,INBOX
+MSG0209,THR1056,TWF-1056,2025-01-18 16:38:51,Fatima Al-Hassan <fatima.al-hassan@clienth.com>,Fatima Al-Hassan,fatima.al-hassan@clienth.com,Meridian Group,"Re: Ticket #1056 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1056 regarding Server Rack Installation has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Fatima Al-Hassan",False,INBOX
+MSG0117,THR1040,TWF-1040,2025-01-20 00:49:48,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1040. Please investigate and issue a refund.
+
+Tom Harris",False,INBOX
+MSG0220,THR1058,TWF-1058,2025-01-20 15:14:42,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,Urgent Escalation Required - ERP Integration Service completely down,"Hello,
+
+I am escalating this issue to management. Our ERP Integration Service is completely non-functional and we have been unable to operate for 1 days. Ticket #1058 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Sarah Thompson | CloudNova Inc",True,INBOX
+MSG0002,THR1001,TWF-1001,2025-01-20 15:53:52,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,Ticket #1001 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1001 has been resolved satisfactorily. Your technician was very professional and resolved the IT Asset Management Tool issue quickly. Appreciate the effort.
+
+Priya Mehta | Infovision Systems",False,INBOX
+MSG0217,THR1061,TWF-1061,2025-01-22 15:39:17,John Smith <john.smith@clientq.com>,John Smith,john.smith@clientq.com,Apex Networks,Billing Query - Invoice for Firewall & Security Suite,"Hi TechWayFit Finance Team,
+
+I received invoice #1061 for Firewall & Security Suite but the amount doesn't match our purchase order. We were quoted a different price. Could you please review and send a corrected invoice?
+
+John Smith | Apex Networks",False,INBOX
+MSG0241,THR1054,TWF-1054,2025-01-24 08:05:59,Daniel Osei <daniel.osei@clientc.com>,Daniel Osei,daniel.osei@clientc.com,TechBridge Corp,Re-opening Ticket #1054 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1054 has returned. The IT Asset Management Tool started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Daniel Osei",False,INBOX
+MSG0210,THR1028,TWF-1028,2025-01-24 21:21:15,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,"Re: Ticket #1028 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1028 regarding Data Backup & Recovery System has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Lisa Nguyen",True,INBOX
+MSG0041,THR1024,TWF-1024,2025-01-26 02:19:08,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Billing Query - Invoice for Endpoint Protection Suite,"Hi TechWayFit Finance Team,
+
+I received invoice #1024 for Endpoint Protection Suite but the amount doesn't match our purchase order. We were quoted a different price. Could you please review and send a corrected invoice?
+
+Grace Otieno | AfriTech Solutions",False,INBOX
+MSG0082,THR1006,TWF-1006,2025-01-27 18:00:23,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,REOPEN - Ticket #1006 - Problem persists,"The fix applied to ticket #1006 was only a temporary workaround. The root cause was not addressed and the IT Asset Management Tool is failing again. Please reopen and escalate to L2 support.
+
+Elena Sokolova | EastWest Systems",False,INBOX
+MSG0009,THR1007,TWF-1007,2025-01-28 08:26:10,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,"Re: Ticket #1007 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1007 regarding IT Asset Management Tool has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Sunita Rao",True,INBOX
+MSG0023,THR1017,TWF-1017,2025-01-30 22:29:45,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,REOPEN - Ticket #1017 - Problem persists,"The fix applied to ticket #1017 was only a temporary workaround. The root cause was not addressed and the Endpoint Protection Suite is failing again. Please reopen and escalate to L2 support.
+
+Sandra Jones | Atlantic Systems",True,INBOX
+MSG0127,THR1038,TWF-1038,2025-01-31 11:05:42,Yasmin Ali <yasmin.ali@clientx.com>,Yasmin Ali,yasmin.ali@clientx.com,FutureTech ME,UNACCEPTABLE - 8 days and still no fix!!,"I have HAD IT with your support team. Ticket #1038 has been open for 8 days and nobody has a clue how to fix our ERP Integration Service. Every time I call I get a different story. This is completely unacceptable. SORT THIS OUT NOW.
+
+Yasmin Ali",True,INBOX
+MSG0111,THR1033,TWF-1033,2025-01-31 16:39:21,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,REOPEN - Ticket #1033 - Problem persists,"The fix applied to ticket #1033 was only a temporary workaround. The root cause was not addressed and the Server Rack Installation is failing again. Please reopen and escalate to L2 support.
+
+Sarah Thompson | CloudNova Inc",True,INBOX
+MSG0061,THR1022,TWF-1022,2025-02-03 20:04:01,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,Urgent Escalation Required - Cloud Migration Package completely down,"Hello,
+
+I am escalating this issue to management. Our Cloud Migration Package is completely non-functional and we have been unable to operate for 11 days. Ticket #1022 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Diana Chen | Pacific IT Services",True,INBOX
+MSG0166,THR1028,TWF-1028,2025-02-03 21:31:48,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,Request to Close Ticket #1028,"Dear TechWayFit,
+
+The issue with Data Backup & Recovery System has been sorted out. Kindly close ticket #1028 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Lisa Nguyen",True,INBOX
+MSG0067,THR1032,TWF-1032,2025-02-05 03:50:59,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1032. Please investigate and issue a refund.
+
+Sunita Rao",False,INBOX
+MSG0242,THR1065,TWF-1065,2025-02-13 03:49:10,Felix Mueller <felix.mueller@client3.com>,Felix Mueller,felix.mueller@client3.com,German IT Group,Formal Complaint - SLA Breach on Ticket #1065,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1065. We signed up for a 4-hour response SLA and it has been 12 days without a proper resolution. We expect compensation as per our contract.
+
+Felix Mueller",False,INBOX
+MSG0098,THR1037,TWF-1037,2025-02-18 20:11:27,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,Request to Close Ticket #1037,"Dear TechWayFit,
+
+The issue with Network Infrastructure Setup has been sorted out. Kindly close ticket #1037 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Priya Mehta",True,INBOX
+MSG0092,THR1035,TWF-1035,2025-02-19 19:04:53,Felix Mueller <felix.mueller@client3.com>,Felix Mueller,felix.mueller@client3.com,German IT Group,Excellent Service on Ticket #1035,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1035. Your engineer was knowledgeable, responsive, and resolved our Endpoint Protection Suite issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Felix Mueller | German IT Group",False,INBOX
+MSG0078,THR1004,TWF-1004,2025-02-20 11:09:42,Arjun Patel <arjun.patel@client1.com>,Arjun Patel,arjun.patel@client1.com,IndoSoft Technologies,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The Firewall & Security Suite is now working flawlessly. Looking forward to renewing our contract!
+
+Arjun Patel",False,INBOX
+MSG0093,THR1019,TWF-1019,2025-02-20 14:13:55,Carlos Ruiz <carlos.ruiz@clientg.com>,Carlos Ruiz,carlos.ruiz@clientg.com,PrimeTech,Re: Ticket #1019 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1019. It has been 9 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Carlos Ruiz | PrimeTech",False,INBOX
+MSG0157,THR1023,TWF-1023,2025-02-22 05:09:14,Michael Brown <michael.brown@clientw.com>,Michael Brown,michael.brown@clientw.com,CoreLogic IT,This is a disaster - Ticket #1023,"Your support is an absolute disaster. 12 days, 7 engineers, and the Server Rack Installation is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Michael Brown | CoreLogic IT",True,INBOX
+MSG0131,THR1025,TWF-1025,2025-02-22 07:31:01,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Urgent Escalation Required - Data Backup & Recovery System completely down,"Hello,
+
+I am escalating this issue to management. Our Data Backup & Recovery System is completely non-functional and we have been unable to operate for 10 days. Ticket #1025 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Mark Wilson | GlobalEdge Solutions",True,INBOX
+MSG0109,THR1039,TWF-1039,2025-02-24 05:03:44,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,Ticket Request: VPN & Remote Access Solution performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our VPN & Remote Access Solution since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Diana Chen | Pacific IT Services",True,INBOX
+MSG0207,THR1046,TWF-1046,2025-02-25 23:51:38,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Formal Complaint - SLA Breach on Ticket #1046,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1046. We signed up for a 4-hour response SLA and it has been 6 days without a proper resolution. We expect compensation as per our contract.
+
+Grace Otieno",False,INBOX
+MSG0250,THR1040,TWF-1040,2025-03-03 13:10:33,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,"Re: Ticket #1040 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1040 regarding Firewall & Security Suite has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Tom Harris",True,INBOX
+MSG0037,THR1008,TWF-1008,2025-03-03 17:20:07,David Kim <david.kim@clienty.com>,David Kim,david.kim@clienty.com,KoreaTech Global,Excellent Service on Ticket #1008,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1008. Your engineer was knowledgeable, responsive, and resolved our Endpoint Protection Suite issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+David Kim | KoreaTech Global",False,INBOX
+MSG0165,THR1021,TWF-1021,2025-03-04 17:50:42,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Closing Ticket #1021 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1021. The Firewall & Security Suite is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Rachel Green | Emerald IT Solutions",False,INBOX
+MSG0222,THR1055,TWF-1055,2025-03-05 21:09:27,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Closing Ticket #1055 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1055. The VPN & Remote Access Solution is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Rachel Green | Emerald IT Solutions",True,INBOX
+MSG0046,THR1007,TWF-1007,2025-03-08 19:43:25,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Complaint Regarding Poor Service - Ticket #1007,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1007. The issue with our ERP Integration Service has been open for 7 days with no meaningful progress. We are very disappointed.
+
+Sunita Rao",True,INBOX
+MSG0150,THR1049,TWF-1049,2025-03-08 23:44:20,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Ticket Request: Helpdesk Software License performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Helpdesk Software License since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Nadia Petrov | Eurolink Systems",True,INBOX
+MSG0182,THR1036,TWF-1036,2025-03-09 15:11:07,David Kim <david.kim@clienty.com>,David Kim,david.kim@clienty.com,KoreaTech Global,DO NOT CLOSE Ticket #1036 - Issue NOT resolved!,"Someone on your team closed ticket #1036 without fixing anything!! The Network Infrastructure Setup is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+David Kim",False,INBOX
+MSG0174,THR1035,TWF-1035,2025-03-10 09:25:18,Felix Mueller <felix.mueller@client3.com>,Felix Mueller,felix.mueller@client3.com,German IT Group,REOPEN - Ticket #1035 - Problem persists,"The fix applied to ticket #1035 was only a temporary workaround. The root cause was not addressed and the Data Backup & Recovery System is failing again. Please reopen and escalate to L2 support.
+
+Felix Mueller | German IT Group",False,INBOX
+MSG0100,THR1037,TWF-1037,2025-03-11 23:42:44,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,Complaint Regarding Poor Service - Ticket #1037,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1037. The issue with our Data Backup & Recovery System has been open for 3 days with no meaningful progress. We are very disappointed.
+
+Priya Mehta",False,INBOX
+MSG0228,THR1062,TWF-1062,2025-03-12 08:11:58,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,New Issue: Data Backup & Recovery System not working,"Hi TechWayFit Support,
+
+I'm reaching out regarding our recently deployed Data Backup & Recovery System. We are experiencing issues where the system is not responding as expected. Our team noticed the problem starting 7 days ago and it is affecting our operations. Could you please raise a support ticket and assign a technician?
+
+Regards,
+Rachel Green
+Emerald IT Solutions",True,INBOX
+MSG0012,THR1009,TWF-1009,2025-03-13 11:51:33,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Urgent Escalation Required - Server Rack Installation completely down,"Hello,
+
+I am escalating this issue to management. Our Server Rack Installation is completely non-functional and we have been unable to operate for 6 days. Ticket #1009 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Nadia Petrov | Eurolink Systems",True,INBOX
+MSG0080,THR1035,TWF-1035,2025-03-13 20:02:28,Felix Mueller <felix.mueller@client3.com>,Felix Mueller,felix.mueller@client3.com,German IT Group,Following up on Ticket #1035 - Firewall & Security Suite,"Hi,
+
+I wanted to follow up on ticket #1035 raised 14 days ago regarding our Firewall & Security Suite. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Felix Mueller",False,INBOX
+MSG0069,THR1010,TWF-1010,2025-03-14 07:29:27,Amit Verma <amit.verma@cliente.com>,Amit Verma,amit.verma@cliente.com,DataSync Solutions,Closing Ticket #1010 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1010. The Data Backup & Recovery System is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Amit Verma | DataSync Solutions",False,INBOX
+MSG0206,THR1050,TWF-1050,2025-03-15 02:23:11,Yasmin Ali <yasmin.ali@clientx.com>,Yasmin Ali,yasmin.ali@clientx.com,FutureTech ME,Complaint Regarding Poor Service - Ticket #1050,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1050. The issue with our IT Asset Management Tool has been open for 8 days with no meaningful progress. We are very disappointed.
+
+Yasmin Ali",False,INBOX
+MSG0172,THR1055,TWF-1055,2025-03-18 01:29:43,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Support Required - Server Rack Installation installation failure,"Hello,
+
+We recently purchased the Server Rack Installation from TechWayFit and during installation encountered errors. The setup wizard crashes at step 3 and we cannot proceed further. Please log this as a ticket urgently.
+
+Thanks,
+Rachel Green",True,INBOX
+MSG0177,THR1039,TWF-1039,2025-03-25 01:22:01,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,Closing Ticket #1039 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1039. The Helpdesk Software License is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Diana Chen | Pacific IT Services",True,INBOX
+MSG0156,THR1051,TWF-1051,2025-03-27 05:40:49,Hassan Malik <hassan.malik@clients.com>,Hassan Malik,hassan.malik@clients.com,Crescent Tech,Support Required - Network Infrastructure Setup installation failure,"Hello,
+
+We recently purchased the Network Infrastructure Setup from TechWayFit and during installation encountered errors. The setup wizard crashes at step 3 and we cannot proceed further. Please log this as a ticket urgently.
+
+Thanks,
+Hassan Malik",True,INBOX
+MSG0081,THR1024,TWF-1024,2025-03-29 00:12:56,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,REOPEN - Ticket #1024 - Problem persists,"The fix applied to ticket #1024 was only a temporary workaround. The root cause was not addressed and the VPN & Remote Access Solution is failing again. Please reopen and escalate to L2 support.
+
+Grace Otieno | AfriTech Solutions",False,INBOX
+MSG0047,THR1000,TWF-1000,2025-03-29 18:16:58,James Okoye <james.okoye@clienti.com>,James Okoye,james.okoye@clienti.com,Vertex Systems,Request to Close Ticket #1000,"Dear TechWayFit,
+
+The issue with Endpoint Protection Suite has been sorted out. Kindly close ticket #1000 from your end. Please send the closure report to our IT manager.
+
+Regards,
+James Okoye",False,INBOX
+MSG0184,THR1003,TWF-1003,2025-03-30 07:30:38,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,Complaint Regarding Poor Service - Ticket #1003,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1003. The issue with our Data Backup & Recovery System has been open for 7 days with no meaningful progress. We are very disappointed.
+
+Peter Adams",False,INBOX
+MSG0088,THR1003,TWF-1003,2025-03-31 23:29:48,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,DO NOT CLOSE Ticket #1003 - Issue NOT resolved!,"Someone on your team closed ticket #1003 without fixing anything!! The Endpoint Protection Suite is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Peter Adams",True,INBOX
+MSG0013,THR1010,TWF-1010,2025-04-01 18:02:53,Amit Verma <amit.verma@cliente.com>,Amit Verma,amit.verma@cliente.com,DataSync Solutions,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1010. Please investigate and issue a refund.
+
+Amit Verma",True,INBOX
+MSG0001,THR1000,TWF-1000,2025-04-01 23:38:31,James Okoye <james.okoye@clienti.com>,James Okoye,james.okoye@clienti.com,Vertex Systems,Re-opening Ticket #1000 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1000 has returned. The Cloud Migration Package started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+James Okoye",False,INBOX
+MSG0073,THR1003,TWF-1003,2025-04-13 18:00:47,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,Re-opening Ticket #1003 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1003 has returned. The Helpdesk Software License started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Peter Adams",False,INBOX
+MSG0243,THR1040,TWF-1040,2025-04-15 06:08:25,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Urgent Escalation Required - ERP Integration Service completely down,"Hello,
+
+I am escalating this issue to management. Our ERP Integration Service is completely non-functional and we have been unable to operate for 8 days. Ticket #1040 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Tom Harris | BlueStar IT",False,INBOX
+MSG0096,THR1033,TWF-1033,2025-04-22 13:57:55,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,"Re: Ticket #1033 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1033 regarding Data Backup & Recovery System has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Sarah Thompson",False,INBOX
+MSG0029,THR1017,TWF-1017,2025-04-23 00:59:03,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,Request to Close Ticket #1017,"Dear TechWayFit,
+
+The issue with Endpoint Protection Suite has been sorted out. Kindly close ticket #1017 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Sandra Jones",True,INBOX
+MSG0169,THR1010,TWF-1010,2025-04-24 04:16:03,Amit Verma <amit.verma@cliente.com>,Amit Verma,amit.verma@cliente.com,DataSync Solutions,DO NOT CLOSE Ticket #1010 - Issue NOT resolved!,"Someone on your team closed ticket #1010 without fixing anything!! The Server Rack Installation is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Amit Verma",False,INBOX
+MSG0128,THR1003,TWF-1003,2025-04-25 11:29:22,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,Re: Ticket #1003 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1003. It has been 12 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Peter Adams | Northgate IT",True,INBOX
+MSG0248,THR1058,TWF-1058,2025-04-26 11:35:15,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The Cloud Migration Package is now working flawlessly. Looking forward to renewing our contract!
+
+Sarah Thompson",False,INBOX
+MSG0137,THR1023,TWF-1023,2025-04-26 18:02:36,Michael Brown <michael.brown@clientw.com>,Michael Brown,michael.brown@clientw.com,CoreLogic IT,Re: Ticket #1023 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1023. It has been 2 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Michael Brown | CoreLogic IT",True,INBOX
+MSG0211,THR1025,TWF-1025,2025-04-28 04:22:34,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,REOPEN - Ticket #1025 - Problem persists,"The fix applied to ticket #1025 was only a temporary workaround. The root cause was not addressed and the Data Backup & Recovery System is failing again. Please reopen and escalate to L2 support.
+
+Mark Wilson | GlobalEdge Solutions",True,INBOX
+MSG0120,THR1041,TWF-1041,2025-04-29 06:48:17,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Billing Query - Invoice for Server Rack Installation,"Hi TechWayFit Finance Team,
+
+I received invoice #1041 for Server Rack Installation but the amount doesn't match our purchase order. We were quoted a different price. Could you please review and send a corrected invoice?
+
+Sunita Rao | BrightPath Solutions",False,INBOX
+MSG0167,THR1054,TWF-1054,2025-04-29 18:59:10,Daniel Osei <daniel.osei@clientc.com>,Daniel Osei,daniel.osei@clientc.com,TechBridge Corp,Support Required - Firewall & Security Suite installation failure,"Hello,
+
+We recently purchased the Firewall & Security Suite from TechWayFit and during installation encountered errors. The setup wizard crashes at step 3 and we cannot proceed further. Please log this as a ticket urgently.
+
+Thanks,
+Daniel Osei",True,INBOX
+MSG0223,THR1029,TWF-1029,2025-04-30 03:14:57,Rajesh Kumar <rajesh.kumar@clienta.com>,Rajesh Kumar,rajesh.kumar@clienta.com,NetSphere Pvt Ltd,Excellent Service on Ticket #1029,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1029. Your engineer was knowledgeable, responsive, and resolved our ERP Integration Service issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Rajesh Kumar | NetSphere Pvt Ltd",True,INBOX
+MSG0097,THR1038,TWF-1038,2025-05-01 12:14:04,Yasmin Ali <yasmin.ali@clientx.com>,Yasmin Ali,yasmin.ali@clientx.com,FutureTech ME,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The Server Rack Installation is now working flawlessly. Looking forward to renewing our contract!
+
+Yasmin Ali",False,INBOX
+MSG0227,THR1043,TWF-1043,2025-05-02 10:47:57,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Closing Ticket #1043 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1043. The IT Asset Management Tool is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Sunita Rao | BrightPath Solutions",True,INBOX
+MSG0143,THR1025,TWF-1025,2025-05-02 21:49:55,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Re: Ticket #1025 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1025. It has been 6 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Mark Wilson | GlobalEdge Solutions",True,INBOX
+MSG0079,THR1035,TWF-1035,2025-05-03 05:36:18,Felix Mueller <felix.mueller@client3.com>,Felix Mueller,felix.mueller@client3.com,German IT Group,Ticket Request: Endpoint Protection Suite performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Endpoint Protection Suite since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Felix Mueller | German IT Group",True,INBOX
+MSG0026,THR1009,TWF-1009,2025-05-04 04:47:21,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Following up on Ticket #1009 - VPN & Remote Access Solution,"Hi,
+
+I wanted to follow up on ticket #1009 raised 3 days ago regarding our VPN & Remote Access Solution. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Nadia Petrov",False,INBOX
+MSG0225,THR1059,TWF-1059,2025-05-05 01:28:57,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,REOPEN - Ticket #1059 - Problem persists,"The fix applied to ticket #1059 was only a temporary workaround. The root cause was not addressed and the VPN & Remote Access Solution is failing again. Please reopen and escalate to L2 support.
+
+Peter Adams | Northgate IT",True,INBOX
+MSG0233,THR1040,TWF-1040,2025-05-06 06:07:32,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Complaint Regarding Poor Service - Ticket #1040,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1040. The issue with our IT Asset Management Tool has been open for 13 days with no meaningful progress. We are very disappointed.
+
+Tom Harris",True,INBOX
+MSG0024,THR1018,TWF-1018,2025-05-10 09:06:13,Mei Lin <mei.lin@clientj.com>,Mei Lin,mei.lin@clientj.com,AsiaCore Technologies,Formal Complaint - SLA Breach on Ticket #1018,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1018. We signed up for a 4-hour response SLA and it has been 6 days without a proper resolution. We expect compensation as per our contract.
+
+Mei Lin",False,INBOX
+MSG0027,THR1006,TWF-1006,2025-05-13 00:03:12,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,REOPEN - Ticket #1006 - Problem persists,"The fix applied to ticket #1006 was only a temporary workaround. The root cause was not addressed and the Data Backup & Recovery System is failing again. Please reopen and escalate to L2 support.
+
+Elena Sokolova | EastWest Systems",True,INBOX
+MSG0219,THR1059,TWF-1059,2025-05-14 08:18:39,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,DO NOT CLOSE Ticket #1059 - Issue NOT resolved!,"Someone on your team closed ticket #1059 without fixing anything!! The VPN & Remote Access Solution is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Peter Adams",False,INBOX
+MSG0044,THR1026,TWF-1026,2025-05-17 15:34:48,Ananya Iyer <ananya.iyer@clientl.com>,Ananya Iyer,ananya.iyer@clientl.com,Pinnacle Infotech,Formal Complaint - SLA Breach on Ticket #1026,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1026. We signed up for a 4-hour response SLA and it has been 13 days without a proper resolution. We expect compensation as per our contract.
+
+Ananya Iyer",True,INBOX
+MSG0019,THR1015,TWF-1015,2025-05-20 06:28:07,Hassan Malik <hassan.malik@clients.com>,Hassan Malik,hassan.malik@clients.com,Crescent Tech,Re: Ticket #1015 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1015. It has been 4 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Hassan Malik | Crescent Tech",False,INBOX
+MSG0185,THR1055,TWF-1055,2025-05-20 10:13:28,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Ticket #1055 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1055 has been resolved satisfactorily. Your technician was very professional and resolved the Cloud Migration Package issue quickly. Appreciate the effort.
+
+Rachel Green | Emerald IT Solutions",True,INBOX
+MSG0022,THR1007,TWF-1007,2025-05-21 07:08:31,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Excellent Service on Ticket #1007,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1007. Your engineer was knowledgeable, responsive, and resolved our Endpoint Protection Suite issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Sunita Rao | BrightPath Solutions",True,INBOX
+MSG0189,THR1057,TWF-1057,2025-05-22 22:14:06,Ravi Shankar <ravi.shankar@cliento.com>,Ravi Shankar,ravi.shankar@cliento.com,Quantum IT,Complaint Regarding Poor Service - Ticket #1057,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1057. The issue with our Server Rack Installation has been open for 7 days with no meaningful progress. We are very disappointed.
+
+Ravi Shankar",False,INBOX
+MSG0038,THR1018,TWF-1018,2025-05-25 00:47:36,Mei Lin <mei.lin@clientj.com>,Mei Lin,mei.lin@clientj.com,AsiaCore Technologies,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The ERP Integration Service is now working flawlessly. Looking forward to renewing our contract!
+
+Mei Lin",True,INBOX
+MSG0146,THR1047,TWF-1047,2025-05-25 10:50:12,Arjun Patel <arjun.patel@client1.com>,Arjun Patel,arjun.patel@client1.com,IndoSoft Technologies,Ticket Request: Data Backup & Recovery System performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Data Backup & Recovery System since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Arjun Patel | IndoSoft Technologies",True,INBOX
+MSG0181,THR1051,TWF-1051,2025-05-25 15:32:25,Hassan Malik <hassan.malik@clients.com>,Hassan Malik,hassan.malik@clients.com,Crescent Tech,Re: Ticket #1051 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1051. It has been 14 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Hassan Malik | Crescent Tech",False,INBOX
+MSG0035,THR1022,TWF-1022,2025-05-26 14:16:33,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,Re: Ticket #1022 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1022. It has been 9 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Diana Chen | Pacific IT Services",True,INBOX
+MSG0229,THR1063,TWF-1063,2025-05-27 18:32:15,Rajesh Kumar <rajesh.kumar@clienta.com>,Rajesh Kumar,rajesh.kumar@clienta.com,NetSphere Pvt Ltd,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1063. Please investigate and issue a refund.
+
+Rajesh Kumar",False,INBOX
+MSG0136,THR1021,TWF-1021,2025-05-30 21:27:59,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,DO NOT CLOSE Ticket #1021 - Issue NOT resolved!,"Someone on your team closed ticket #1021 without fixing anything!! The VPN & Remote Access Solution is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Rachel Green",True,INBOX
+MSG0084,THR1017,TWF-1017,2025-05-31 16:56:26,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,Request to Close Ticket #1017,"Dear TechWayFit,
+
+The issue with Helpdesk Software License has been sorted out. Kindly close ticket #1017 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Sandra Jones",True,INBOX
+MSG0055,THR1029,TWF-1029,2025-06-04 17:21:12,Rajesh Kumar <rajesh.kumar@clienta.com>,Rajesh Kumar,rajesh.kumar@clienta.com,NetSphere Pvt Ltd,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1029. Please investigate and issue a refund.
+
+Rajesh Kumar",True,INBOX
+MSG0215,THR1036,TWF-1036,2025-06-07 21:49:36,David Kim <david.kim@clienty.com>,David Kim,david.kim@clienty.com,KoreaTech Global,Re: Ticket #1036 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1036. It has been 14 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+David Kim | KoreaTech Global",True,INBOX
+MSG0190,THR1016,TWF-1016,2025-06-10 08:40:48,Claire Martin <claire.martin@client2.com>,Claire Martin,claire.martin@client2.com,FranceTech Partners,ESCALATION - Ticket #1016 unresolved for 7 days,"Dear TechWayFit Management,
+
+I am escalating ticket #1016 related to our Endpoint Protection Suite. Despite multiple follow-ups, this has remained unresolved for 7 days. This is severely impacting our business operations and we request immediate senior-level intervention.
+
+Claire Martin
+FranceTech Partners",False,INBOX
+MSG0070,THR1028,TWF-1028,2025-06-13 13:35:22,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,ESCALATION - Ticket #1028 unresolved for 6 days,"Dear TechWayFit Management,
+
+I am escalating ticket #1028 related to our Firewall & Security Suite. Despite multiple follow-ups, this has remained unresolved for 6 days. This is severely impacting our business operations and we request immediate senior-level intervention.
+
+Lisa Nguyen
+Nexgen IT",True,INBOX
+MSG0226,THR1049,TWF-1049,2025-06-14 18:40:05,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,ESCALATION - Ticket #1049 unresolved for 10 days,"Dear TechWayFit Management,
+
+I am escalating ticket #1049 related to our Cloud Migration Package. Despite multiple follow-ups, this has remained unresolved for 10 days. This is severely impacting our business operations and we request immediate senior-level intervention.
+
+Nadia Petrov
+Eurolink Systems",False,INBOX
+MSG0062,THR1009,TWF-1009,2025-06-16 14:55:33,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Formal Complaint - SLA Breach on Ticket #1009,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1009. We signed up for a 4-hour response SLA and it has been 8 days without a proper resolution. We expect compensation as per our contract.
+
+Nadia Petrov",False,INBOX
+MSG0102,THR1032,TWF-1032,2025-06-20 07:40:45,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Formal Complaint - SLA Breach on Ticket #1032,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1032. We signed up for a 4-hour response SLA and it has been 14 days without a proper resolution. We expect compensation as per our contract.
+
+Sunita Rao",False,INBOX
+MSG0006,THR1005,TWF-1005,2025-06-21 08:20:55,Amit Verma <amit.verma@cliente.com>,Amit Verma,amit.verma@cliente.com,DataSync Solutions,Request to Close Ticket #1005,"Dear TechWayFit,
+
+The issue with Cloud Migration Package has been sorted out. Kindly close ticket #1005 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Amit Verma",True,INBOX
+MSG0129,THR1016,TWF-1016,2025-06-22 02:46:27,Claire Martin <claire.martin@client2.com>,Claire Martin,claire.martin@client2.com,FranceTech Partners,Ticket #1016 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1016 has been resolved satisfactorily. Your technician was very professional and resolved the Helpdesk Software License issue quickly. Appreciate the effort.
+
+Claire Martin | FranceTech Partners",True,INBOX
+MSG0170,THR1051,TWF-1051,2025-06-23 12:15:31,Hassan Malik <hassan.malik@clients.com>,Hassan Malik,hassan.malik@clients.com,Crescent Tech,Closing Ticket #1051 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1051. The Data Backup & Recovery System is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Hassan Malik | Crescent Tech",False,INBOX
+MSG0105,THR1017,TWF-1017,2025-06-23 15:35:58,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The ERP Integration Service is now working flawlessly. Looking forward to renewing our contract!
+
+Sandra Jones",False,INBOX
+MSG0090,THR1036,TWF-1036,2025-06-24 08:00:30,David Kim <david.kim@clienty.com>,David Kim,david.kim@clienty.com,KoreaTech Global,Support Required - IT Asset Management Tool installation failure,"Hello,
+
+We recently purchased the IT Asset Management Tool from TechWayFit and during installation encountered errors. The setup wizard crashes at step 3 and we cannot proceed further. Please log this as a ticket urgently.
+
+Thanks,
+David Kim",True,INBOX
+MSG0028,THR1004,TWF-1004,2025-06-25 12:58:51,Arjun Patel <arjun.patel@client1.com>,Arjun Patel,arjun.patel@client1.com,IndoSoft Technologies,Ticket #1004 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1004 has been resolved satisfactorily. Your technician was very professional and resolved the Firewall & Security Suite issue quickly. Appreciate the effort.
+
+Arjun Patel | IndoSoft Technologies",True,INBOX
+MSG0236,THR1040,TWF-1040,2025-06-27 14:28:58,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Complaint Regarding Poor Service - Ticket #1040,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1040. The issue with our VPN & Remote Access Solution has been open for 4 days with no meaningful progress. We are very disappointed.
+
+Tom Harris",False,INBOX
+MSG0183,THR1018,TWF-1018,2025-06-28 04:15:09,Mei Lin <mei.lin@clientj.com>,Mei Lin,mei.lin@clientj.com,AsiaCore Technologies,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The Helpdesk Software License is now working flawlessly. Looking forward to renewing our contract!
+
+Mei Lin",False,INBOX
+MSG0119,THR1019,TWF-1019,2025-06-28 12:51:05,Carlos Ruiz <carlos.ruiz@clientg.com>,Carlos Ruiz,carlos.ruiz@clientg.com,PrimeTech,UNACCEPTABLE - 1 days and still no fix!!,"I have HAD IT with your support team. Ticket #1019 has been open for 1 days and nobody has a clue how to fix our Endpoint Protection Suite. Every time I call I get a different story. This is completely unacceptable. SORT THIS OUT NOW.
+
+Carlos Ruiz",True,INBOX
+MSG0025,THR1019,TWF-1019,2025-07-01 19:28:06,Carlos Ruiz <carlos.ruiz@clientg.com>,Carlos Ruiz,carlos.ruiz@clientg.com,PrimeTech,Excellent Service on Ticket #1019,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1019. Your engineer was knowledgeable, responsive, and resolved our ERP Integration Service issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Carlos Ruiz | PrimeTech",True,INBOX
+MSG0235,THR1065,TWF-1065,2025-07-02 03:40:09,Felix Mueller <felix.mueller@client3.com>,Felix Mueller,felix.mueller@client3.com,German IT Group,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1065. Please investigate and issue a refund.
+
+Felix Mueller",False,INBOX
+MSG0089,THR1001,TWF-1001,2025-07-03 17:20:11,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,Excellent Service on Ticket #1001,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1001. Your engineer was knowledgeable, responsive, and resolved our Endpoint Protection Suite issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Priya Mehta | Infovision Systems",False,INBOX
+MSG0042,THR1025,TWF-1025,2025-07-04 07:05:41,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Ticket #1025 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1025 has been resolved satisfactorily. Your technician was very professional and resolved the Helpdesk Software License issue quickly. Appreciate the effort.
+
+Mark Wilson | GlobalEdge Solutions",True,INBOX
+MSG0110,THR1025,TWF-1025,2025-07-08 12:17:53,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Re: Ticket #1025 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1025. It has been 10 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Mark Wilson | GlobalEdge Solutions",True,INBOX
+MSG0101,THR1022,TWF-1022,2025-07-10 08:37:42,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,Following up on Ticket #1022 - Firewall & Security Suite,"Hi,
+
+I wanted to follow up on ticket #1022 raised 14 days ago regarding our Firewall & Security Suite. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Diana Chen",True,INBOX
+MSG0218,THR1049,TWF-1049,2025-07-12 03:15:34,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Ticket #1049 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1049 has been resolved satisfactorily. Your technician was very professional and resolved the Endpoint Protection Suite issue quickly. Appreciate the effort.
+
+Nadia Petrov | Eurolink Systems",True,INBOX
+MSG0050,THR1021,TWF-1021,2025-07-14 06:05:00,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Formal Complaint - SLA Breach on Ticket #1021,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1021. We signed up for a 4-hour response SLA and it has been 13 days without a proper resolution. We expect compensation as per our contract.
+
+Rachel Green",True,INBOX
+MSG0099,THR1006,TWF-1006,2025-07-14 22:09:19,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,Re-opening Ticket #1006 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1006 has returned. The Endpoint Protection Suite started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Elena Sokolova",False,INBOX
+MSG0171,THR1021,TWF-1021,2025-07-16 06:54:07,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Formal Complaint - SLA Breach on Ticket #1021,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1021. We signed up for a 4-hour response SLA and it has been 8 days without a proper resolution. We expect compensation as per our contract.
+
+Rachel Green",True,INBOX
+MSG0040,THR1007,TWF-1007,2025-07-17 09:38:42,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Re-opening Ticket #1007 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1007 has returned. The Endpoint Protection Suite started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Sunita Rao",False,INBOX
+MSG0176,THR1051,TWF-1051,2025-07-20 22:46:30,Hassan Malik <hassan.malik@clients.com>,Hassan Malik,hassan.malik@clients.com,Crescent Tech,This is a disaster - Ticket #1051,"Your support is an absolute disaster. 2 days, 7 engineers, and the Cloud Migration Package is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Hassan Malik | Crescent Tech",False,INBOX
+MSG0161,THR1040,TWF-1040,2025-07-23 23:50:18,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Formal Complaint - SLA Breach on Ticket #1040,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1040. We signed up for a 4-hour response SLA and it has been 4 days without a proper resolution. We expect compensation as per our contract.
+
+Tom Harris",True,INBOX
+MSG0116,THR1020,TWF-1020,2025-07-28 12:51:08,Daniel Osei <daniel.osei@clientc.com>,Daniel Osei,daniel.osei@clientc.com,TechBridge Corp,Re-opening Ticket #1020 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1020 has returned. The Server Rack Installation started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Daniel Osei",True,INBOX
+MSG0237,THR1065,TWF-1065,2025-07-30 13:29:03,Felix Mueller <felix.mueller@client3.com>,Felix Mueller,felix.mueller@client3.com,German IT Group,DO NOT CLOSE Ticket #1065 - Issue NOT resolved!,"Someone on your team closed ticket #1065 without fixing anything!! The Cloud Migration Package is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Felix Mueller",False,INBOX
+MSG0163,THR1017,TWF-1017,2025-07-31 00:40:18,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,Urgent Escalation Required - Firewall & Security Suite completely down,"Hello,
+
+I am escalating this issue to management. Our Firewall & Security Suite is completely non-functional and we have been unable to operate for 10 days. Ticket #1017 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Sandra Jones | Atlantic Systems",False,INBOX
+MSG0234,THR1064,TWF-1064,2025-07-31 22:27:16,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1064. Please investigate and issue a refund.
+
+Priya Mehta",True,INBOX
+MSG0106,THR1022,TWF-1022,2025-08-04 16:46:04,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,Re: Ticket #1022 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1022. It has been 2 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Diana Chen | Pacific IT Services",False,INBOX
+MSG0147,THR1038,TWF-1038,2025-08-05 08:22:05,Yasmin Ali <yasmin.ali@clientx.com>,Yasmin Ali,yasmin.ali@clientx.com,FutureTech ME,Re: Ticket #1038 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1038. It has been 14 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Yasmin Ali | FutureTech ME",True,INBOX
+MSG0145,THR1046,TWF-1046,2025-08-06 09:03:45,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Billing Query - Invoice for Helpdesk Software License,"Hi TechWayFit Finance Team,
+
+I received invoice #1046 for Helpdesk Software License but the amount doesn't match our purchase order. We were quoted a different price. Could you please review and send a corrected invoice?
+
+Grace Otieno | AfriTech Solutions",True,INBOX
+MSG0014,THR1011,TWF-1011,2025-08-06 19:24:18,Claire Martin <claire.martin@client2.com>,Claire Martin,claire.martin@client2.com,FranceTech Partners,This is a disaster - Ticket #1011,"Your support is an absolute disaster. 5 days, 7 engineers, and the ERP Integration Service is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Claire Martin | FranceTech Partners",False,INBOX
+MSG0107,THR1024,TWF-1024,2025-08-08 04:45:41,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,UNACCEPTABLE - 5 days and still no fix!!,"I have HAD IT with your support team. Ticket #1024 has been open for 5 days and nobody has a clue how to fix our Helpdesk Software License. Every time I call I get a different story. This is completely unacceptable. SORT THIS OUT NOW.
+
+Grace Otieno",True,INBOX
+MSG0043,THR1007,TWF-1007,2025-08-13 04:31:26,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Excellent Service on Ticket #1007,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1007. Your engineer was knowledgeable, responsive, and resolved our IT Asset Management Tool issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Sunita Rao | BrightPath Solutions",False,INBOX
+MSG0104,THR1023,TWF-1023,2025-08-13 09:35:21,Michael Brown <michael.brown@clientw.com>,Michael Brown,michael.brown@clientw.com,CoreLogic IT,ESCALATION - Ticket #1023 unresolved for 9 days,"Dear TechWayFit Management,
+
+I am escalating ticket #1023 related to our Data Backup & Recovery System. Despite multiple follow-ups, this has remained unresolved for 9 days. This is severely impacting our business operations and we request immediate senior-level intervention.
+
+Michael Brown
+CoreLogic IT",False,INBOX
+MSG0066,THR1031,TWF-1031,2025-08-13 10:02:33,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,This is a disaster - Ticket #1031,"Your support is an absolute disaster. 14 days, 7 engineers, and the ERP Integration Service is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Sarah Thompson | CloudNova Inc",False,INBOX
+MSG0034,THR1019,TWF-1019,2025-08-17 12:24:04,Carlos Ruiz <carlos.ruiz@clientg.com>,Carlos Ruiz,carlos.ruiz@clientg.com,PrimeTech,Formal Complaint - SLA Breach on Ticket #1019,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1019. We signed up for a 4-hour response SLA and it has been 7 days without a proper resolution. We expect compensation as per our contract.
+
+Carlos Ruiz",True,INBOX
+MSG0135,THR1015,TWF-1015,2025-08-17 21:15:26,Hassan Malik <hassan.malik@clients.com>,Hassan Malik,hassan.malik@clients.com,Crescent Tech,Re-opening Ticket #1015 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1015 has returned. The VPN & Remote Access Solution started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Hassan Malik",True,INBOX
+MSG0244,THR1047,TWF-1047,2025-08-19 02:50:16,Arjun Patel <arjun.patel@client1.com>,Arjun Patel,arjun.patel@client1.com,IndoSoft Technologies,ESCALATION - Ticket #1047 unresolved for 1 days,"Dear TechWayFit Management,
+
+I am escalating ticket #1047 related to our Firewall & Security Suite. Despite multiple follow-ups, this has remained unresolved for 1 days. This is severely impacting our business operations and we request immediate senior-level intervention.
+
+Arjun Patel
+IndoSoft Technologies",True,INBOX
+MSG0232,THR1049,TWF-1049,2025-08-19 18:21:52,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Re: Ticket #1049 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1049. It has been 7 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Nadia Petrov | Eurolink Systems",False,INBOX
+MSG0204,THR1046,TWF-1046,2025-08-20 03:16:51,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,This is a disaster - Ticket #1046,"Your support is an absolute disaster. 2 days, 7 engineers, and the IT Asset Management Tool is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Grace Otieno | AfriTech Solutions",True,INBOX
+MSG0074,THR1033,TWF-1033,2025-08-24 14:51:53,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1033. Please investigate and issue a refund.
+
+Sarah Thompson",True,INBOX
+MSG0203,THR1048,TWF-1048,2025-08-26 09:52:04,Carlos Ruiz <carlos.ruiz@clientg.com>,Carlos Ruiz,carlos.ruiz@clientg.com,PrimeTech,Ticket #1048 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1048 has been resolved satisfactorily. Your technician was very professional and resolved the Endpoint Protection Suite issue quickly. Appreciate the effort.
+
+Carlos Ruiz | PrimeTech",True,INBOX
+MSG0125,THR1037,TWF-1037,2025-08-26 14:56:05,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,DO NOT CLOSE Ticket #1037 - Issue NOT resolved!,"Someone on your team closed ticket #1037 without fixing anything!! The Data Backup & Recovery System is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Priya Mehta",False,INBOX
+MSG0091,THR1037,TWF-1037,2025-08-28 15:08:48,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,Billing Query - Invoice for Network Infrastructure Setup,"Hi TechWayFit Finance Team,
+
+I received invoice #1037 for Network Infrastructure Setup but the amount doesn't match our purchase order. We were quoted a different price. Could you please review and send a corrected invoice?
+
+Priya Mehta | Infovision Systems",True,INBOX
+MSG0221,THR1057,TWF-1057,2025-09-02 00:04:16,Ravi Shankar <ravi.shankar@cliento.com>,Ravi Shankar,ravi.shankar@cliento.com,Quantum IT,Closing Ticket #1057 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1057. The Firewall & Security Suite is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Ravi Shankar | Quantum IT",True,INBOX
+MSG0144,THR1039,TWF-1039,2025-09-04 02:03:48,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,This is a disaster - Ticket #1039,"Your support is an absolute disaster. 11 days, 7 engineers, and the Firewall & Security Suite is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Diana Chen | Pacific IT Services",True,INBOX
+MSG0005,THR1004,TWF-1004,2025-09-06 14:20:03,Arjun Patel <arjun.patel@client1.com>,Arjun Patel,arjun.patel@client1.com,IndoSoft Technologies,This is a disaster - Ticket #1004,"Your support is an absolute disaster. 2 days, 7 engineers, and the Helpdesk Software License is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Arjun Patel | IndoSoft Technologies",True,INBOX
+MSG0173,THR1016,TWF-1016,2025-09-08 02:58:44,Claire Martin <claire.martin@client2.com>,Claire Martin,claire.martin@client2.com,FranceTech Partners,ESCALATION - Ticket #1016 unresolved for 9 days,"Dear TechWayFit Management,
+
+I am escalating ticket #1016 related to our Firewall & Security Suite. Despite multiple follow-ups, this has remained unresolved for 9 days. This is severely impacting our business operations and we request immediate senior-level intervention.
+
+Claire Martin
+FranceTech Partners",True,INBOX
+MSG0048,THR1027,TWF-1027,2025-09-08 08:25:35,John Smith <john.smith@clientq.com>,John Smith,john.smith@clientq.com,Apex Networks,Support Required - Server Rack Installation installation failure,"Hello,
+
+We recently purchased the Server Rack Installation from TechWayFit and during installation encountered errors. The setup wizard crashes at step 3 and we cannot proceed further. Please log this as a ticket urgently.
+
+Thanks,
+John Smith",False,INBOX
+MSG0126,THR1043,TWF-1043,2025-09-09 02:46:59,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Ticket Request: Network Infrastructure Setup performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Network Infrastructure Setup since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Sunita Rao | BrightPath Solutions",True,INBOX
+MSG0032,THR1002,TWF-1002,2025-09-09 05:30:15,Ravi Shankar <ravi.shankar@cliento.com>,Ravi Shankar,ravi.shankar@cliento.com,Quantum IT,Re: Ticket #1002 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1002. It has been 3 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Ravi Shankar | Quantum IT",False,INBOX
+MSG0202,THR1055,TWF-1055,2025-09-10 07:03:56,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Urgent Escalation Required - Cloud Migration Package completely down,"Hello,
+
+I am escalating this issue to management. Our Cloud Migration Package is completely non-functional and we have been unable to operate for 2 days. Ticket #1055 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Rachel Green | Emerald IT Solutions",True,INBOX
+MSG0018,THR1014,TWF-1014,2025-09-11 19:27:40,John Smith <john.smith@clientq.com>,John Smith,john.smith@clientq.com,Apex Networks,Ticket #1014 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1014 has been resolved satisfactorily. Your technician was very professional and resolved the Server Rack Installation issue quickly. Appreciate the effort.
+
+John Smith | Apex Networks",False,INBOX
+MSG0231,THR1037,TWF-1037,2025-09-13 05:49:17,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,UNACCEPTABLE - 14 days and still no fix!!,"I have HAD IT with your support team. Ticket #1037 has been open for 14 days and nobody has a clue how to fix our ERP Integration Service. Every time I call I get a different story. This is completely unacceptable. SORT THIS OUT NOW.
+
+Priya Mehta",True,INBOX
+MSG0200,THR1049,TWF-1049,2025-09-13 07:07:49,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,"Re: Ticket #1049 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1049 regarding Cloud Migration Package has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Nadia Petrov",False,INBOX
+MSG0155,THR1017,TWF-1017,2025-09-16 01:29:15,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,Re: Ticket #1017 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1017. It has been 11 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Sandra Jones | Atlantic Systems",True,INBOX
+MSG0039,THR1023,TWF-1023,2025-09-24 22:54:00,Michael Brown <michael.brown@clientw.com>,Michael Brown,michael.brown@clientw.com,CoreLogic IT,This is a disaster - Ticket #1023,"Your support is an absolute disaster. 7 days, 7 engineers, and the Helpdesk Software License is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Michael Brown | CoreLogic IT",False,INBOX
+MSG0056,THR1004,TWF-1004,2025-09-25 15:19:55,Arjun Patel <arjun.patel@client1.com>,Arjun Patel,arjun.patel@client1.com,IndoSoft Technologies,Following up on Ticket #1004 - Endpoint Protection Suite,"Hi,
+
+I wanted to follow up on ticket #1004 raised 7 days ago regarding our Endpoint Protection Suite. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Arjun Patel",False,INBOX
+MSG0058,THR1030,TWF-1030,2025-09-26 04:49:03,Fatima Al-Hassan <fatima.al-hassan@clienth.com>,Fatima Al-Hassan,fatima.al-hassan@clienth.com,Meridian Group,Re: Ticket #1030 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1030. It has been 5 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Fatima Al-Hassan | Meridian Group",False,INBOX
+MSG0132,THR1044,TWF-1044,2025-09-28 01:39:46,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,New Issue: Server Rack Installation not working,"Hi TechWayFit Support,
+
+I'm reaching out regarding our recently deployed Server Rack Installation. We are experiencing issues where the system is not responding as expected. Our team noticed the problem starting 1 days ago and it is affecting our operations. Could you please raise a support ticket and assign a technician?
+
+Regards,
+Elena Sokolova
+EastWest Systems",True,INBOX
+MSG0086,THR1023,TWF-1023,2025-10-01 14:44:10,Michael Brown <michael.brown@clientw.com>,Michael Brown,michael.brown@clientw.com,CoreLogic IT,Closing Ticket #1023 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1023. The Network Infrastructure Setup is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Michael Brown | CoreLogic IT",False,INBOX
+MSG0153,THR1000,TWF-1000,2025-10-02 19:37:19,James Okoye <james.okoye@clienti.com>,James Okoye,james.okoye@clienti.com,Vertex Systems,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The Firewall & Security Suite is now working flawlessly. Looking forward to renewing our contract!
+
+James Okoye",True,INBOX
+MSG0205,THR1036,TWF-1036,2025-10-03 05:01:29,David Kim <david.kim@clienty.com>,David Kim,david.kim@clienty.com,KoreaTech Global,Urgent Escalation Required - Endpoint Protection Suite completely down,"Hello,
+
+I am escalating this issue to management. Our Endpoint Protection Suite is completely non-functional and we have been unable to operate for 7 days. Ticket #1036 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+David Kim | KoreaTech Global",False,INBOX
+MSG0071,THR1001,TWF-1001,2025-10-03 20:14:57,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,This is a disaster - Ticket #1001,"Your support is an absolute disaster. 13 days, 7 engineers, and the Firewall & Security Suite is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Priya Mehta | Infovision Systems",False,INBOX
+MSG0148,THR1046,TWF-1046,2025-10-04 10:10:27,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,DO NOT CLOSE Ticket #1046 - Issue NOT resolved!,"Someone on your team closed ticket #1046 without fixing anything!! The ERP Integration Service is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Grace Otieno",True,INBOX
+MSG0158,THR1028,TWF-1028,2025-10-04 10:11:03,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,Formal Complaint - SLA Breach on Ticket #1028,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1028. We signed up for a 4-hour response SLA and it has been 9 days without a proper resolution. We expect compensation as per our contract.
+
+Lisa Nguyen",False,INBOX
+MSG0175,THR1048,TWF-1048,2025-10-05 11:00:26,Carlos Ruiz <carlos.ruiz@clientg.com>,Carlos Ruiz,carlos.ruiz@clientg.com,PrimeTech,"Re: Ticket #1048 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1048 regarding Data Backup & Recovery System has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Carlos Ruiz",False,INBOX
+MSG0010,THR1008,TWF-1008,2025-10-08 01:43:26,David Kim <david.kim@clienty.com>,David Kim,david.kim@clienty.com,KoreaTech Global,Formal Complaint - SLA Breach on Ticket #1008,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1008. We signed up for a 4-hour response SLA and it has been 3 days without a proper resolution. We expect compensation as per our contract.
+
+David Kim",True,INBOX
+MSG0179,THR1025,TWF-1025,2025-10-08 18:34:33,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Complaint Regarding Poor Service - Ticket #1025,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1025. The issue with our Data Backup & Recovery System has been open for 5 days with no meaningful progress. We are very disappointed.
+
+Mark Wilson",False,INBOX
+MSG0138,THR1038,TWF-1038,2025-10-11 04:58:27,Yasmin Ali <yasmin.ali@clientx.com>,Yasmin Ali,yasmin.ali@clientx.com,FutureTech ME,Closing Ticket #1038 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1038. The Helpdesk Software License is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Yasmin Ali | FutureTech ME",False,INBOX
+MSG0118,THR1028,TWF-1028,2025-10-15 02:40:39,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,Closing Ticket #1028 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1028. The Endpoint Protection Suite is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Lisa Nguyen | Nexgen IT",False,INBOX
+MSG0201,THR1018,TWF-1018,2025-10-16 10:07:40,Mei Lin <mei.lin@clientj.com>,Mei Lin,mei.lin@clientj.com,AsiaCore Technologies,Excellent Service on Ticket #1018,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1018. Your engineer was knowledgeable, responsive, and resolved our Endpoint Protection Suite issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Mei Lin | AsiaCore Technologies",True,INBOX
+MSG0168,THR1046,TWF-1046,2025-10-18 20:15:36,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,DO NOT CLOSE Ticket #1046 - Issue NOT resolved!,"Someone on your team closed ticket #1046 without fixing anything!! The ERP Integration Service is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Grace Otieno",True,INBOX
+MSG0246,THR1066,TWF-1066,2025-10-23 11:25:05,David Kim <david.kim@clienty.com>,David Kim,david.kim@clienty.com,KoreaTech Global,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1066. Please investigate and issue a refund.
+
+David Kim",False,INBOX
+MSG0020,THR1016,TWF-1016,2025-10-25 02:44:59,Claire Martin <claire.martin@client2.com>,Claire Martin,claire.martin@client2.com,FranceTech Partners,Billing Query - Invoice for VPN & Remote Access Solution,"Hi TechWayFit Finance Team,
+
+I received invoice #1016 for VPN & Remote Access Solution but the amount doesn't match our purchase order. We were quoted a different price. Could you please review and send a corrected invoice?
+
+Claire Martin | FranceTech Partners",False,INBOX
+MSG0192,THR1058,TWF-1058,2025-10-28 04:13:34,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,Ticket Request: Data Backup & Recovery System performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Data Backup & Recovery System since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Sarah Thompson | CloudNova Inc",True,INBOX
+MSG0193,THR1058,TWF-1058,2025-10-30 23:48:15,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,Closing Ticket #1058 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1058. The IT Asset Management Tool is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Sarah Thompson | CloudNova Inc",False,INBOX
+MSG0059,THR1023,TWF-1023,2025-10-31 13:47:05,Michael Brown <michael.brown@clientw.com>,Michael Brown,michael.brown@clientw.com,CoreLogic IT,Ticket #1023 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1023 has been resolved satisfactorily. Your technician was very professional and resolved the Endpoint Protection Suite issue quickly. Appreciate the effort.
+
+Michael Brown | CoreLogic IT",False,INBOX
+MSG0052,THR1025,TWF-1025,2025-11-01 08:11:25,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Ticket #1025 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1025 has been resolved satisfactorily. Your technician was very professional and resolved the ERP Integration Service issue quickly. Appreciate the effort.
+
+Mark Wilson | GlobalEdge Solutions",True,INBOX
+MSG0123,THR1042,TWF-1042,2025-11-03 08:50:11,Arjun Patel <arjun.patel@client1.com>,Arjun Patel,arjun.patel@client1.com,IndoSoft Technologies,Ticket Request: IT Asset Management Tool performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our IT Asset Management Tool since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Arjun Patel | IndoSoft Technologies",False,INBOX
+MSG0051,THR1028,TWF-1028,2025-11-06 03:28:52,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,Ticket #1028 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1028 has been resolved satisfactorily. Your technician was very professional and resolved the Firewall & Security Suite issue quickly. Appreciate the effort.
+
+Lisa Nguyen | Nexgen IT",True,INBOX
+MSG0247,THR1044,TWF-1044,2025-11-07 16:17:38,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,Request to Close Ticket #1044,"Dear TechWayFit,
+
+The issue with VPN & Remote Access Solution has been sorted out. Kindly close ticket #1044 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Elena Sokolova",True,INBOX
+MSG0003,THR1002,TWF-1002,2025-11-11 07:25:16,Ravi Shankar <ravi.shankar@cliento.com>,Ravi Shankar,ravi.shankar@cliento.com,Quantum IT,Excellent Service on Ticket #1002,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1002. Your engineer was knowledgeable, responsive, and resolved our Endpoint Protection Suite issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Ravi Shankar | Quantum IT",False,INBOX
+MSG0240,THR1059,TWF-1059,2025-11-15 01:46:50,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,Complaint Regarding Poor Service - Ticket #1059,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1059. The issue with our Firewall & Security Suite has been open for 14 days with no meaningful progress. We are very disappointed.
+
+Peter Adams",False,INBOX
+MSG0159,THR1052,TWF-1052,2025-11-16 23:21:53,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,Ticket Request: Data Backup & Recovery System performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Data Backup & Recovery System since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Sarah Thompson | CloudNova Inc",False,INBOX
+MSG0036,THR1016,TWF-1016,2025-11-18 06:22:29,Claire Martin <claire.martin@client2.com>,Claire Martin,claire.martin@client2.com,FranceTech Partners,Re: Ticket #1016 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1016. It has been 10 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Claire Martin | FranceTech Partners",False,INBOX
+MSG0214,THR1059,TWF-1059,2025-11-20 03:15:28,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,Complaint Regarding Poor Service - Ticket #1059,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1059. The issue with our Firewall & Security Suite has been open for 6 days with no meaningful progress. We are very disappointed.
+
+Peter Adams",True,INBOX
+MSG0113,THR1028,TWF-1028,2025-11-25 13:33:00,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,Formal Complaint - SLA Breach on Ticket #1028,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1028. We signed up for a 4-hour response SLA and it has been 4 days without a proper resolution. We expect compensation as per our contract.
+
+Lisa Nguyen",True,INBOX
+MSG0085,THR1006,TWF-1006,2025-11-27 04:55:15,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,Excellent Service on Ticket #1006,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1006. Your engineer was knowledgeable, responsive, and resolved our Data Backup & Recovery System issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Elena Sokolova | EastWest Systems",False,INBOX
+MSG0008,THR1007,TWF-1007,2025-11-30 13:29:03,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Closing Ticket #1007 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1007. The Server Rack Installation is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Sunita Rao | BrightPath Solutions",True,INBOX
+MSG0208,THR1054,TWF-1054,2025-11-30 21:38:45,Daniel Osei <daniel.osei@clientc.com>,Daniel Osei,daniel.osei@clientc.com,TechBridge Corp,Re-opening Ticket #1054 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1054 has returned. The ERP Integration Service started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Daniel Osei",False,INBOX
+MSG0141,THR1045,TWF-1045,2025-12-02 14:35:39,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The Data Backup & Recovery System is now working flawlessly. Looking forward to renewing our contract!
+
+Nadia Petrov",False,INBOX
+MSG0031,THR1021,TWF-1021,2025-12-04 12:58:56,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Ticket Request: Server Rack Installation performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Server Rack Installation since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Rachel Green | Emerald IT Solutions",False,INBOX
+MSG0164,THR1053,TWF-1053,2025-12-04 21:43:57,Fatima Al-Hassan <fatima.al-hassan@clienth.com>,Fatima Al-Hassan,fatima.al-hassan@clienth.com,Meridian Group,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1053. Please investigate and issue a refund.
+
+Fatima Al-Hassan",True,INBOX
+MSG0087,THR1027,TWF-1027,2025-12-07 04:47:10,John Smith <john.smith@clientq.com>,John Smith,john.smith@clientq.com,Apex Networks,Following up on Ticket #1027 - Network Infrastructure Setup,"Hi,
+
+I wanted to follow up on ticket #1027 raised 2 days ago regarding our Network Infrastructure Setup. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+John Smith",True,INBOX
+MSG0140,THR1024,TWF-1024,2025-12-11 18:43:46,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Complaint Regarding Poor Service - Ticket #1024,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1024. The issue with our Cloud Migration Package has been open for 6 days with no meaningful progress. We are very disappointed.
+
+Grace Otieno",True,INBOX
+MSG0112,THR1025,TWF-1025,2025-12-13 12:52:00,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Re-opening Ticket #1025 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1025 has returned. The Cloud Migration Package started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Mark Wilson",True,INBOX
+MSG0064,THR1004,TWF-1004,2025-12-20 07:02:05,Arjun Patel <arjun.patel@client1.com>,Arjun Patel,arjun.patel@client1.com,IndoSoft Technologies,Closing Ticket #1004 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1004. The IT Asset Management Tool is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Arjun Patel | IndoSoft Technologies",False,INBOX
+MSG0178,THR1056,TWF-1056,2025-12-23 01:45:15,Fatima Al-Hassan <fatima.al-hassan@clienth.com>,Fatima Al-Hassan,fatima.al-hassan@clienth.com,Meridian Group,Ticket Request: Helpdesk Software License performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Helpdesk Software License since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Fatima Al-Hassan | Meridian Group",True,INBOX
+MSG0245,THR1057,TWF-1057,2025-12-23 17:06:04,Ravi Shankar <ravi.shankar@cliento.com>,Ravi Shankar,ravi.shankar@cliento.com,Quantum IT,"Re: Ticket #1057 - Issue Resolved, Thank You","Hi TechWayFit Team,
+
+I'm happy to confirm that the issue reported in ticket #1057 regarding Data Backup & Recovery System has been resolved by your engineer. The fix worked perfectly and our systems are back to normal. Thank you for your support.
+
+Regards,
+Ravi Shankar",False,INBOX
+MSG0094,THR1034,TWF-1034,2025-12-24 04:37:21,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Excellent Service on Ticket #1034,"Hi,
+
+I wanted to take a moment to appreciate the exceptional support received on ticket #1034. Your engineer was knowledgeable, responsive, and resolved our Endpoint Protection Suite issue within hours. TechWayFit continues to be our preferred IT partner. 5 stars!
+
+Tom Harris | BlueStar IT",True,INBOX
+MSG0154,THR1033,TWF-1033,2025-12-24 09:32:04,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,Re: Ticket #1033 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1033. It has been 3 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Sarah Thompson | CloudNova Inc",True,INBOX
+MSG0007,THR1006,TWF-1006,2025-12-24 23:09:25,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,Urgent Escalation Required - Firewall & Security Suite completely down,"Hello,
+
+I am escalating this issue to management. Our Firewall & Security Suite is completely non-functional and we have been unable to operate for 13 days. Ticket #1006 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Elena Sokolova | EastWest Systems",True,INBOX
+MSG0011,THR1006,TWF-1006,2025-12-25 12:09:06,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,Request to Close Ticket #1006,"Dear TechWayFit,
+
+The issue with Firewall & Security Suite has been sorted out. Kindly close ticket #1006 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Elena Sokolova",True,INBOX
+MSG0191,THR1037,TWF-1037,2025-12-25 23:40:28,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,Following up on Ticket #1037 - Firewall & Security Suite,"Hi,
+
+I wanted to follow up on ticket #1037 raised 13 days ago regarding our Firewall & Security Suite. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Priya Mehta",True,INBOX
+MSG0194,THR1046,TWF-1046,2025-12-28 16:45:09,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Closing Ticket #1046 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1046. The Firewall & Security Suite is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Grace Otieno | AfriTech Solutions",False,INBOX
+MSG0016,THR1013,TWF-1013,2025-12-31 14:36:03,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Closing Ticket #1013 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1013. The Network Infrastructure Setup is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Grace Otieno | AfriTech Solutions",True,INBOX
+MSG0103,THR1026,TWF-1026,2026-01-03 01:55:37,Ananya Iyer <ananya.iyer@clientl.com>,Ananya Iyer,ananya.iyer@clientl.com,Pinnacle Infotech,DO NOT CLOSE Ticket #1026 - Issue NOT resolved!,"Someone on your team closed ticket #1026 without fixing anything!! The Endpoint Protection Suite is STILL not working. I am furious. Who authorized the closure? This is extremely unprofessional. Reopen it IMMEDIATELY and send a senior engineer.
+
+Ananya Iyer",True,INBOX
+MSG0142,THR1045,TWF-1045,2026-01-06 20:48:11,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Urgent Escalation Required - Network Infrastructure Setup completely down,"Hello,
+
+I am escalating this issue to management. Our Network Infrastructure Setup is completely non-functional and we have been unable to operate for 12 days. Ticket #1045 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Nadia Petrov | Eurolink Systems",True,INBOX
+MSG0216,THR1010,TWF-1010,2026-01-11 22:10:58,Amit Verma <amit.verma@cliente.com>,Amit Verma,amit.verma@cliente.com,DataSync Solutions,REOPEN - Ticket #1010 - Problem persists,"The fix applied to ticket #1010 was only a temporary workaround. The root cause was not addressed and the Network Infrastructure Setup is failing again. Please reopen and escalate to L2 support.
+
+Amit Verma | DataSync Solutions",False,INBOX
+MSG0162,THR1030,TWF-1030,2026-01-13 01:40:48,Fatima Al-Hassan <fatima.al-hassan@clienth.com>,Fatima Al-Hassan,fatima.al-hassan@clienth.com,Meridian Group,Ticket #1030 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1030 has been resolved satisfactorily. Your technician was very professional and resolved the Endpoint Protection Suite issue quickly. Appreciate the effort.
+
+Fatima Al-Hassan | Meridian Group",False,INBOX
+MSG0076,THR1006,TWF-1006,2026-01-14 20:38:14,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,Request to Close Ticket #1006,"Dear TechWayFit,
+
+The issue with Endpoint Protection Suite has been sorted out. Kindly close ticket #1006 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Elena Sokolova",False,INBOX
+MSG0004,THR1003,TWF-1003,2026-01-15 01:17:57,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,Re: Ticket #1003 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1003. It has been 9 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Peter Adams | Northgate IT",True,INBOX
+MSG0095,THR1009,TWF-1009,2026-01-17 09:16:07,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Following up on Ticket #1009 - VPN & Remote Access Solution,"Hi,
+
+I wanted to follow up on ticket #1009 raised 6 days ago regarding our VPN & Remote Access Solution. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Nadia Petrov",True,INBOX
+MSG0149,THR1048,TWF-1048,2026-01-17 12:05:15,Carlos Ruiz <carlos.ruiz@clientg.com>,Carlos Ruiz,carlos.ruiz@clientg.com,PrimeTech,Support Required - ERP Integration Service installation failure,"Hello,
+
+We recently purchased the ERP Integration Service from TechWayFit and during installation encountered errors. The setup wizard crashes at step 3 and we cannot proceed further. Please log this as a ticket urgently.
+
+Thanks,
+Carlos Ruiz",False,INBOX
+MSG0197,THR1059,TWF-1059,2026-01-19 10:35:42,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,Billing Query - Invoice for Network Infrastructure Setup,"Hi TechWayFit Finance Team,
+
+I received invoice #1059 for Network Infrastructure Setup but the amount doesn't match our purchase order. We were quoted a different price. Could you please review and send a corrected invoice?
+
+Peter Adams | Northgate IT",False,INBOX
+MSG0083,THR1018,TWF-1018,2026-01-20 01:23:01,Mei Lin <mei.lin@clientj.com>,Mei Lin,mei.lin@clientj.com,AsiaCore Technologies,Complaint Regarding Poor Service - Ticket #1018,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1018. The issue with our Cloud Migration Package has been open for 6 days with no meaningful progress. We are very disappointed.
+
+Mei Lin",True,INBOX
+MSG0139,THR1025,TWF-1025,2026-01-20 02:37:04,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Re-opening Ticket #1025 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1025 has returned. The ERP Integration Service started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Mark Wilson",True,INBOX
+MSG0068,THR1017,TWF-1017,2026-01-20 16:30:25,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,Request to Close Ticket #1017,"Dear TechWayFit,
+
+The issue with Data Backup & Recovery System has been sorted out. Kindly close ticket #1017 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Sandra Jones",True,INBOX
+MSG0075,THR1034,TWF-1034,2026-01-21 06:51:24,Tom Harris <tom.harris@clientk.com>,Tom Harris,tom.harris@clientk.com,BlueStar IT,Billing Query - Invoice for VPN & Remote Access Solution,"Hi TechWayFit Finance Team,
+
+I received invoice #1034 for VPN & Remote Access Solution but the amount doesn't match our purchase order. We were quoted a different price. Could you please review and send a corrected invoice?
+
+Tom Harris | BlueStar IT",False,INBOX
+MSG0239,THR1044,TWF-1044,2026-01-21 09:09:37,Elena Sokolova <elena.sokolova@clientt.com>,Elena Sokolova,elena.sokolova@clientt.com,EastWest Systems,Urgent Escalation Required - ERP Integration Service completely down,"Hello,
+
+I am escalating this issue to management. Our ERP Integration Service is completely non-functional and we have been unable to operate for 14 days. Ticket #1044 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Elena Sokolova | EastWest Systems",False,INBOX
+MSG0188,THR1052,TWF-1052,2026-01-22 02:35:11,Sarah Thompson <sarah.thompson@clientd.com>,Sarah Thompson,sarah.thompson@clientd.com,CloudNova Inc,Closing Ticket #1052 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1052. The Helpdesk Software License is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Sarah Thompson | CloudNova Inc",False,INBOX
+MSG0053,THR1028,TWF-1028,2026-01-26 22:26:19,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,This is a disaster - Ticket #1028,"Your support is an absolute disaster. 13 days, 7 engineers, and the IT Asset Management Tool is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Lisa Nguyen | Nexgen IT",True,INBOX
+MSG0124,THR1039,TWF-1039,2026-01-28 09:57:47,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,UNACCEPTABLE - 11 days and still no fix!!,"I have HAD IT with your support team. Ticket #1039 has been open for 11 days and nobody has a clue how to fix our VPN & Remote Access Solution. Every time I call I get a different story. This is completely unacceptable. SORT THIS OUT NOW.
+
+Diana Chen",False,INBOX
+MSG0186,THR1039,TWF-1039,2026-02-04 20:24:00,Diana Chen <diana.chen@clientr.com>,Diana Chen,diana.chen@clientr.com,Pacific IT Services,Closing Ticket #1039 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1039. The Helpdesk Software License is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Diana Chen | Pacific IT Services",True,INBOX
+MSG0224,THR1018,TWF-1018,2026-02-05 00:16:32,Mei Lin <mei.lin@clientj.com>,Mei Lin,mei.lin@clientj.com,AsiaCore Technologies,REOPEN - Ticket #1018 - Problem persists,"The fix applied to ticket #1018 was only a temporary workaround. The root cause was not addressed and the ERP Integration Service is failing again. Please reopen and escalate to L2 support.
+
+Mei Lin | AsiaCore Technologies",True,INBOX
+MSG0045,THR1024,TWF-1024,2026-02-07 14:12:08,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,This is a disaster - Ticket #1024,"Your support is an absolute disaster. 4 days, 7 engineers, and the Cloud Migration Package is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Grace Otieno | AfriTech Solutions",True,INBOX
+MSG0030,THR1020,TWF-1020,2026-02-08 06:50:41,Daniel Osei <daniel.osei@clientc.com>,Daniel Osei,daniel.osei@clientc.com,TechBridge Corp,Overcharge on Annual Support Contract,"Dear Billing Department,
+
+We noticed we've been charged twice for our support renewal this quarter. The duplicate charge appears as reference #1020. Please investigate and issue a refund.
+
+Daniel Osei",False,INBOX
+MSG0152,THR1050,TWF-1050,2026-02-10 23:56:08,Yasmin Ali <yasmin.ali@clientx.com>,Yasmin Ali,yasmin.ali@clientx.com,FutureTech ME,New Issue: Data Backup & Recovery System not working,"Hi TechWayFit Support,
+
+I'm reaching out regarding our recently deployed Data Backup & Recovery System. We are experiencing issues where the system is not responding as expected. Our team noticed the problem starting 6 days ago and it is affecting our operations. Could you please raise a support ticket and assign a technician?
+
+Regards,
+Yasmin Ali
+FutureTech ME",False,INBOX
+MSG0054,THR1017,TWF-1017,2026-02-14 13:14:52,Sandra Jones <sandra.jones@clientz.com>,Sandra Jones,sandra.jones@clientz.com,Atlantic Systems,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The VPN & Remote Access Solution is now working flawlessly. Looking forward to renewing our contract!
+
+Sandra Jones",True,INBOX
+MSG0057,THR1003,TWF-1003,2026-02-14 22:57:12,Peter Adams <peter.adams@clientu.com>,Peter Adams,peter.adams@clientu.com,Northgate IT,Request to Close Ticket #1003,"Dear TechWayFit,
+
+The issue with Firewall & Security Suite has been sorted out. Kindly close ticket #1003 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Peter Adams",True,INBOX
+MSG0196,THR1043,TWF-1043,2026-02-17 16:21:56,Sunita Rao <sunita.rao@clientv.com>,Sunita Rao,sunita.rao@clientv.com,BrightPath Solutions,Following up on Ticket #1043 - Cloud Migration Package,"Hi,
+
+I wanted to follow up on ticket #1043 raised 6 days ago regarding our Cloud Migration Package. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Sunita Rao",True,INBOX
+MSG0049,THR1019,TWF-1019,2026-02-19 14:45:44,Carlos Ruiz <carlos.ruiz@clientg.com>,Carlos Ruiz,carlos.ruiz@clientg.com,PrimeTech,Following up on Ticket #1019 - Firewall & Security Suite,"Hi,
+
+I wanted to follow up on ticket #1019 raised 7 days ago regarding our Firewall & Security Suite. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Carlos Ruiz",False,INBOX
+MSG0199,THR1060,TWF-1060,2026-02-20 02:06:23,Claire Martin <claire.martin@client2.com>,Claire Martin,claire.martin@client2.com,FranceTech Partners,Support Required - Firewall & Security Suite installation failure,"Hello,
+
+We recently purchased the Firewall & Security Suite from TechWayFit and during installation encountered errors. The setup wizard crashes at step 3 and we cannot proceed further. Please log this as a ticket urgently.
+
+Thanks,
+Claire Martin",False,INBOX
+MSG0114,THR1009,TWF-1009,2026-02-20 10:07:30,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Closing Ticket #1009 - All good,"Hi Support,
+
+Everything is working fine now. Please go ahead and close ticket #1009. The ERP Integration Service is running smoothly and our team is happy. Thanks for your patience and support throughout.
+
+Nadia Petrov | Eurolink Systems",False,INBOX
+MSG0017,THR1010,TWF-1010,2026-02-22 05:39:10,Amit Verma <amit.verma@cliente.com>,Amit Verma,amit.verma@cliente.com,DataSync Solutions,Following up on Ticket #1010 - Network Infrastructure Setup,"Hi,
+
+I wanted to follow up on ticket #1010 raised 14 days ago regarding our Network Infrastructure Setup. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Amit Verma",False,INBOX
+MSG0072,THR1028,TWF-1028,2026-02-24 14:42:30,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,Request to Close Ticket #1028,"Dear TechWayFit,
+
+The issue with Server Rack Installation has been sorted out. Kindly close ticket #1028 from your end. Please send the closure report to our IT manager.
+
+Regards,
+Lisa Nguyen",False,INBOX
+MSG0108,THR1035,TWF-1035,2026-02-25 10:05:41,Felix Mueller <felix.mueller@client3.com>,Felix Mueller,felix.mueller@client3.com,German IT Group,Following up on Ticket #1035 - Network Infrastructure Setup,"Hi,
+
+I wanted to follow up on ticket #1035 raised 2 days ago regarding our Network Infrastructure Setup. We haven't received any update yet and the issue is still unresolved. Could you please provide a status update?
+
+Thank you,
+Felix Mueller",True,INBOX
+MSG0198,THR1046,TWF-1046,2026-02-26 00:44:40,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Re-opening Ticket #1046 - Issue has returned,"Hi Support,
+
+Unfortunately the issue we thought was resolved in ticket #1046 has returned. The Endpoint Protection Suite started showing the same errors again this morning. We need to reopen and have a senior engineer look at it.
+
+Grace Otieno",False,INBOX
+MSG0021,THR1009,TWF-1009,2026-02-28 11:09:31,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,REOPEN - Ticket #1009 - Problem persists,"The fix applied to ticket #1009 was only a temporary workaround. The root cause was not addressed and the Server Rack Installation is failing again. Please reopen and escalate to L2 support.
+
+Nadia Petrov | Eurolink Systems",True,INBOX
+MSG0122,THR1000,TWF-1000,2026-03-01 11:50:18,James Okoye <james.okoye@clienti.com>,James Okoye,james.okoye@clienti.com,Vertex Systems,Request to Close Ticket #1000,"Dear TechWayFit,
+
+The issue with ERP Integration Service has been sorted out. Kindly close ticket #1000 from your end. Please send the closure report to our IT manager.
+
+Regards,
+James Okoye",True,INBOX
+MSG0134,THR1045,TWF-1045,2026-03-03 20:55:28,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,New Issue: Server Rack Installation not working,"Hi TechWayFit Support,
+
+I'm reaching out regarding our recently deployed Server Rack Installation. We are experiencing issues where the system is not responding as expected. Our team noticed the problem starting 2 days ago and it is affecting our operations. Could you please raise a support ticket and assign a technician?
+
+Regards,
+Nadia Petrov
+Eurolink Systems",False,INBOX
+MSG0160,THR1023,TWF-1023,2026-03-04 16:45:15,Michael Brown <michael.brown@clientw.com>,Michael Brown,michael.brown@clientw.com,CoreLogic IT,This is a disaster - Ticket #1023,"Your support is an absolute disaster. 13 days, 7 engineers, and the IT Asset Management Tool is STILL broken. My team cannot work. We are losing thousands per day because of TechWayFit's incompetence. If not resolved by tomorrow I am contacting my legal team.
+
+Michael Brown | CoreLogic IT",True,INBOX
+MSG0249,THR1067,TWF-1067,2026-03-05 02:23:59,Rachel Green <rachel.green@client4.com>,Rachel Green,rachel.green@client4.com,Emerald IT Solutions,Ticket Request: Endpoint Protection Suite performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Endpoint Protection Suite since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Rachel Green | Emerald IT Solutions",False,INBOX
+MSG0060,THR1010,TWF-1010,2026-03-07 17:14:11,Amit Verma <amit.verma@cliente.com>,Amit Verma,amit.verma@cliente.com,DataSync Solutions,Urgent Escalation Required - Firewall & Security Suite completely down,"Hello,
+
+I am escalating this issue to management. Our Firewall & Security Suite is completely non-functional and we have been unable to operate for 3 days. Ticket #1010 was raised but no resolution has come through. We need this treated as a P1 incident immediately.
+
+Amit Verma | DataSync Solutions",False,INBOX
+MSG0187,THR1025,TWF-1025,2026-03-10 09:02:01,Mark Wilson <mark.wilson@clientm.com>,Mark Wilson,mark.wilson@clientm.com,GlobalEdge Solutions,Re: Ticket #1025 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1025. It has been 13 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Mark Wilson | GlobalEdge Solutions",False,INBOX
+MSG0077,THR1009,TWF-1009,2026-03-12 15:27:34,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Formal Complaint - SLA Breach on Ticket #1009,"To TechWayFit Support Management,
+
+Your team has breached the agreed SLA on ticket #1009. We signed up for a 4-hour response SLA and it has been 13 days without a proper resolution. We expect compensation as per our contract.
+
+Nadia Petrov",False,INBOX
+MSG0121,THR1009,TWF-1009,2026-03-15 13:19:09,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Ticket #1009 - Resolution Confirmed,"Hello,
+
+This is to confirm that ticket #1009 has been resolved satisfactorily. Your technician was very professional and resolved the Data Backup & Recovery System issue quickly. Appreciate the effort.
+
+Nadia Petrov | Eurolink Systems",True,INBOX
+MSG0180,THR1057,TWF-1057,2026-03-15 20:41:11,Ravi Shankar <ravi.shankar@cliento.com>,Ravi Shankar,ravi.shankar@cliento.com,Quantum IT,Ticket Request: Data Backup & Recovery System performance issue,"Dear Support Team,
+
+We have noticed significant performance degradation in our Data Backup & Recovery System since last week. Response times have increased by over 60%. Please open a ticket and advise next steps.
+
+Ravi Shankar | Quantum IT",False,INBOX
+MSG0238,THR1046,TWF-1046,2026-03-17 11:01:48,Grace Otieno <grace.otieno@clientp.com>,Grace Otieno,grace.otieno@clientp.com,AfriTech Solutions,Positive Feedback - Great experience with TechWayFit,"Dear TechWayFit Team,
+
+We are very pleased with the service received during our recent support engagement. The Server Rack Installation is now working flawlessly. Looking forward to renewing our contract!
+
+Grace Otieno",True,INBOX
+MSG0130,THR1028,TWF-1028,2026-03-20 04:22:52,Lisa Nguyen <lisa.nguyen@clientf.com>,Lisa Nguyen,lisa.nguyen@clientf.com,Nexgen IT,Re: Ticket #1028 - Still awaiting response,"Hello TechWayFit Team,
+
+This is a gentle reminder regarding ticket #1028. It has been 13 business days and we are yet to hear back from your team. Our operations are partially impacted. Please prioritize this.
+
+Best,
+Lisa Nguyen | Nexgen IT",False,INBOX
+MSG0133,THR1009,TWF-1009,2026-03-23 05:44:48,Nadia Petrov <nadia.petrov@clientn.com>,Nadia Petrov,nadia.petrov@clientn.com,Eurolink Systems,Complaint Regarding Poor Service - Ticket #1009,"Dear TechWayFit,
+
+I am writing to formally complain about the handling of ticket #1009. The issue with our Network Infrastructure Setup has been open for 11 days with no meaningful progress. We are very disappointed.
+
+Nadia Petrov",False,INBOX
+MSG0230,THR1037,TWF-1037,2026-03-23 15:52:56,Priya Mehta <priya.mehta@clientb.com>,Priya Mehta,priya.mehta@clientb.com,Infovision Systems,ESCALATION - Ticket #1037 unresolved for 4 days,"Dear TechWayFit Management,
+
+I am escalating ticket #1037 related to our Helpdesk Software License. Despite multiple follow-ups, this has remained unresolved for 4 days. This is severely impacting our business operations and we request immediate senior-level intervention.
+
+Priya Mehta
+Infovision Systems",True,INBOX

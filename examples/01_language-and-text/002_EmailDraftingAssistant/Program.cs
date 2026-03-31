@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Required so the Action<string> OnChunk callback from LlmNode can write
+// synchronously to the SSE response body on the Kestrel thread.
+builder.WebHost.ConfigureKestrel(k => k.AllowSynchronousIO = true);
+
 // Add appsettings.local.json to configuration (loaded last to override other settings)
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
