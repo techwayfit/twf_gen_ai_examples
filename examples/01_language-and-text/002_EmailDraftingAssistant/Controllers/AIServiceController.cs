@@ -28,70 +28,6 @@ public class AIServiceController : ControllerBase
     }
 
     /// <summary>
-    /// Generates a draft email based on the provided request details.
-    /// </summary>
-    [HttpPost("draft")]
-    public async Task<IActionResult> DraftEmail([FromBody] EmailDraftRequest request)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.Context))
-            {
-                return BadRequest(new { error = Constants.Messages.EmptyPrompt });
-            }
-
-            var apiKey = _configuration["OpenAI:ApiKey"];
-            if (string.IsNullOrEmpty(apiKey) || apiKey == "your-openai-api-key-here")
-            {
-                return StatusCode(500, new { error = Constants.Messages.OpenApiKeyNotConfigured });
-            }
-
-            // Build the prompt
-            var prompt = Constants.Prompts.EmailDraftPrompt
-                .Replace("{{context}}", request.Context)
-                .Replace("{{tone}}", request.Tone ?? "professional")
-                .Replace("{{recipient}}", request.Recipient ?? "the recipient");
-
-            // Call OpenAI API
-            using var http = new HttpClient();
-            http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-
-            var body = new
-            {
-                model = _configuration["OpenAI:Model"] ?? "gpt-4o-mini",
-                messages = new[]
-                {
-                    new { role = "system", content = Constants.Prompts.EmailDraftSystemPrompt },
-                    new { role = "user", content = prompt }
-                },
-                max_tokens = 1024,
-                temperature = 0.7
-            };
-
-            var response = await http.PostAsJsonAsync(
-                _configuration["OpenAI:Endpoint"] ?? "https://api.openai.com/v1/chat/completions", body);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("OpenAI API error: {StatusCode} {Error}", response.StatusCode, errorContent);
-                return StatusCode(500, new { error = Constants.Messages.FailedToProcessRequest });
-            }
-
-            var result = await response.Content.ReadFromJsonAsync<OpenAIResponse>();
-            var draft = result?.Choices?.FirstOrDefault()?.Message?.Content
-                        ?? Constants.Messages.RequestCouldNotProcessed;
-
-            return Ok(new EmailDraftResponse { Draft = draft, Timestamp = DateTime.UtcNow });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating email draft");
-            return StatusCode(500, new { error = "An unexpected error occurred." });
-        }
-    }
-
-    /// <summary>
     /// Streams a reply draft using a multi-node TwfAiFramework workflow:
     ///   1. Validate input
     ///   2. Load email data, thread history, and sender history
@@ -154,7 +90,10 @@ public class AIServiceController : ControllerBase
     {
         var model    = _configuration["OpenAI:Model"]    ?? LlmConfig.OpenAI(apiKey).Model;
         var endpoint = _configuration["OpenAI:Endpoint"] ?? LlmConfig.OpenAI(apiKey).ApiEndpoint;
-        return LlmConfig.LmServer(model: model, apiKey: apiKey, apiEndpoint: endpoint);
+        return LlmConfig.LmServer(
+            model: model, 
+            apiKey: apiKey, 
+            apiEndpoint: endpoint);
     }
 
     private Workflow BuildReplyWorkflow(LlmConfig llmConfig, Action<string> onChunk)
@@ -324,40 +263,10 @@ public class AIServiceController : ControllerBase
 
 // ── Request / Response models ─────────────────────────────────────────────────
 
-public class EmailDraftRequest
-{
-    public string Context { get; set; } = string.Empty;
-    public string? Recipient { get; set; }
-    public string? Tone { get; set; }
-}
-
-public class EmailDraftResponse
-{
-    public string Draft { get; set; } = string.Empty;
-    public DateTime Timestamp { get; set; }
-}
-
 public class DraftReplyRequest
 {
     public string MessageId { get; set; } = string.Empty;
     public string Tone      { get; set; } = "professional";
-}
-
-// ── Minimal OpenAI response shapes ───────────────────────────────────────────
-
-public class OpenAIResponse
-{
-    public List<Choice>? Choices { get; set; }
-}
-
-public class Choice
-{
-    public MessageContent? Message { get; set; }
-}
-
-public class MessageContent
-{
-    public string? Content { get; set; }
 }
 
 
