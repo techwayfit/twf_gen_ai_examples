@@ -9,9 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="twf_ai_framework">
-      <HintPath>$(MSBuildThisFileDirectory)..\..\..\library\twf_ai_framework.dll</HintPath>
-    </Reference>
+    <PackageReference Include="TwfAiFramework" Version="1.0.1" />
   </ItemGroup>
 
 </Project>
