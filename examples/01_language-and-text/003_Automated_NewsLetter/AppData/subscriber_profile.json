@@ -1,0 +1,10 @@
+{
+  "displayName": "Manas",
+  "interestWeights": {
+    "artificial intelligence": 5,
+    "iran war": 5
+  },
+  "minRelevanceScore": 2,
+  "preferredSectionCount": 5,
+  "tone": "analytical"
+}

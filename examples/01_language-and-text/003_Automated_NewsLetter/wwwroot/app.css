@@ -1,0 +1,164 @@
+/* TechWayFit Newsletter — app.css */
+
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.sidebar {
+    background-color: #1b2a4a;
+}
+
+h1:focus {
+    outline: none;
+}
+
+a, .btn-link {
+    color: #0071c1;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.content {
+    padding-top: 1.1rem;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid #e50000;
+}
+
+.validation-message {
+    color: #e50000;
+}
+
+/* Newsletter rendered preview */
+.newsletter-rendered {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #212529;
+}
+
+.newsletter-rendered h1,
+.newsletter-rendered h2,
+.newsletter-rendered h3 {
+    margin-top: 1.5rem;
+    color: #1b2a4a;
+}
+
+.newsletter-rendered h2 {
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.4rem;
+}
+
+.newsletter-rendered ul {
+    padding-left: 1.5rem;
+}
+
+.newsletter-rendered a {
+    color: #0071c1;
+    word-break: break-all;
+}
+
+/* Raw markdown display */
+.newsletter-raw {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.875rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Interest weight sliders */
+.interest-row input[type=range] {
+    accent-color: #1b6ec2;
+}
+
+/* ── Pipeline log panel ──────────────────────────────────────────────────── */
+
+.log-panel {
+    font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+}
+
+.log-entry {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.1rem 0.75rem;
+    border-left: 3px solid transparent;
+}
+
+.log-entry:hover {
+    background-color: rgba(255,255,255,0.04);
+}
+
+.log-entry--warning  { border-left-color: #d29922; }
+.log-entry--error,
+.log-entry--critical { border-left-color: #f85149; background-color: rgba(248,81,73,0.06); }
+
+.log-time {
+    color: #6e7681;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.log-level {
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 3rem;
+}
+
+.log-level--information { color: #58a6ff; }
+.log-level--warning     { color: #d29922; }
+.log-level--error,
+.log-level--critical    { color: #f85149; }
+.log-level--debug       { color: #8b949e; }
+
+.log-category {
+    color: #8b949e;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.log-message {
+    color: #c9d1d9;
+    word-break: break-word;
+}
+
+/* Blazor error UI */
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

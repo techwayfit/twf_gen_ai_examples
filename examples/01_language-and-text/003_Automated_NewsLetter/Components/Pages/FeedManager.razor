@@ -1,0 +1,227 @@
+@page "/feeds"
+@rendermode InteractiveServer
+@inject HttpClient Http
+
+<PageTitle>Feed Manager — TechWayFit</PageTitle>
+
+<div class="container-fluid mt-3">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h3><i class="bi bi-rss-fill me-2"></i>Feed Manager</h3>
+            <p class="text-muted">Add, remove, and test RSS/Atom feed URLs. Changes are persisted and used on the next newsletter generation.</p>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading…</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Add new feed -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Add Feed</h5>
+            </div>
+            <div class="card-body">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                    <input type="url" class="form-control" placeholder="https://example.com/feed/rss"
+                           @bind="_newFeedUrl" @onkeyup="HandleEnter" />
+                    <button class="btn btn-info text-white" @onclick="AddFeed" disabled="@string.IsNullOrWhiteSpace(_newFeedUrl)">
+                        <i class="bi bi-plus-lg me-1"></i> Add
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feed list -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Configured Feeds (@_feeds.Count)</h5>
+                <button class="btn btn-sm btn-light" @onclick="SaveFeeds" disabled="@_saving">
+                    @if (_saving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    <i class="bi bi-save me-1"></i> Save
+                </button>
+            </div>
+            <div class="card-body p-0">
+                @if (_feeds.Count == 0)
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-rss display-4 d-block mb-2 opacity-25"></i>
+                        No feeds configured. Add one above.
+                    </div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var feed in _feeds.ToList())
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="text-break me-3">
+                                    <i class="bi bi-rss text-warning me-2"></i>@feed
+                                </span>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            @onclick="() => TestFeed(feed)"
+                                            disabled="@(_testingFeed == feed)">
+                                        @if (_testingFeed == feed)
+                                        {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-play-circle"></i>
+                                        }
+                                        <span class="ms-1">Test</span>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveFeed(feed)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+
+        <!-- Test results -->
+        @if (_testResults.Count > 0)
+        {
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Test Results</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var (url, result) in _testResults)
+                        {
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <small class="text-muted text-break me-2">@url</small>
+                                    <span class="badge @(result.StartsWith("✓") ? "bg-success" : "bg-danger") flex-shrink-0">
+                                        @result
+                                    </span>
+                                </div>
+                                @if (_testTitles.TryGetValue(url, out var titles) && titles.Count > 0)
+                                {
+                                    <ol class="mb-0 ps-3">
+                                        @foreach (var title in titles)
+                                        {
+                                            <li><small>@title</small></li>
+                                        }
+                                    </ol>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        @if (_saveSuccess)
+        {
+            <div class="alert alert-success mt-3" role="alert">
+                <i class="bi bi-check-circle me-2"></i>Feeds saved successfully!
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<string>                         _feeds       = new();
+    private Dictionary<string, string>           _testResults = new();
+    private Dictionary<string, List<string>>     _testTitles  = new();
+    private string  _newFeedUrl  = string.Empty;
+    private string? _testingFeed = null;
+    private bool    _loading     = true;
+    private bool    _saving      = false;
+    private bool    _saveSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var feeds = await Http.GetFromJsonAsync<List<string>>("/api/Newsletter/feeds");
+        _feeds   = feeds ?? new List<string>();
+        _loading = false;
+    }
+
+    private void AddFeed()
+    {
+        var url = _newFeedUrl.Trim();
+        if (string.IsNullOrWhiteSpace(url)) return;
+        if (!_feeds.Contains(url))
+            _feeds.Add(url);
+        _newFeedUrl = string.Empty;
+    }
+
+    private void RemoveFeed(string url)
+    {
+        _feeds.Remove(url);
+        _testResults.Remove(url);
+        _testTitles.Remove(url);
+    }
+
+    private async Task TestFeed(string url)
+    {
+        _testingFeed = url;
+        StateHasChanged();
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/Newsletter/test-feed", new { url });
+            if (response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadFromJsonAsync<TestFeedResponse>();
+                _testResults[url] = body is not null
+                    ? $"✓ {body.ArticleCount} articles"
+                    : "✓ OK";
+                _testTitles[url] = body?.Titles ?? new List<string>();
+            }
+            else
+            {
+                _testResults[url] = $"✗ HTTP {(int)response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _testResults[url] = $"✗ {ex.Message[..Math.Min(40, ex.Message.Length)]}";
+        }
+        finally
+        {
+            _testingFeed = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveFeeds()
+    {
+        _saving      = true;
+        _saveSuccess = false;
+        StateHasChanged();
+
+        var response = await Http.PostAsJsonAsync("/api/Newsletter/feeds", _feeds);
+        _saving = false;
+        if (response.IsSuccessStatusCode)
+        {
+            _saveSuccess = true;
+            await Task.Delay(2000);
+            _saveSuccess = false;
+        }
+        StateHasChanged();
+    }
+
+    private void HandleEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") AddFeed();
+    }
+
+    private record TestFeedResponse(int ArticleCount, List<string> Titles);
+}

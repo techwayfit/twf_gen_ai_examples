@@ -1,0 +1,294 @@
+@page "/newsletter"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+@inject HttpClient Http
+@inject WebLoggerService WebLogger
+@implements IDisposable
+
+<PageTitle>Newsletter — TechWayFit</PageTitle>
+
+<div class="container-fluid mt-3">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h3><i class="bi bi-newspaper me-2"></i>Newsletter Generator</h3>
+            <p class="text-muted">Generate your personalised weekly newsletter. The pipeline fetches RSS feeds, filters articles by your interests, and streams your digest below.</p>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" @onclick="GenerateNewsletter" disabled="@_isGenerating">
+                    @if (_isGenerating)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        <span>Generating…</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-play-fill me-1"></i>
+                        <span>Generate Now</span>
+                    }
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(_markdownContent))
+                {
+                    <button class="btn btn-outline-secondary" @onclick="CopyMarkdown">
+                        <i class="bi bi-clipboard me-1"></i> Copy Markdown
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="ToggleView">
+                        <i class="bi @(_showRendered ? "bi-code" : "bi-eye") me-1"></i>
+                        @(_showRendered ? "Raw" : "Preview")
+                    </button>
+                }
+            </div>
+        </div>
+        @if (_copySuccess)
+        {
+            <div class="col-md-6 d-flex align-items-center">
+                <span class="text-success"><i class="bi bi-check-circle me-1"></i>Copied to clipboard!</span>
+            </div>
+        }
+    </div>
+
+    <!-- Status / error banner -->
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@_errorMessage
+            <button type="button" class="btn-close" @onclick="() => _errorMessage = string.Empty"></button>
+        </div>
+    }
+
+    <!-- Pipeline Log -->
+    @if (_logEntries.Count > 0 || _isGenerating)
+    {
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <span>
+                    <i class="bi bi-terminal me-2"></i>Pipeline Log
+                    <span class="badge bg-secondary ms-2">@_logEntries.Count</span>
+                </span>
+                <div class="d-flex gap-2 align-items-center">
+                    @if (_isGenerating)
+                    {
+                        <span class="badge bg-warning text-dark">
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>Running…
+                        </span>
+                    }
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="ClearLogs" title="Clear log">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="log-panel" class="log-panel">
+                    @foreach (var entry in _logEntries)
+                    {
+                        <div class="log-entry log-entry--@entry.Level.ToString().ToLowerInvariant()">
+                            <span class="log-time">@entry.Timestamp.ToString("HH:mm:ss")</span>
+                            <span class="log-level log-level--@entry.Level.ToString().ToLowerInvariant()">@entry.Level.ToString()[..4].ToUpper()</span>
+                            <span class="log-category">[@entry.Category]</span>
+                            <span class="log-message">@entry.Message</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Newsletter preview -->
+    @if (!string.IsNullOrWhiteSpace(_markdownContent) || _isGenerating)
+    {
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-text me-2"></i>Newsletter Preview</span>
+                @if (_isGenerating)
+                {
+                    <span class="badge bg-warning text-dark">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>Streaming…
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-success">Complete</span>
+                }
+            </div>
+            <div class="card-body p-3">
+                @if (_showRendered)
+                {
+                    <div id="newsletter-rendered" class="newsletter-rendered"></div>
+                }
+                else
+                {
+                    <pre class="newsletter-raw">@_markdownContent</pre>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5 text-muted">
+                <i class="bi bi-newspaper display-3 d-block mb-3 opacity-25"></i>
+                <p>Click <strong>Generate Now</strong> to fetch articles and stream your personalised newsletter.</p>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool   _isGenerating   = false;
+    private bool   _showRendered   = true;
+    private bool   _copySuccess    = false;
+    private string _markdownContent = string.Empty;
+    private string _errorMessage    = string.Empty;
+
+    private List<WebLogEntry> _logEntries = new();
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    protected override void OnInitialized()
+    {
+        WebLogger.OnNewEntry += HandleNewLogEntry;
+        _logEntries = WebLogger.Entries.ToList();
+    }
+
+    public void Dispose()
+    {
+        WebLogger.OnNewEntry -= HandleNewLogEntry;
+    }
+
+    private void HandleNewLogEntry()
+    {
+        _logEntries = WebLogger.Entries.ToList();
+        InvokeAsync(async () =>
+        {
+            StateHasChanged();
+            await ScrollLogToBottomAsync();
+        });
+    }
+
+    // ── Newsletter generation ─────────────────────────────────────────────────
+
+    private async Task GenerateNewsletter()
+    {
+        _isGenerating    = true;
+        _markdownContent = string.Empty;
+        _errorMessage    = string.Empty;
+        _copySuccess     = false;
+        WebLogger.Clear();
+        _logEntries = new();
+        StateHasChanged();
+
+        try
+        {
+            using var response = await Http.PostAsJsonAsync(
+                "/api/Newsletter/generate",
+                new { subscriberId = "default", forceRefresh = true });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = $"Server returned {(int)response.StatusCode}. Check your API key configuration.";
+                return;
+            }
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new System.IO.StreamReader(stream);
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (!line.StartsWith("data: ")) continue;
+
+                var payload = line["data: ".Length..];
+
+                if (payload == "[DONE]") break;
+
+                try
+                {
+                    using var doc  = System.Text.Json.JsonDocument.Parse(payload);
+                    var root = doc.RootElement;
+
+                    if (root.TryGetProperty("error", out var errProp))
+                    {
+                        _errorMessage = errProp.GetString() ?? "Unknown error";
+                        break;
+                    }
+
+                    if (root.TryGetProperty("delta", out var deltaProp))
+                    {
+                        _markdownContent += deltaProp.GetString();
+                        StateHasChanged();
+
+                        if (_showRendered)
+                            await RenderMarkdownAsync();
+                    }
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    // Ignore malformed SSE lines
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _isGenerating = false;
+            StateHasChanged();
+
+            if (_showRendered && !string.IsNullOrWhiteSpace(_markdownContent))
+                await RenderMarkdownAsync();
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private void ClearLogs()
+    {
+        WebLogger.Clear();
+        _logEntries = new();
+        StateHasChanged();
+    }
+
+    private async Task ToggleView()
+    {
+        _showRendered = !_showRendered;
+        StateHasChanged();
+
+        if (_showRendered && !string.IsNullOrWhiteSpace(_markdownContent))
+            await RenderMarkdownAsync();
+    }
+
+    private async Task RenderMarkdownAsync()
+    {
+        await Task.Yield();
+        try { await JS.InvokeVoidAsync("renderMarkdown", "newsletter-rendered", _markdownContent); }
+        catch { /* JS interop may fail during prerender */ }
+    }
+
+    private async Task ScrollLogToBottomAsync()
+    {
+        try { await JS.InvokeVoidAsync("scrollToBottom", "log-panel"); }
+        catch { }
+    }
+
+    private async Task CopyMarkdown()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("copyToClipboard", _markdownContent);
+            _copySuccess = true;
+            StateHasChanged();
+            await Task.Delay(2000);
+            _copySuccess = false;
+            StateHasChanged();
+        }
+        catch { }
+    }
+}

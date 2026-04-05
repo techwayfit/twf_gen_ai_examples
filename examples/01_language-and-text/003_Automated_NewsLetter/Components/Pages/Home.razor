@@ -1,0 +1,95 @@
+@page "/"
+
+<PageTitle>TechWayFit Newsletter — Home</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">📰 Automated Newsletter Generator</h2>
+            <p class="text-muted">Personalised weekly tech digest powered by TwfAiFramework</p>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Newsletter -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-newspaper me-2"></i>Newsletter</h5>
+                </div>
+                <div class="card-body">
+                    <p>Generate your personalised newsletter on demand or let the scheduler run it weekly.</p>
+                    <ul class="text-muted small">
+                        <li>Fetches top 50 articles from your RSS feeds</li>
+                        <li>Single LLM call clusters all articles</li>
+                        <li>Streams a personalised digest to the browser</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="newsletter" class="btn btn-primary w-100">
+                        <i class="bi bi-play-fill me-1"></i> Generate Newsletter
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscriber Profile -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-fill me-2"></i>Subscriber Profile</h5>
+                </div>
+                <div class="card-body">
+                    <p>Set your display name, topic interest weights, and preferred newsletter tone.</p>
+                    <ul class="text-muted small">
+                        <li>Adjust topic weights (0–10) per cluster</li>
+                        <li>Set minimum relevance threshold</li>
+                        <li>Choose editorial tone</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="profile" class="btn btn-success w-100">
+                        <i class="bi bi-pencil-fill me-1"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feed Manager -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-rss-fill me-2"></i>Feed Manager</h5>
+                </div>
+                <div class="card-body">
+                    <p>Add, remove, and test RSS feed URLs. View last-fetch status and article counts.</p>
+                    <ul class="text-muted small">
+                        <li>Supports RSS 2.0 and Atom 1.0</li>
+                        <li>Test individual feeds</li>
+                        <li>Persist feed lists across restarts</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="feeds" class="btn btn-info w-100">
+                        <i class="bi bi-gear-fill me-1"></i> Manage Feeds
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>How It Works</h5>
+                <p class="mb-0">
+                    This example demonstrates a <strong>multi-stage LLM pipeline</strong> using TwfAiFramework.
+                    RSS articles are fetched, clustered in a <em>single LLM call</em>, scored against your interests,
+                    enriched with full article text (lazy), summarised per cluster, then streamed as a personalised
+                    newsletter with editorial commentary — all with <code>AddStep</code>, <code>LlmNode</code>,
+                    <code>OutputParserNode</code>, and <code>Workflow.Branch</code>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

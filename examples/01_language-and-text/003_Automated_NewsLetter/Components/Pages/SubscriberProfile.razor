@@ -1,0 +1,183 @@
+@page "/profile"
+@rendermode InteractiveServer
+@inject HttpClient Http
+
+<PageTitle>Subscriber Profile — TechWayFit</PageTitle>
+
+<div class="container-fluid mt-3">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h3><i class="bi bi-person-fill me-2"></i>Subscriber Profile</h3>
+            <p class="text-muted">Configure your display name, topic interest weights (0–10), and editorial tone. The newsletter clusters articles to match your top interests.</p>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading…</span>
+            </div>
+        </div>
+    }
+    else if (_profile is not null)
+    {
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-person me-2"></i>Identity & Preferences</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Name -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Display Name</label>
+                            <input type="text" class="form-control" @bind="_profile.DisplayName" placeholder="Your first name" />
+                        </div>
+
+                        <!-- Tone -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Editorial Tone</label>
+                            <select class="form-select" @bind="_profile.Tone">
+                                <option value="informative">Informative</option>
+                                <option value="conversational">Conversational</option>
+                                <option value="analytical">Analytical</option>
+                                <option value="enthusiastic">Enthusiastic</option>
+                                <option value="professional">Professional</option>
+                            </select>
+                        </div>
+
+                        <!-- Min Relevance -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Minimum Relevance Score: <span class="badge bg-secondary">@_profile.MinRelevanceScore</span>
+                            </label>
+                            <input type="range" class="form-range" min="1" max="10"
+                                   @bind="_profile.MinRelevanceScore" @bind:event="oninput" />
+                            <small class="text-muted">Clusters scoring below this are dropped before enrichment.</small>
+                        </div>
+
+                        <!-- Preferred Section Count -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Max Sections: <span class="badge bg-secondary">@_profile.PreferredSectionCount</span>
+                            </label>
+                            <input type="range" class="form-range" min="1" max="10"
+                                   @bind="_profile.PreferredSectionCount" @bind:event="oninput" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Topic Interest Weights</h5>
+                        <button class="btn btn-sm btn-light" @onclick="AddTopic">
+                            <i class="bi bi-plus-lg"></i> Add Topic
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var kvp in _profile.InterestWeights.ToList())
+                        {
+                            <div class="mb-3 interest-row">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <input type="text" class="form-control form-control-sm me-2"
+                                           value="@kvp.Key"
+                                           @onchange="e => RenameKey(kvp.Key, e.Value?.ToString() ?? kvp.Key)" />
+                                    <span class="badge bg-primary me-2" style="min-width:2rem">@kvp.Value</span>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveTopic(kvp.Key)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                <input type="range" class="form-range" min="0" max="10"
+                                       value="@kvp.Value"
+                                       @onchange="e => UpdateWeight(kvp.Key, int.Parse(e.Value?.ToString() ?? kvp.Value.ToString()))" />
+                            </div>
+                        }
+                        @if (_profile.InterestWeights.Count == 0)
+                        {
+                            <p class="text-muted text-center">No topics yet. Click <strong>Add Topic</strong> to start.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save / Status -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-success" @onclick="SaveProfile" disabled="@_saving">
+                        @if (_saving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Saving…</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-save me-1"></i>
+                            <span>Save Profile</span>
+                        }
+                    </button>
+                    @if (_saveSuccess)
+                    {
+                        <span class="text-success"><i class="bi bi-check-circle me-1"></i>Profile saved!</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private Models.SubscriberProfile? _profile;
+    private bool _loading     = true;
+    private bool _saving      = false;
+    private bool _saveSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _profile = await Http.GetFromJsonAsync<Models.SubscriberProfile>("/api/Newsletter/profile")
+                   ?? new Models.SubscriberProfile();
+        _loading = false;
+    }
+
+    private void AddTopic()
+    {
+        var key = $"New Topic {_profile!.InterestWeights.Count + 1}";
+        _profile.InterestWeights[key] = 5;
+    }
+
+    private void RemoveTopic(string key) =>
+        _profile!.InterestWeights.Remove(key);
+
+    private void RenameKey(string oldKey, string newKey)
+    {
+        if (oldKey == newKey || string.IsNullOrWhiteSpace(newKey)) return;
+        var value = _profile!.InterestWeights[oldKey];
+        _profile.InterestWeights.Remove(oldKey);
+        _profile.InterestWeights[newKey] = value;
+    }
+
+    private void UpdateWeight(string key, int value) =>
+        _profile!.InterestWeights[key] = value;
+
+    private async Task SaveProfile()
+    {
+        _saving      = true;
+        _saveSuccess = false;
+        StateHasChanged();
+
+        var response = await Http.PostAsJsonAsync("/api/Newsletter/profile", _profile);
+
+        _saving = false;
+        if (response.IsSuccessStatusCode)
+        {
+            _saveSuccess = true;
+            await Task.Delay(2000);
+            _saveSuccess = false;
+        }
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,32 @@
+@page "/Error"
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Error</PageTitle>
+
+<h1 class="text-danger">Error.</h1>
+<h2 class="text-danger">An error occurred while processing your request.</h2>
+
+@if (ShowDetailedErrors)
+{
+    <p>Exception: @ExceptionMessage</p>
+}
+else
+{
+    <p>
+        <strong>Exception details are only shown in the development environment.</strong>
+    </p>
+}
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private bool ShowDetailedErrors =>
+        HttpContext?.RequestServices
+            .GetRequiredService<IHostEnvironment>()
+            .IsDevelopment() ?? false;
+
+    private string? ExceptionMessage =>
+        HttpContext?.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()
+            ?.Error.Message;
+}
