@@ -1,0 +1,30 @@
+@page "/"
+
+<PageTitle>AI Translation Hub</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">🌍 Real-Time Multilingual Translation Hub</h2>
+            <p class="text-muted">Context-aware translation with cultural nuance, domain terminology, and back-translation quality validation</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <TranslationWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>About This Demo</h5>
+                <p class="mb-0">
+                    This translation hub uses a multi-stage AI workflow: chain-of-thought translation preserves cultural nuance and domain terminology,
+                    a back-translation round-trip validates quality (scored 0–100), and low-confidence results are automatically refined before delivery.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

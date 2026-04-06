@@ -1,0 +1,377 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using System.Text.Json
+
+<div class="card shadow-lg">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-translate me-2"></i>Translation Hub
+        </h5>
+        <small class="opacity-75">Nuanced translation with back-translation quality validation</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4 align-items-stretch translation-layout">
+            <!-- Left panel: Input -->
+            <div class="col-lg-5">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Source Text</label>
+                    <textarea class="form-control"
+                              rows="9"
+                              placeholder="Enter text to translate..."
+                              @bind="sourceText"
+                              @bind:event="oninput"
+                              disabled="@isLoading"
+                              maxlength="5000"></textarea>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">@sourceText.Length / 5000 characters</small>
+                        @if (sourceText.Length > 4500)
+                        {
+                            <small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Approaching limit</small>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center panel: Controls -->
+            <div class="col-lg-2">
+                <div class="translation-controls h-100 d-flex flex-column justify-content-center">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Target Language</label>
+                        <select class="form-select" @bind="selectedLanguage" disabled="@isLoading">
+                            @foreach (var lang in Languages)
+                            {
+                                <option value="@lang.Key">@lang.Value</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Domain</label>
+                        <select class="form-select" @bind="selectedDomain" disabled="@isLoading">
+                            @foreach (var domain in Domains)
+                            {
+                                <option value="@domain.Key">@domain.Value</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary"
+                            @onclick="Translate"
+                            disabled="@(isLoading || string.IsNullOrWhiteSpace(sourceText))">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status">
+                                    <span class="visually-hidden">Translating...</span>
+                                </span>
+                                <span>Translating...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-translate me-2"></i>
+                                <span>Translate</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="Clear" disabled="@isLoading">
+                            <i class="bi bi-x-circle me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right panel: Output -->
+            <div class="col-lg-5">
+                @if (isLoading)
+                {
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100" style="min-height: 300px;">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted">Translating and validating quality...</p>
+                    </div>
+                }
+                else if (isStreaming)
+                {
+                    <div class="bg-light border rounded p-3 translation-output">
+                        @streamingText<span class="blinking-cursor">|</span>
+                    </div>
+                }
+                else if (translationResult != null)
+                {
+                    <!-- Header: language pair + quality badge -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">
+                            <i class="bi bi-arrow-right me-1"></i>
+                            <strong>@translationResult.SourceLanguage</strong> → <strong>@Languages.GetValueOrDefault(translationResult.TargetLanguageCode, translationResult.TargetLanguageCode)</strong>
+                            <span class="ms-2 badge bg-secondary">@translationResult.Domain</span>
+                        </small>
+                        <span class="badge @GetQualityBadgeClass(translationResult.QualityLabel)">
+                            <i class="bi @GetQualityIcon(translationResult.QualityLabel) me-1"></i>
+                            @translationResult.QualityLabel — @translationResult.QualityScore/100
+                        </span>
+                    </div>
+
+                    <!-- Translation output -->
+                    <div class="bg-light border rounded p-3 mb-3 translation-output">
+                        @translationResult.Translation
+                    </div>
+
+                    <!-- Cultural notes -->
+                    @if (!string.IsNullOrWhiteSpace(translationResult.CulturalNotes))
+                    {
+                        <div class="alert alert-info py-2 mb-2">
+                            <small><i class="bi bi-globe2 me-1"></i><strong>Cultural notes:</strong> @translationResult.CulturalNotes</small>
+                        </div>
+                    }
+
+                    <!-- Flagged terms -->
+                    @if (!string.IsNullOrWhiteSpace(translationResult.FlaggedTerms))
+                    {
+                        <div class="alert alert-warning py-2 mb-2">
+                            <small><i class="bi bi-flag me-1"></i><strong>Flagged terms for review:</strong> @translationResult.FlaggedTerms</small>
+                        </div>
+                    }
+
+                    <!-- Back-translation toggle -->
+                    <details class="mt-2">
+                        <summary class="text-muted" style="cursor: pointer; font-size: 0.85rem;">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Back-translation (quality check)
+                        </summary>
+                        <div class="bg-white border rounded p-2 mt-1">
+                            <small class="text-secondary">@translationResult.BackTranslation</small>
+                        </div>
+                    </details>
+
+                    <div class="mt-2 text-end">
+                        <small class="text-muted">
+                            <i class="bi bi-clock me-1"></i>@translationResult.Timestamp.ToLocalTime().ToString("HH:mm:ss")
+                        </small>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted" style="min-height: 300px;">
+                        <i class="bi bi-translate" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Your translation will appear here</p>
+                        <small>Results include quality score, cultural notes, and back-translation</small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+    </div>
+}
+
+<style>
+    .translation-output {
+        min-height: 200px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        line-height: 1.7;
+        font-size: 1rem;
+    }
+
+    .translation-controls {
+        max-width: 260px;
+        margin: 0 auto;
+    }
+
+    @@media (max-width: 991.98px) {
+        .translation-controls {
+            max-width: 100%;
+        }
+    }
+
+    .blinking-cursor {
+        display: inline-block;
+        font-weight: 100;
+        color: #0d6efd;
+        animation: blink 0.8s step-end infinite;
+    }
+
+    @@keyframes blink {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0; }
+    }
+</style>
+
+@code {
+    private static readonly Dictionary<string, string> Languages = new()
+    {
+        { "es", "Spanish" },
+        { "fr", "French" },
+        { "de", "German" },
+        { "zh", "Chinese (Simplified)" },
+        { "ja", "Japanese" },
+        { "ar", "Arabic" },
+        { "pt", "Portuguese" },
+        { "it", "Italian" },
+        { "ko", "Korean" },
+        { "hi", "Hindi" },
+        { "nl", "Dutch" },
+        { "ru", "Russian" },
+        {"or", "Oriya"},
+    {"en", "English"}
+    };
+
+    private static readonly Dictionary<string, string> Domains = new()
+    {
+        { "general", "General" },
+        { "legal", "Legal" },
+        { "medical", "Medical" },
+        { "technical", "Technical" },
+        { "finance", "Finance" },
+        { "marketing", "Marketing" },
+        { "education", "Education" },
+        { "ecommerce", "E-Commerce" }
+    };
+
+    private string sourceText = string.Empty;
+    private string selectedLanguage = "es";
+    private string selectedDomain = "general";
+    private bool isLoading = false;
+    private bool isStreaming = false;
+    private string streamingText = string.Empty;
+    private string? errorMessage;
+    private TranslationApiResponse? translationResult;
+
+    private async Task Translate()
+    {
+        if (string.IsNullOrWhiteSpace(sourceText)) return;
+
+        isLoading    = true;
+        isStreaming  = false;
+        streamingText = string.Empty;
+        errorMessage = null;
+        translationResult = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/TranslationApi/translate");
+            requestMsg.Content = JsonContent.Create(new
+            {
+                SourceText     = sourceText.Trim(),
+                TargetLanguage = selectedLanguage,
+                Domain         = selectedDomain
+            });
+
+            using var response = await Http.SendAsync(requestMsg, HttpCompletionOption.ResponseHeadersRead);
+
+            // Switch from loading spinner to streaming display
+            isLoading   = false;
+            isStreaming = true;
+            await InvokeAsync(StateHasChanged);
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new System.IO.StreamReader(stream);
+
+            var jsonOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvent = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvent = line.Substring(7).Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line.Substring(6);
+                    switch (pendingEvent)
+                    {
+                        case "token":
+                            var token = JsonSerializer.Deserialize<string>(data, jsonOpts);
+                            streamingText += token;
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "complete":
+                            translationResult = JsonSerializer.Deserialize<TranslationApiResponse>(data, jsonOpts);
+                            isStreaming  = false;
+                            streamingText = string.Empty;
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "error":
+                            var err = JsonSerializer.Deserialize<ErrorResponse>(data, jsonOpts);
+                            errorMessage = err?.Error ?? "Translation failed. Please try again.";
+                            isStreaming  = false;
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+                    pendingEvent = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading   = false;
+            isStreaming = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void Clear()
+    {
+        sourceText = string.Empty;
+        streamingText = string.Empty;
+        translationResult = null;
+        errorMessage = null;
+        isStreaming = false;
+        StateHasChanged();
+    }
+
+    private string GetQualityBadgeClass(string? label) => label?.ToLower() switch
+    {
+        "excellent" => "bg-success",
+        "good"      => "bg-primary",
+        "refined"   => "bg-warning text-dark",
+        "review"    => "bg-danger",
+        _           => "bg-secondary"
+    };
+
+    private string GetQualityIcon(string? label) => label?.ToLower() switch
+    {
+        "excellent" => "bi-patch-check-fill",
+        "good"      => "bi-check-circle",
+        "refined"   => "bi-tools",
+        "review"    => "bi-exclamation-circle",
+        _           => "bi-info-circle"
+    };
+
+    private class TranslationApiResponse
+    {
+        public string Translation { get; set; } = string.Empty;
+        public string SourceLanguage { get; set; } = string.Empty;
+        public string TargetLanguageCode { get; set; } = string.Empty;
+        public string Domain { get; set; } = string.Empty;
+        public int QualityScore { get; set; }
+        public string QualityLabel { get; set; } = string.Empty;
+        public string BackTranslation { get; set; } = string.Empty;
+        public string FlaggedTerms { get; set; } = string.Empty;
+        public string CulturalNotes { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+
+    private class ErrorResponse
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+}
