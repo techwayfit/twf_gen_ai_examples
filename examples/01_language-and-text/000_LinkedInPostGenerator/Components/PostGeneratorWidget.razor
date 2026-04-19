@@ -1,0 +1,468 @@
+@rendermode @(new InteractiveServerRenderMode(prerender: true))
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject _000_LinkedInPostGenerator.Services.ProfileService ProfileSvc
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Web
+
+<!-- ══ INPUT FORM CARD ══════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-linkedin me-2"></i>Post Details
+        </h5>
+        <small class="opacity-75">Fill in the details — your author profile handles voice and style</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+
+            <!-- ── Left column: inputs ──────────────────────────────────────── -->
+            <div class="col-12 col-lg-4">
+
+                <!-- Topic -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Topic / Message <span class="text-danger">*</span>
+                    </label>
+                    <textarea class="form-control"
+                              rows="5"
+                              placeholder="What do you want to share? e.g. 'Why I switched from REST to gRPC for internal services and what we learned after 3 weeks'"
+                              @bind="topic"
+                              @bind:event="oninput"
+                              disabled="@isGenerating"
+                              maxlength="2000"></textarea>
+                    <small class="text-muted">@topic.Length / 2,000 characters</small>
+                </div>
+
+                <!-- Role -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Your Current Role <span class="text-danger">*</span></label>
+                    <select class="form-select" @bind="currentRole" disabled="@isGenerating">
+                        @foreach (var r in Constants.Roles.All)
+                        {
+                            <option value="@r">@FormatLabel(r)</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Audience -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Target Audience</label>
+                    <select class="form-select" @bind="targetAudience" disabled="@isGenerating">
+                        @foreach (var a in Constants.Audiences.All)
+                        {
+                            <option value="@a">@FormatLabel(a)</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Max chars -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Max Length (characters)</label>
+                    <select class="form-select" @bind="maxChars" disabled="@isGenerating">
+                        <option value="600">600 — short & punchy</option>
+                        <option value="900">900 — medium</option>
+                        <option value="1300">1,300 — standard (recommended)</option>
+                        <option value="1800">1,800 — long-form</option>
+                        <option value="2500">2,500 — detailed</option>
+                    </select>
+                </div>
+
+                <!-- Related links -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-link-45deg me-1 text-primary"></i>Related Links
+                        <small class="text-muted fw-normal">(optional, for technical posts)</small>
+                    </label>
+                    <textarea class="form-control"
+                              rows="3"
+                              placeholder="One URL per line&#10;https://grpc.io/docs/&#10;https://protobuf.dev/"
+                              @bind="relatedLinksText"
+                              @bind:event="oninput"
+                              disabled="@isGenerating"></textarea>
+                </div>
+
+                <!-- Additional context -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-chat-text me-1 text-primary"></i>Additional Context
+                        <small class="text-muted fw-normal">(optional)</small>
+                    </label>
+                    <textarea class="form-control"
+                              rows="3"
+                              placeholder="e.g. 'Mention that our migration took 3 weeks and reduced latency by 40%'"
+                              @bind="additionalContext"
+                              @bind:event="oninput"
+                              disabled="@isGenerating"></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary px-4"
+                            @onclick="Generate"
+                            disabled="@(isGenerating || string.IsNullOrWhiteSpace(topic))">
+                        @if (isGenerating)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Generating...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-stars me-2"></i>
+                            <span>Generate Post</span>
+                        }
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="Reset" disabled="@isGenerating">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Right column: output ─────────────────────────────────────── -->
+            <div class="col-12 col-lg-8">
+
+                <!-- Pre-run placeholder -->
+                @if (!isGenerating && result == null && stages.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="card shadow-sm mb-4 prerun-card">
+                        <div class="card-body py-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Ready to generate
+                            </h6>
+                            <p class="text-muted mb-2">
+                                Fill in a topic on the left, choose your role and audience, then click
+                                <span class="fw-semibold text-body">Generate Post</span>.
+                            </p>
+                            <small class="text-muted d-block">
+                                Your author profile (bio, writing style, and previous post references) is loaded
+                                automatically from the <a href="profile">My Profile</a> page.
+                            </small>
+                        </div>
+                    </div>
+                }
+
+                <!-- Error banner -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- Stage progress -->
+                @if (isGenerating || stages.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body py-3">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                @foreach (var (msg, idx, done) in stages)
+                                {
+                                    <span class="badge @(done ? "bg-success" : "bg-primary") stage-badge">
+                                        @if (done)
+                                        {
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        @msg
+                                    </span>
+                                    @if (idx < stages.Count - 1)
+                                    {
+                                        <i class="bi bi-arrow-right text-muted"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Generated post result -->
+                @if (result != null)
+                {
+                    <div class="card shadow-lg">
+                        <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill fs-5"></i>
+                                <span class="fw-bold">Post Ready</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-white text-success fw-semibold">
+                                    @result.CharCount chars
+                                </span>
+                                <small class="opacity-75">
+                                    <i class="bi bi-clock me-1"></i>@result.GeneratedAt.ToLocalTime().ToString("HH:mm:ss")
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Post text -->
+                            <div class="post-output border rounded p-3 mb-3 bg-light position-relative">
+                                <div class="post-text mb-0">@((MarkupString)FormatPostHtml(result.Post))</div>
+                                <button class="btn btn-sm btn-outline-secondary copy-btn"
+                                        @onclick="() => CopyPost(result.Post)">
+                                    <i class="bi @(copied ? "bi-check2" : "bi-clipboard") me-1"></i>
+                                    @(copied ? "Copied!" : "Copy")
+                                </button>
+                            </div>
+
+                            <!-- Length bar -->
+                            <div class="mb-3">
+                                @{
+                                    var pct = Math.Min(100, (int)(result.CharCount * 100.0 / maxChars));
+                                    var barClass = pct > 100 ? "bg-danger" : pct > 85 ? "bg-warning" : "bg-success";
+                                }
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Length</small>
+                                    <small class="text-muted">@result.CharCount / @maxChars characters</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar @barClass" style="width: @pct%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Hashtags -->
+                            @if (result.HashtagSuggestions.Count > 0)
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted fw-semibold d-block mb-2">SUGGESTED HASHTAGS</small>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach (var tag in result.HashtagSuggestions)
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary-emphasis hashtag-badge">@tag</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Regenerate -->
+                            <button class="btn btn-outline-primary btn-sm"
+                                    @onclick="Generate"
+                                    disabled="@isGenerating">
+                                <i class="bi bi-arrow-repeat me-1"></i>Regenerate
+                            </button>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .prerun-card {
+        border-style: dashed;
+        border-color: #d0d7de;
+        background: #f8fbff;
+    }
+
+    .stage-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.75em;
+    }
+
+    .post-output {
+        min-height: 10rem;
+    }
+
+    .post-text {
+        word-break: break-word;
+        font-family: inherit;
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    .copy-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .hashtag-badge {
+        font-size: 0.85rem;
+        padding: 0.4em 0.7em;
+        cursor: default;
+    }
+</style>
+
+@code {
+    // ── Form fields ──────────────────────────────────────────────────────────
+    private string topic             = string.Empty;
+    private string currentRole       = "developer";
+    private string targetAudience    = "engineers";
+    private int    maxChars          = 1300;
+    private string relatedLinksText  = string.Empty;
+    private string additionalContext = string.Empty;
+
+    // ── State ────────────────────────────────────────────────────────────────
+    private bool   isGenerating  = false;
+    private bool   copied        = false;
+    private string errorMessage  = string.Empty;
+
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+    private GeneratedPostPayload? result = null;
+
+    protected override void OnInitialized()
+    {
+        var profile    = ProfileSvc.Load();
+        currentRole    = profile.DefaultRole;
+        targetAudience = profile.DefaultAudience;
+        maxChars       = profile.DefaultMaxChars;
+    }
+
+    // ── Generate ─────────────────────────────────────────────────────────────
+    private async Task Generate()
+    {
+        if (string.IsNullOrWhiteSpace(topic)) return;
+
+        isGenerating = true;
+        errorMessage = string.Empty;
+        result       = null;
+        stages       = new();
+        copied       = false;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/Post/generate");
+
+            var links = relatedLinksText
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(l => l.StartsWith("http"))
+                .ToList();
+
+            requestMsg.Content = JsonContent.Create(new
+            {
+                Topic             = topic.Trim(),
+                CurrentRole       = currentRole,
+                TargetAudience    = targetAudience,
+                MaxChars          = maxChars,
+                RelatedLinks      = links,
+                AdditionalContext = additionalContext.Trim()
+            });
+
+            using var response = await Http.SendAsync(requestMsg, HttpCompletionOption.ResponseHeadersRead);
+            using var stream   = await response.Content.ReadAsStreamAsync();
+            using var reader   = new System.IO.StreamReader(stream);
+
+            var jsonOpts       = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "complete":
+                            result = JsonSerializer.Deserialize<GeneratedPostPayload>(data, jsonOpts);
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "error":
+                            var err = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage = err?.Error ?? "Generation failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isGenerating = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // ── Reset ────────────────────────────────────────────────────────────────
+    private void Reset()
+    {
+        topic             = string.Empty;
+        relatedLinksText  = string.Empty;
+        additionalContext = string.Empty;
+        errorMessage      = string.Empty;
+        result            = null;
+        stages            = new();
+        copied            = false;
+        StateHasChanged();
+    }
+
+    // ── Copy to clipboard ────────────────────────────────────────────────────
+    private async Task CopyPost(string text)
+    {
+        await JS.InvokeVoidAsync("copyToClipboard", text);
+        copied = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        copied = false;
+        StateHasChanged();
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────────────────
+    private static string FormatLabel(string value) =>
+        System.Globalization.CultureInfo.InvariantCulture.TextInfo
+            .ToTitleCase(value.Replace('-', ' ').ToLower());
+
+    // Converts newlines to <br> for HTML display (post text is already plain Unicode)
+    private static string FormatPostHtml(string text) =>
+        System.Net.WebUtility.HtmlEncode(text)
+            .Replace("\n\n", "<br><br>")
+            .Replace("\n", "<br>");
+
+    // ── SSE payload types ────────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message    { get; set; } = string.Empty;
+        public int    StageIndex { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class GeneratedPostPayload
+    {
+        public string       Post               { get; set; } = string.Empty;
+        public int          CharCount          { get; set; }
+        public List<string> HashtagSuggestions { get; set; } = new();
+        public DateTime     GeneratedAt        { get; set; }
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+}

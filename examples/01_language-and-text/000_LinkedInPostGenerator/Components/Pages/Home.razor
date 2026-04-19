@@ -1,0 +1,37 @@
+@page "/"
+
+<PageTitle>LinkedIn Post Generator</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">LinkedIn Post Generator</h2>
+            <p class="text-muted">
+                Fill in your topic, role, and audience — your author profile does the rest.
+                Posts are generated in your voice and adjusted to your target length.
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <PostGeneratorWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>About This Demo</h5>
+                <p class="mb-0">
+                    This pipeline runs two sequential stages: <strong>post generation</strong> — the LLM drafts an
+                    engaging post using your topic, role, audience, and author profile as context; and
+                    <strong>length adjustment</strong> — a second LLM pass shortens or preserves the draft to hit your
+                    target character count. Your author profile (bio, writing guidelines, and previous post references)
+                    is loaded from <code>profile.json</code> and injected as the system prompt for every generation.
+                    Update it any time on the <a href="profile">My Profile</a> page.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
