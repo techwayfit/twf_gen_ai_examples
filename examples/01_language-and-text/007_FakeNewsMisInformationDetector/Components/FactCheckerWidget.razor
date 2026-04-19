@@ -1,0 +1,523 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using System.Text.Json
+
+<!-- ══ INPUT FORM CARD ══════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-search me-2"></i>Article or Claim to Fact-Check
+        </h5>
+        <small class="opacity-75">Paste a news article, social media post, or a specific claim</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+            <!-- Left: article text -->
+            <div class="col-12 col-lg-4">
+                <label class="form-label fw-semibold">
+                    Article Text <span class="text-danger">*</span>
+                </label>
+                <textarea class="form-control article-textarea"
+                          rows="11"
+                          placeholder="Paste the article or claim you want to fact-check here..."
+                          @bind="articleText"
+                          @bind:event="oninput"
+                          disabled="@isChecking"
+                          maxlength="10000"></textarea>
+                <div class="d-flex justify-content-between mt-2">
+                    <small class="text-muted">@articleText.Length / 10,000 characters</small>
+                </div>
+                <div class="analysis-panel border rounded p-3">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-sliders me-2 text-primary"></i>Analysis Settings
+                    </h6>
+
+                    <label class="form-label fw-semibold">Claims to extract</label>
+                    <select class="form-select" @bind="maxClaims" disabled="@isChecking">
+                        <option value="3">Up to 3 claims</option>
+                        <option value="5">Up to 5 claims</option>
+                        <option value="7">Up to 7 claims</option>
+                    </select>
+                    <small class="text-muted d-block mt-2">More claims increase coverage but take longer to analyse.</small>
+
+                    <div class="analysis-hint mt-3 p-2 rounded border-start border-3 border-primary-subtle bg-body-tertiary">
+                        <small class="text-muted">
+                            <i class="bi bi-lightbulb me-1 text-primary"></i>
+                            For best results, include complete sentences and avoid pasting multiple unrelated topics.
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4 flex-wrap">
+                        <button class="btn btn-primary px-4"
+                                @onclick="Analyse"
+                                disabled="@(isChecking || string.IsNullOrWhiteSpace(articleText))">
+                            @if (isChecking)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Analysing...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-shield-check me-2"></i>
+                                <span>Fact-Check Article</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="Reset" disabled="@isChecking">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: analysis settings -->
+            <div class="col-12 col-lg-8">
+
+                <!-- ══ PRE-RUN DEFAULT TEXT ═══════════════════════════════════════════════ -->
+                @if (!isChecking && report == null && stages.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="card shadow-sm mb-4 precheck-card">
+                        <div class="card-body py-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Ready to fact-check
+                            </h6>
+                            <p class="text-muted mb-2">
+                                Paste an article or claim on the left, choose how many claims to extract, then click
+                                <span class="fw-semibold text-body">Fact-Check Article</span>.
+                            </p>
+                            <small class="text-muted d-block">
+                                You will see live stage progress, an overall credibility score, and source-backed claim verdicts.
+                            </small>
+                        </div>
+                    </div>
+                }
+                
+                <!-- ══ ERROR BANNER ════════════════════════════════════════════════════════ -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- ══ STAGE PROGRESS ══════════════════════════════════════════════════════ -->
+                @if (isChecking || stages.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body py-3">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                @foreach (var (msg, idx, done) in stages)
+                                {
+                                    <span class="badge @(done ? "bg-success" : "bg-primary") stage-badge">
+                                        @if (done)
+                                        {
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        @msg
+                                    </span>
+                                    @if (idx < stages.Count - 1)
+                                    {
+                                        <i class="bi bi-arrow-right text-muted"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- ══ CREDIBILITY REPORT ══════════════════════════════════════════════════ -->
+                @if (report != null)
+                {
+                    <div class="card shadow-lg">
+                        <!-- Report header with score -->
+                        <div class="card-header @ScoreHeaderClass(report.OverallCredibilityScore) text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="score-circle">@report.OverallCredibilityScore</span>
+                                <div>
+                                    <div class="fw-bold fs-5">
+                                        <i class="bi @VerdictIcon(report.OverallVerdict) me-2"></i>@VerdictLabel(report.OverallVerdict)
+                                    </div>
+                                    <small class="opacity-75">Overall credibility score out of 100</small>
+                                </div>
+                            </div>
+                            <small class="opacity-75">
+                                <i class="bi bi-clock me-1"></i>Checked @report.CheckedAt.ToLocalTime().ToString("HH:mm:ss")
+                            </small>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Summary -->
+                            @if (!string.IsNullOrWhiteSpace(report.Summary))
+                            {
+                                <div class="alert @SummaryAlertClass(report.OverallCredibilityScore) mb-4" role="alert">
+                                    <i class="bi bi-info-circle me-2"></i>@report.Summary
+                                </div>
+                            }
+
+                            <!-- Score scale legend -->
+                            <div class="d-flex gap-2 flex-wrap mb-4">
+                                <span class="badge bg-success">80–100 Mostly Supported</span>
+                                <span class="badge bg-warning text-dark">50–79 Mixed</span>
+                                <span class="badge bg-orange">20–49 Likely Misleading</span>
+                                <span class="badge bg-danger">0–19 Likely False</span>
+                            </div>
+
+                            <!-- Per-claim verdicts -->
+                            @if (report.ClaimVerdicts.Count > 0)
+                            {
+                                <h6 class="fw-bold mb-3">
+                                    <i class="bi bi-list-check me-2 text-primary"></i>Claim-by-Claim Analysis
+                                </h6>
+
+                                <div class="accordion" id="claimsAccordion">
+                                    @foreach (var (cv, idx) in report.ClaimVerdicts.Select((v, i) => (v, i)))
+                                    {
+                                        <div class="accordion-item mb-2 border rounded">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button @(idx == 0 ? "" : "collapsed") claim-btn"
+                                                        type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#claim-@idx">
+                                                    <div class="d-flex align-items-start gap-2 flex-wrap w-100 me-3">
+                                                        <span class="badge @VerdictBadgeClass(cv.Verdict) flex-shrink-0 mt-1">
+                                                            @VerdictLabel(cv.Verdict)
+                                                        </span>
+                                                        <span class="claim-text">@cv.Text</span>
+                                                        <span class="ms-auto flex-shrink-0 text-muted small">
+                                                            @((int)(cv.Confidence * 100))% confidence
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="claim-@idx"
+                                                 class="accordion-collapse collapse @(idx == 0 ? "show" : "")">
+                                                <div class="accordion-body">
+                                                    <!-- Reasoning -->
+                                                    @if (!string.IsNullOrWhiteSpace(cv.Reasoning))
+                                                    {
+                                                        <p class="mb-3 text-body">
+                                                            <i class="bi bi-chat-square-text me-2 text-primary"></i>@cv.Reasoning
+                                                        </p>
+                                                    }
+
+                                                    <!-- Sources -->
+                                                    @if (cv.Sources.Count > 0)
+                                                    {
+                                                        <div class="sources-list">
+                                                            <small class="text-muted fw-semibold d-block mb-2">SOURCES CITED</small>
+                                                            @foreach (var src in cv.Sources)
+                                                            {
+                                                                <div class="source-card border rounded p-2 mb-2 bg-light">
+                                                                    <div class="fw-semibold small">
+                                                                        @if (!string.IsNullOrWhiteSpace(src.Url))
+                                                                        {
+                                                                            <a href="@src.Url" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                                                                <i class="bi bi-box-arrow-up-right me-1"></i>@src.Title
+                                                                            </a>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <span><i class="bi bi-journal-text me-1"></i>@src.Title</span>
+                                                                        }
+                                                                    </div>
+                                                                    @if (!string.IsNullOrWhiteSpace(src.Snippet))
+                                                                    {
+                                                                        <p class="text-muted small mb-0 mt-1">@src.Snippet</p>
+                                                                    }
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <small class="text-muted fst-italic">
+                                                            <i class="bi bi-exclamation-circle me-1"></i>No supporting sources found for this claim.
+                                                        </small>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>No individual claim verdicts were generated. The overall verdict above is based on a general assessment.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stage-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.75em;
+    }
+
+    .analysis-panel {
+        background: #f8f9fa;
+    }
+
+    .article-textarea {
+        resize: vertical;
+        min-height: 18rem;
+    }
+
+    .precheck-card {
+        border-style: dashed;
+        border-color: #d0d7de;
+        background: #f8fbff;
+    }
+
+    .score-circle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.25);
+        font-size: 1.4rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .claim-btn {
+        background-color: transparent;
+    }
+
+    .claim-btn:not(.collapsed) {
+        background-color: #f8f9fa;
+    }
+
+    .claim-text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .source-card {
+        font-size: 0.85rem;
+    }
+
+    .bg-orange {
+        background-color: #fd7e14 !important;
+        color: white;
+    }
+</style>
+
+@code {
+    // ── Form fields ──────────────────────────────────────────────────────────
+    private string articleText = string.Empty;
+    private int    maxClaims   = 5;
+
+    // ── State ────────────────────────────────────────────────────────────────
+    private bool   isChecking    = false;
+    private string errorMessage  = string.Empty;
+
+    // Stage progress: (message, index, isDone)
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+
+    // Result
+    private CredibilityReportPayload? report = null;
+
+    // ── Analyse ──────────────────────────────────────────────────────────────
+    private async Task Analyse()
+    {
+        if (string.IsNullOrWhiteSpace(articleText)) return;
+
+        isChecking   = true;
+        errorMessage = string.Empty;
+        report       = null;
+        stages       = new();
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post,
+                $"{baseUrl}/api/FactCheck/analyse");
+
+            requestMsg.Content = JsonContent.Create(new
+            {
+                ArticleText = articleText.Trim(),
+                MaxClaims   = maxClaims
+            });
+
+            using var response = await Http.SendAsync(requestMsg,
+                HttpCompletionOption.ResponseHeadersRead);
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new System.IO.StreamReader(stream);
+
+            var jsonOpts       = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                // Mark all prior stages as done
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "complete":
+                            report = JsonSerializer.Deserialize<CredibilityReportPayload>(data, jsonOpts);
+
+                            // Mark all stages done
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "error":
+                            var errPayload = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage   = errPayload?.Error ?? "Fact-check failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isChecking = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // ── Reset ────────────────────────────────────────────────────────────────
+    private void Reset()
+    {
+        articleText  = string.Empty;
+        maxClaims    = 5;
+        errorMessage = string.Empty;
+        report       = null;
+        stages       = new();
+        StateHasChanged();
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────────────────
+
+    private static string ScoreHeaderClass(int score) => score switch
+    {
+        >= 80 => "bg-success",
+        >= 50 => "bg-warning text-dark",  // override text
+        >= 20 => "bg-orange",
+        _     => "bg-danger"
+    };
+
+    // Bootstrap text-dark override needed for warning bg
+    // Re-apply for the header div
+    private static string ScoreHeaderTextClass(int score) =>
+        score is >= 50 and < 80 ? "text-dark" : "text-white";
+
+    private static string SummaryAlertClass(int score) => score switch
+    {
+        >= 80 => "alert-success",
+        >= 50 => "alert-warning",
+        _     => "alert-danger"
+    };
+
+    private static string VerdictBadgeClass(string verdict) => verdict?.ToLower() switch
+    {
+        "supported"    => "bg-success",
+        "disputed"     => "bg-danger",
+        "unverifiable" => "bg-secondary",
+        _              => "bg-secondary"
+    };
+
+    private static string VerdictIcon(string verdict) => verdict?.ToLower() switch
+    {
+        "supported"          => "bi-check-circle-fill",
+        "mostly supported"   => "bi-check-circle-fill",
+        "mixed"              => "bi-dash-circle-fill",
+        "likely misleading"  => "bi-exclamation-circle-fill",
+        "likely false"       => "bi-x-circle-fill",
+        "disputed"           => "bi-x-circle-fill",
+        "unverifiable"       => "bi-question-circle-fill",
+        _                    => "bi-shield-exclamation"
+    };
+
+    private static string VerdictLabel(string verdict) =>
+        string.IsNullOrWhiteSpace(verdict)
+            ? "Unknown"
+            : System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(verdict.ToLower());
+
+    // ── SSE payload types ────────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message     { get; set; } = string.Empty;
+        public int    StageIndex  { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class CredibilityReportPayload
+    {
+        public int                        OverallCredibilityScore { get; set; }
+        public string                     OverallVerdict          { get; set; } = string.Empty;
+        public string                     Summary                 { get; set; } = string.Empty;
+        public List<ClaimVerdictPayload>  ClaimVerdicts           { get; set; } = new();
+        public DateTime                   CheckedAt               { get; set; }
+    }
+
+    private class ClaimVerdictPayload
+    {
+        public string                      Id         { get; set; } = string.Empty;
+        public string                      Text       { get; set; } = string.Empty;
+        public string                      Verdict    { get; set; } = string.Empty;
+        public double                      Confidence { get; set; }
+        public string                      Reasoning  { get; set; } = string.Empty;
+        public List<EvidenceSourcePayload> Sources    { get; set; } = new();
+    }
+
+    private class EvidenceSourcePayload
+    {
+        public string Title   { get; set; } = string.Empty;
+        public string Url     { get; set; } = string.Empty;
+        public string Snippet { get; set; } = string.Empty;
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+}

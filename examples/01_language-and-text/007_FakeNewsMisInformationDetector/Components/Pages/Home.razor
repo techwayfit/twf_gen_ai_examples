@@ -1,0 +1,37 @@
+@page "/"
+
+<PageTitle>Fake News & Misinformation Detector</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">Fake News &amp; Misinformation Detector</h2>
+            <p class="text-muted">
+                Paste an article to extract its key claims, search for evidence, and receive a
+                structured credibility report with per-claim verdicts and source citations
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <FactCheckerWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>About This Demo</h5>
+                <p class="mb-0">
+                    This pipeline runs three sequential stages: <strong>claim extraction</strong> — the LLM identifies
+                    specific verifiable assertions from the article; <strong>evidence search</strong> — each claim is
+                    queried against the Serper.dev search API to retrieve real-time web sources; and
+                    <strong>chain-of-thought evaluation</strong> — a dedicated LLM call reasons through the evidence
+                    for each claim and assigns a structured verdict with confidence scores and citations.
+                    Each stage has a clear responsibility, making the report auditable and independently reviewable.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
