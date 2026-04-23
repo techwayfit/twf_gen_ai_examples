@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link 
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.chref="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootsrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link 
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-ichref="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/botstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --light-color: #f8f9fc;
+            --dark-color: #5a5c69;
+            --sidebar-bg: #224abe;
+            --sidebar-text: #ffffff;
+            --content-bg: #f8f9fc;
+        }
+
+        /* Theme Variations */
+        [data-theme="dark"] {
+            --sidebar-bg: #1a1a2e;
+            --sidebar-text: #e0e0e0;
+            --content-bg: #16213e;
+            --light-color: #0f3460;
+            --dark-color: #e0e0e0;
+        }
+
+        [data-theme="green"] {
+            --sidebar-bg: #1b4332;
+            --primary-color: #2d6a4f;
+        }
+
+        [data-theme="purple"] {
+            --sidebar-bg: #4a148c;
+            --primary-color: #7b1fa2;
+        }
+
+        [data-theme="orange"] {
+            --sidebar-bg: #e65100;
+            --primary-color: #ff6f00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--content-bg);
+            transition: all 0.3s ease;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu .nav-item {
+            margin: 0.25rem 0;
+        }
+
+        .sidebar-menu .nav-link {
+            color: var(--sidebar-text);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            opacity: 0.8;
+        }
+
+        .sidebar-menu .nav-link:hover,
+        .sidebar-menu .nav-link.active {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #fff;
+        }
+
+        .sidebar-menu .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        [data-theme="dark"] .top-navbar {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        /* Toggle Button */
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark-color);
+        }
+
+        /* Theme Customizer */
+        .theme-customizer {
+            position: fixed;
+            top: 80px;
+            right: -300px;
+            width: 300px;
+            background: #fff;
+            box-shadow: -2px 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px 0 0 8px;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            padding: 1.5rem;
+        }
+
+        [data-theme="dark"] .theme-customizer {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        .theme-customizer.show {
+            right: 0;
+        }
+
+        .theme-customizer-toggle {
+            position: absolute;
+            left: -40px;
+            top: 20px;
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-option {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0.25rem;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .theme-option:hover,
+        .theme-option.active {
+            transform: scale(1.1);
+            border-color: #333;
+        }
+
+        .theme-blue { background: #4e73df; }
+        .theme-dark { background: #1a1a2e; }
+        .theme-green { background: #1b4332; }
+        .theme-purple { background: #4a148c; }
+        .theme-orange { background: #e65100; }
+
+        /* Cards */
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .stat-card {
+            background: #1a1a2e;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card .icon {
+            font-size: 2rem;
+            opacity: 0.3;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .theme-customizer {
+                width: 280px;
+                right: -280px;
+            }
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-grid-1x2-fill me-2"></i>
+            Admin Panel
+        </div>
+        <ul class="nav flex-column sidebar-menu">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">
+                    <i class="bi bi-speedometer2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-people"></i>
+                    Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-box-seam"></i>
+                    Products
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-cart"></i>
+                    Orders
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-graph-up"></i>
+                    Analytics
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-gear"></i>
+                    Settings
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-question-circle"></i>
+                    Help
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Navbar -->
+        <nav class="top-navbar d-flex justify-content-between 
+align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h4 class="mb-0 ms-3">Dashboard</h4>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3">
+                    <button class="btn btn-link position-relative" 
+type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-bell"></i>
+                        <span class="position-absolute top-0 start-100 
+translate-middle badge rounded-pill bg-danger">
+                            3
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">New order 
+received</a></li>
+                        <li><a class="dropdown-item" href="#">User 
+registration</a></li>
+                        <li><a class="dropdown-item" href="#">System 
+update</a></li>
+                    </ul>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-link d-flex align-items-center" 
+type="button" data-bs-toggle="dropdown">
+                        <img 
+src="https://ui-avatars.com/api/?name=Admin+User&background=4e73df&color=ffsrc="https://ui-avatars.com/api/?name=Admin+Usr&background=4e73df&color=fff" 
+                             class="rounded-circle me-2" width="35" 
+height="35" alt="User">
+                        <span>Admin</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" 
+href="#">Profile</a></li>
+                        <li><a class="dropdown-item" 
+href="#">Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" 
+href="#">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="page-header">
+                <h2>Welcome Back!</h2>
+                <p class="text-muted">Here's what's happening with your 
+projects today.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stat-card border-start border-primary 
+border-4">
+                        <div class="d-flex justify-content-between 
+align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase 
+mb-1">Earnings (Monthly)</h6>
+                                <h4 class="mb-0">$40,000</h4>
+                            </div>
+                            <i class="bi bi-calendar icon 
+text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stat-card border-start border-success 
+border-4">
+                        <div class="d-flex justify-content-between 
+align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase 
+mb-1">Earnings (Annual)</h6>
+                                <h4 class="mb-0">$215,000</h4>
+                            </div>
+                            <i class="bi bi-dollar-sign icon 
+text-success"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stat-card border-start border-info 
+border-4">
+                        <div class="d-flex justify-content-between 
+align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase 
+mb-1">Tasks</h6>
+                                <h4 class="mb-0">50%</h4>
+                            </div>
+                            <i class="bi bi-clipboard icon text-info"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="stat-card border-start border-warning 
+border-4">
+                        <div class="d-flex justify-content-between 
+align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase 
+mb-1">Pending Requests</h6>
+                                <h4 class="mb-0">18</h4>
+                            </div>
+                            <i class="bi bi-chat icon text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Table -->
+            <div class="row">
+                <div class="col-lg-8 mb-4">
+                    <div class="stat-card">
+                        <h5 class="mb-4">Recent Orders</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Product</th>
+                                        <th>Status</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>#1234</td>
+                                        <td>John Doe</td>
+                                        <td>Laptop Pro</td>
+                                        <td><span class="badge 
+bg-success">Completed</span></td>
+                                        <td>$1,200</td>
+                                    </tr>
+                                    <tr>
+                                        <td>#1235</td>
+                                        <td>Jane Smith</td>
+                                        <td>Wireless Mouse</td>
+                                        <td><span class="badge 
+bg-warning">Pending</span></td>
+                                        <td>$50</td>
+                                    </tr>
+                                    <tr>
+                                        <td>#1236</td>
+                                        <td>Bob Johnson</td>
+                                        <td>Keyboard</td>
+                                        <td><span class="badge 
+bg-info">Processing</span></td>
+                                        <td>$120</td>
+                                    </tr>
+                                    <tr>
+                                        <td>#1237</td>
+                                        <td>Alice Brown</td>
+                                        <td>Monitor 27"</td>
+                                        <td><span class="badge 
+bg-success">Completed</span></td>
+                                        <td>$350</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                    <div class="stat-card">
+                        <h5 class="mb-4">Quick Actions</h5>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>New 
+Order
+                            </button>
+                            <button class="btn btn-outline-secondary">
+                                <i class="bi bi-person-plus me-2"></i>Add 
+User
+                            </button>
+                            <button class="btn btn-outline-secondary">
+                                <i class="bi bi-file-earmark-plus 
+me-2"></i>Create Report
+                            </button>
+                            <button class="btn btn-outline-secondary">
+                                <i class="bi bi-gear me-2"></i>Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Customizer -->
+    <div class="theme-customizer" id="themeCustomizer">
+        <button class="theme-customizer-toggle" id="themeToggle">
+            <i class="bi bi-palette"></i>
+        </button>
+        <h5 class="mb-3">Theme Customizer</h5>
+        <p class="text-muted small mb-3">Choose your preferred theme</p>
+        
+        <div class="mb-4">
+            <label class="form-label small">Sidebar Color</label>
+            <div>
+                <div class="theme-option theme-blue active" 
+data-theme="default" title="Blue"></div>
+                <div class="theme-option theme-dark" data-theme="dark" 
+title="Dark"></div>
+                <div class="theme-option theme-green" data-theme="green" 
+title="Green"></div>
+                <div class="theme-option theme-purple" data-theme="purple" 
+title="Purple"></div>
+                <div class="theme-option theme-orange" data-theme="orange" 
+title="Orange"></div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" 
+id="compactMode">
+                <label class="form-check-label" for="compactMode">Compact 
+Sidebar</label>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" 
+id="darkMode" checked>
+                <label class="form-check-label" for="darkMode">Dark Mode 
+Cards</label>
+            </div>
+        </div>
+
+        <button class="btn btn-primary w-100 mt-3" id="resetTheme">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset to 
+Default
+        </button>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script 
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootsrap.bundle.min.js"></script>
+    
+    <script>
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const mainContent = document.getElementById('mainContent');
+        const themeCustomizer = 
+document.getElementById('themeCustomizer');
+        const themeToggle = 
+document.getElementById('themeToggle');
+        const themeOptions = document.querySelectorAll('.theme-option');
+        const resetTheme = document.getElementById('resetTheme');
+        const compactMode = document.getElementById('compactMode');
+        const darkMode = document.getElementById('darkMode');
+
+        // Toggle Sidebar
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+            if (window.innerWidth > 768) {
+                if (sidebar.style.transform === 'translateX(-100%)') {
+                    sidebar.style.transform = 'translateX(0)';
+                    mainContent.style.marginLeft = '280px';
+                } else {
+                    sidebar.style.transform = 'translateX(-100%)';
+                    mainContent.style.marginLeft = '0';
+                }
+            }
+        });
+
+        // Toggle Theme Customizer
+        themeToggle.addEventListener('click', () => {
+            themeCustomizer.classList.toggle('show');
+        });
+
+        // Theme Selection
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove active class from all options
+                themeOptions.forEach(opt => 
+opt.classList.remove('active'));
+                // Add active class to clicked option
+                option.classList.add('active');
+                // Apply theme
+                const theme = option.getAttribute('data-theme');
+                if (theme === 'default') {
+                    document.body.removeAttribute('data-theme');
+                } else {
+                    document.body.setAttribute('data-theme', theme);
+                }
+                // Save to localStorage
+                localStorage.setItem('adminTheme', theme);
+            });
+        });
+
+        // Reset Theme
+        resetTheme.addEventListener('click', () => {
+            document.body.removeAttribute('data-theme');
+            themeOptions.forEach(opt => opt.classList.remove('active'));
+            document.querySelector('.theme-blue').classList.add('active');
+            localStorage.setItem('adminTheme', 'default');
+        });
+
+        // Compact Mode
+        compactMode.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                
+document.documentElement.style.setProperty('--sidebar-width', '80px');
+                sidebar.querySelectorAll('.nav-link span').forEach(span => 
+{
+                    span.style.display = 'none';
+                });
+            } else {
+                
+document.documentElement.style.setProperty('--sidebar-width', '280px');
+                sidebar.querySelectorAll('.nav-link span').forEach(span => 
+{
+                    span.style.display = 'inline';
+                });
+            }
+        });
+
+        // Dark Mode Cards
+        darkMode.addEventListener('change', (e) => {
+            const cards = document.querySelectorAll('.stat-card');
+            cards.forEach(card => {
+                if (e.target.checked) {
+                    card.setAttribute('data-theme', 'dark');
+                } else {
+                    card.removeAttribute('data-theme');
+                }
+            });
+        });
+
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('adminTheme');
+            if (savedTheme && savedTheme !== 'default') {
+                document.body.setAttribute('data-theme', savedTheme);
+                themeOptions.forEach(opt => {
+                    opt.classList.remove('active');
+                    if (opt.getAttribute('data-theme') === savedTheme) {
+                        opt.classList.add('active');
+                    }
+                });
+            }
+        });
+
+        // Close customizer when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!themeCustomizer.contains(e.target) && 
+!themeToggle.contains(e.target)) {
+                themeCustomizer.classList.remove('show');
+            }
+        });
+
+        // Active nav link
+        document.querySelectorAll('.sidebar-menu .nav-link').forEach(link 
+=> {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar-menu 
+.nav-link').forEach(l => {
+                    l.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

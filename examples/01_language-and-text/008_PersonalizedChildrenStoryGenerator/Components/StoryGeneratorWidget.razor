@@ -1,0 +1,458 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using System.Text.Json
+
+<!-- ══ INPUT FORM CARD ══════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-book-half me-2"></i>Story Details
+        </h5>
+        <small class="opacity-75">Fill in the child's profile and click Generate Story</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+
+            <!-- Left: inputs -->
+            <div class="col-12 col-lg-4">
+
+                <!-- Child's name -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Child's Name <span class="text-danger">*</span>
+                    </label>
+                    <input class="form-control"
+                           type="text"
+                           placeholder="e.g. Ava"
+                           @bind="childName"
+                           disabled="@isGenerating"
+                           maxlength="50" />
+                    <small class="text-muted">The story's main character</small>
+                </div>
+
+                <!-- Interest -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Interest / Theme <span class="text-danger">*</span>
+                    </label>
+                    <input class="form-control"
+                           type="text"
+                           placeholder="e.g. dinosaurs, space, baking"
+                           @bind="interest"
+                           disabled="@isGenerating"
+                           maxlength="100" />
+                    <small class="text-muted">Shapes the setting and plot</small>
+                </div>
+
+                <!-- Moral lesson -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Moral Lesson <span class="text-danger">*</span>
+                    </label>
+                    <input class="form-control"
+                           type="text"
+                           placeholder="e.g. sharing is caring"
+                           @bind="moralLesson"
+                           disabled="@isGenerating"
+                           maxlength="200" />
+                    <small class="text-muted">Woven naturally into the story</small>
+                </div>
+
+                <!-- Settings panel -->
+                <div class="settings-panel border rounded p-3 mt-2">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-sliders me-2 text-primary"></i>Story Settings
+                    </h6>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Age Range</label>
+                        <select class="form-select" @bind="ageRangeMin" disabled="@isGenerating">
+                            <option value="3">2–4 years (Toddler)</option>
+                            <option value="5" selected>5–7 years (Early Reader)</option>
+                            <option value="8">8–10 years (Middle Grade)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Story Length</label>
+                        <select class="form-select" @bind="storyLength" disabled="@isGenerating">
+                            <option value="short">Short (~200–300 words)</option>
+                            <option value="medium">Medium (~400–600 words)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Language</label>
+                        <select class="form-select" @bind="language" disabled="@isGenerating">
+                            <option value="English">English</option>
+                            <option value="Spanish">Spanish</option>
+                            <option value="French">French</option>
+                            <option value="German">German</option>
+                            <option value="Portuguese">Portuguese</option>
+                            <option value="Italian">Italian</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        <button class="btn btn-primary px-4"
+                                @onclick="Generate"
+                                disabled="@(isGenerating || string.IsNullOrWhiteSpace(childName) || string.IsNullOrWhiteSpace(interest) || string.IsNullOrWhiteSpace(moralLesson))">
+                            @if (isGenerating)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Generating...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-magic me-2"></i>
+                                <span>Generate Story</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="Reset" disabled="@isGenerating">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: results panel -->
+            <div class="col-12 col-lg-8">
+
+                <!-- ══ PRE-RUN DEFAULT TEXT ════════════════════════════════════ -->
+                @if (!isGenerating && story == null && stages.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="card shadow-sm mb-4 precheck-card">
+                        <div class="card-body py-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Ready to create a story
+                            </h6>
+                            <p class="text-muted mb-2">
+                                Fill in the child's name, interest, and moral lesson on the left, choose age and
+                                length settings, then click <span class="fw-semibold text-body">Generate Story</span>.
+                            </p>
+                            <small class="text-muted d-block">
+                                You will see live stage progress, the full story text, a moral-highlight sentence,
+                                and ready-to-use image-prompt suggestions for each scene.
+                            </small>
+                        </div>
+                    </div>
+                }
+
+                <!-- ══ ERROR BANNER ════════════════════════════════════════════ -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- ══ STAGE PROGRESS ══════════════════════════════════════════ -->
+                @if (isGenerating || stages.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body py-3">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                @foreach (var (msg, idx, done) in stages)
+                                {
+                                    <span class="badge @(done ? "bg-success" : "bg-primary") stage-badge">
+                                        @if (done)
+                                        {
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        @msg
+                                    </span>
+                                    @if (idx < stages.Count - 1)
+                                    {
+                                        <i class="bi bi-arrow-right text-muted"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- ══ STORY RESULT ════════════════════════════════════════════ -->
+                @if (story != null)
+                {
+                    <div class="card shadow-lg">
+
+                        <!-- Story header -->
+                        <div class="card-header bg-success text-white py-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <div class="fw-bold fs-5">
+                                        <i class="bi bi-book-fill me-2"></i>@story.Title
+                                    </div>
+                                    <small class="opacity-75">
+                                        @ReadingLevelLabel(story.ReadingLevel) ·
+                                        @(story.WordCount > 0 ? $"{story.WordCount} words" : "Story ready")
+                                    </small>
+                                </div>
+                                <small class="opacity-75">
+                                    <i class="bi bi-clock me-1"></i>@story.GeneratedAt.ToLocalTime().ToString("HH:mm:ss")
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+
+                            <!-- Story text -->
+                            <div class="story-text mb-4">
+                                @foreach (var paragraph in SplitParagraphs(story.StoryText))
+                                {
+                                    <p>@paragraph</p>
+                                }
+                            </div>
+
+                            <!-- Moral highlight -->
+                            @if (!string.IsNullOrWhiteSpace(story.MoralHighlight))
+                            {
+                                <div class="moral-card border rounded p-3 mb-4">
+                                    <small class="text-muted fw-semibold d-block mb-1">
+                                        <i class="bi bi-star-fill me-1 text-warning"></i>MORAL OF THE STORY
+                                    </small>
+                                    <p class="mb-0 fst-italic">@story.MoralHighlight</p>
+                                </div>
+                            }
+
+                            <!-- Image prompts -->
+                            @if (story.ImagePrompts.Count > 0)
+                            {
+                                <h6 class="fw-bold mb-3">
+                                    <i class="bi bi-image me-2 text-primary"></i>Image Prompts for Illustration
+                                </h6>
+
+                                <div class="row g-3">
+                                    @foreach (var (prompt, idx) in story.ImagePrompts.Select((p, i) => (p, i + 1)))
+                                    {
+                                        <div class="col-12">
+                                            <div class="image-prompt-card border rounded p-3 bg-light">
+                                                <div class="d-flex align-items-start gap-2">
+                                                    <span class="badge bg-primary flex-shrink-0 mt-1">Scene @idx</span>
+                                                    <p class="mb-0 text-body fst-italic">@prompt</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stage-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.75em;
+    }
+
+    .settings-panel {
+        background: #f8f9fa;
+    }
+
+    .precheck-card {
+        border-style: dashed;
+        border-color: #d0d7de;
+        background: #f8fbff;
+    }
+
+    .story-text p {
+        line-height: 1.8;
+        font-size: 1.05rem;
+        color: #333;
+    }
+
+    .moral-card {
+        border-color: #ffc107 !important;
+        background: #fffdf0;
+        font-size: 0.95rem;
+    }
+
+    .image-prompt-card {
+        border-color: #d1e7dd !important;
+        font-size: 0.9rem;
+    }
+</style>
+
+@code {
+    // ── Form fields ──────────────────────────────────────────────────────────
+    private string childName    = string.Empty;
+    private string interest     = string.Empty;
+    private string moralLesson  = string.Empty;
+    private int    ageRangeMin  = 5;
+    private string storyLength  = "short";
+    private string language     = "English";
+
+    // ── State ────────────────────────────────────────────────────────────────
+    private bool   isGenerating = false;
+    private string errorMessage = string.Empty;
+
+    // Stage progress: (message, index, isDone)
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+
+    // Result
+    private StoryResultPayload? story = null;
+
+    // ── Generate ─────────────────────────────────────────────────────────────
+    private async Task Generate()
+    {
+        if (string.IsNullOrWhiteSpace(childName) ||
+            string.IsNullOrWhiteSpace(interest)  ||
+            string.IsNullOrWhiteSpace(moralLesson)) return;
+
+        isGenerating = true;
+        errorMessage = string.Empty;
+        story        = null;
+        stages       = new();
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post,
+                $"{baseUrl}/api/Story/generate");
+
+            requestMsg.Content = JsonContent.Create(new
+            {
+                ChildName   = childName.Trim(),
+                Interest    = interest.Trim(),
+                MoralLesson = moralLesson.Trim(),
+                AgeRangeMin = ageRangeMin,
+                Language    = language,
+                StoryLength = storyLength
+            });
+
+            using var response = await Http.SendAsync(requestMsg,
+                HttpCompletionOption.ResponseHeadersRead);
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new System.IO.StreamReader(stream);
+
+            var jsonOpts       = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "complete":
+                            story = JsonSerializer.Deserialize<StoryResultPayload>(data, jsonOpts);
+
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "error":
+                            var errPayload = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage   = errPayload?.Error ?? "Story generation failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isGenerating = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // ── Reset ────────────────────────────────────────────────────────────────
+    private void Reset()
+    {
+        childName    = string.Empty;
+        interest     = string.Empty;
+        moralLesson  = string.Empty;
+        ageRangeMin  = 5;
+        storyLength  = "short";
+        language     = "English";
+        errorMessage = string.Empty;
+        story        = null;
+        stages       = new();
+        StateHasChanged();
+    }
+
+    // ── UI helpers ───────────────────────────────────────────────────────────
+
+    private static string ReadingLevelLabel(string level) => level?.ToLower() switch
+    {
+        "toddler"      => "Toddler (2–4 yrs)",
+        "early-reader" => "Early Reader (5–7 yrs)",
+        "middle-grade" => "Middle Grade (8–10 yrs)",
+        _              => level ?? "Unknown"
+    };
+
+    private static IEnumerable<string> SplitParagraphs(string text) =>
+        (text ?? string.Empty)
+            .Split(new[] { "\n\n", "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrWhiteSpace(p));
+
+    // ── SSE payload types ────────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message     { get; set; } = string.Empty;
+        public int    StageIndex  { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class StoryResultPayload
+    {
+        public string       Title          { get; set; } = string.Empty;
+        public string       ReadingLevel   { get; set; } = string.Empty;
+        public string       StoryText      { get; set; } = string.Empty;
+        public List<string> ImagePrompts   { get; set; } = new();
+        public string       MoralHighlight { get; set; } = string.Empty;
+        public int          WordCount      { get; set; }
+        public DateTime     GeneratedAt    { get; set; }
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+}

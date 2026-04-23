@@ -1,0 +1,37 @@
+@page "/"
+
+<PageTitle>Brand Voice Consistency Checker</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">Brand Voice Consistency Checker</h2>
+            <p class="text-muted">
+                Paste your marketing copy and brand guidelines to receive a structured consistency
+                report with severity scores, category-level violations, and targeted rewrite suggestions
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <BrandCheckerWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>About This Demo</h5>
+                <p class="mb-0">
+                    This pipeline runs three sequential stages: <strong>semantic embedding</strong> — both the copy
+                    and brand guidelines are embedded to compute a cosine similarity score that quantifies semantic drift;
+                    <strong>deviation analysis</strong> — an LLM identifies specific tone, vocabulary, formality, and
+                    style violations against the guidelines; and <strong>rewrite generation</strong> — a dedicated LLM
+                    call produces drop-in corrections for each flagged excerpt. Each stage has a clear responsibility,
+                    making the report auditable and independently reviewable.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

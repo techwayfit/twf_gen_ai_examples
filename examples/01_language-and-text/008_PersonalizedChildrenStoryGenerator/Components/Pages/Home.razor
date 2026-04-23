@@ -1,0 +1,38 @@
+@page "/"
+
+<PageTitle>Personalized Children's Story Generator</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">Personalized Children's Story Generator</h2>
+            <p class="text-muted">
+                Enter a child's name, age, interest, and a moral lesson to receive a personalised
+                age-appropriate story with image-prompt suggestions for each scene
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <StoryGeneratorWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>About This Demo</h5>
+                <p class="mb-0">
+                    This pipeline runs two sequential stages: <strong>prompt assembly</strong> — the child's name,
+                    interest, age-derived reading level, and moral lesson are injected into a structured template via
+                    <code>PromptBuilderNode</code>, keeping user-supplied values safely scoped to named placeholders;
+                    and <strong>story generation</strong> — a single <code>LlmNode</code> call produces a complete
+                    narrative, image-prompt suggestions, and a moral-highlight sentence in one structured JSON response.
+                    <code>OutputParserNode</code> then extracts the typed fields so the UI can render the story text
+                    and image prompts independently.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,595 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using System.Text.Json
+
+<!-- ══ INPUT FORM CARD ══════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-shield-check me-2"></i>Brand Voice Consistency Check
+        </h5>
+        <small class="opacity-75">Paste your copy and brand guidelines, then run the analysis</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+
+            <!-- Left: inputs + settings -->
+            <div class="col-12 col-lg-4">
+
+                <!-- Copy text -->
+                <label class="form-label fw-semibold">
+                    Marketing Copy <span class="text-danger">*</span>
+                </label>
+                <textarea class="form-control copy-textarea"
+                          rows="8"
+                          placeholder="Paste the marketing copy you want to check here..."
+                          @bind="copyText"
+                          @bind:event="oninput"
+                          disabled="@isChecking"
+                          maxlength="8000"></textarea>
+                <small class="text-muted d-block mt-1 mb-3">@copyText.Length / 8,000 characters</small>
+
+                <!-- Brand guidelines -->
+                <label class="form-label fw-semibold">
+                    Brand Guidelines <span class="text-danger">*</span>
+                </label>
+                <textarea class="form-control guidelines-textarea"
+                          rows="6"
+                          placeholder="Paste brand guidelines, voice principles, or approved exemplar copy here..."
+                          @bind="brandGuidelines"
+                          @bind:event="oninput"
+                          disabled="@isChecking"
+                          maxlength="5000"></textarea>
+                <small class="text-muted d-block mt-1 mb-3">@brandGuidelines.Length / 5,000 characters</small>
+
+                <!-- Settings panel -->
+                <div class="settings-panel border rounded p-3">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-sliders me-2 text-primary"></i>Analysis Settings
+                    </h6>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Brand Name</label>
+                        <input class="form-control"
+                               type="text"
+                               placeholder="e.g. TechWayFit Inc."
+                               @bind="brandName"
+                               disabled="@isChecking" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Content Type</label>
+                        <select class="form-select" @bind="copyType" disabled="@isChecking">
+                            <option value="marketing copy">Marketing copy</option>
+                            <option value="email">Email</option>
+                            <option value="social post">Social post</option>
+                            <option value="landing page">Landing page</option>
+                            <option value="ad copy">Ad copy</option>
+                            <option value="blog post">Blog post</option>
+                            <option value="press release">Press release</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Analysis Strictness</label>
+                        <select class="form-select" @bind="strictness" disabled="@isChecking">
+                            <option value="standard">Standard</option>
+                            <option value="strict">Strict</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">
+                            Strict mode flags even subtle deviations from brand voice.
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        <button class="btn btn-primary px-4"
+                                @onclick="Analyse"
+                                disabled="@(isChecking || string.IsNullOrWhiteSpace(copyText) || string.IsNullOrWhiteSpace(brandGuidelines))">
+                            @if (isChecking)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Checking...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-shield-check me-2"></i>
+                                <span>Check Brand Voice</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="Reset" disabled="@isChecking">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: results panel -->
+            <div class="col-12 col-lg-8">
+
+                <!-- ══ PRE-RUN DEFAULT TEXT ════════════════════════════════════ -->
+                @if (!isChecking && report == null && stages.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="card shadow-sm mb-4 precheck-card">
+                        <div class="card-body py-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Ready to check brand voice
+                            </h6>
+                            <p class="text-muted mb-2">
+                                Paste your marketing copy and brand guidelines on the left, choose your settings,
+                                then click <span class="fw-semibold text-body">Check Brand Voice</span>.
+                            </p>
+                            <small class="text-muted d-block">
+                                You will see live stage progress, a similarity score, violation categories with
+                                severity scores, and targeted rewrite suggestions for each flagged excerpt.
+                            </small>
+                        </div>
+                    </div>
+                }
+
+                <!-- ══ ERROR BANNER ════════════════════════════════════════════ -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- ══ STAGE PROGRESS ══════════════════════════════════════════ -->
+                @if (isChecking || stages.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body py-3">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                @foreach (var (msg, idx, done) in stages)
+                                {
+                                    <span class="badge @(done ? "bg-success" : "bg-primary") stage-badge">
+                                        @if (done)
+                                        {
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        @msg
+                                    </span>
+                                    @if (idx < stages.Count - 1)
+                                    {
+                                        <i class="bi bi-arrow-right text-muted"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- ══ CONSISTENCY REPORT ══════════════════════════════════════ -->
+                @if (report != null)
+                {
+                    <div class="card shadow-lg">
+
+                        <!-- Report header -->
+                        <div class="card-header @RatingHeaderClass(report.OverallRating) text-white py-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rating-badge">
+                                        <i class="bi @RatingIcon(report.OverallRating) fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold fs-5">@RatingLabel(report.OverallRating)</div>
+                                        <small class="opacity-75">
+                                            @report.Violations.Count violation(s) found ·
+                                            Similarity @((report.SimilarityScore * 100):F0)%
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    @if (report.ApprovedForPublishing)
+                                    {
+                                        <span class="badge bg-success fs-6">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Approved
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger fs-6">
+                                            <i class="bi bi-x-circle-fill me-1"></i>Needs Review
+                                        </span>
+                                    }
+                                    <small class="opacity-75">
+                                        <i class="bi bi-clock me-1"></i>@report.CheckedAt.ToLocalTime().ToString("HH:mm:ss")
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+
+                            <!-- Similarity score bar -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="fw-semibold text-muted">SEMANTIC SIMILARITY</small>
+                                    <small class="fw-bold">@((report.SimilarityScore * 100):F0)%</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar @SimilarityBarClass(report.SimilarityScore)"
+                                         role="progressbar"
+                                         style="width: @((report.SimilarityScore * 100):F0)%"
+                                         aria-valuenow="@((int)(report.SimilarityScore * 100))"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    Cosine similarity between the copy and brand guidelines embeddings
+                                </small>
+                            </div>
+
+                            <!-- Summary -->
+                            @if (!string.IsNullOrWhiteSpace(report.Summary))
+                            {
+                                <div class="alert @SummaryAlertClass(report.OverallRating) mb-4" role="alert">
+                                    <i class="bi bi-chat-square-text me-2"></i>@report.Summary
+                                </div>
+                            }
+
+                            <!-- Rating legend -->
+                            <div class="d-flex gap-2 flex-wrap mb-4">
+                                <span class="badge bg-success">Compliant</span>
+                                <span class="badge bg-info text-dark">Minor</span>
+                                <span class="badge bg-warning text-dark">Moderate</span>
+                                <span class="badge bg-danger">Major</span>
+                            </div>
+
+                            <!-- Violations accordion -->
+                            @if (report.Violations.Count > 0)
+                            {
+                                <h6 class="fw-bold mb-3">
+                                    <i class="bi bi-list-check me-2 text-primary"></i>Violation Details
+                                </h6>
+
+                                <div class="accordion" id="violationsAccordion">
+                                    @foreach (var (v, idx) in report.Violations.Select((v, i) => (v, i)))
+                                    {
+                                        <div class="accordion-item mb-2 border rounded">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button @(idx == 0 ? "" : "collapsed") violation-btn"
+                                                        type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#violation-@idx">
+                                                    <div class="d-flex align-items-start gap-2 flex-wrap w-100 me-3">
+                                                        <span class="badge @SeverityBadgeClass(v.Severity) flex-shrink-0 mt-1">
+                                                            @v.Severity.ToUpperInvariant()
+                                                        </span>
+                                                        <span class="badge @CategoryBadgeClass(v.Category) flex-shrink-0 mt-1">
+                                                            @v.Category
+                                                        </span>
+                                                        <span class="violation-excerpt">@v.Excerpt</span>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="violation-@idx"
+                                                 class="accordion-collapse collapse @(idx == 0 ? "show" : "")">
+                                                <div class="accordion-body">
+
+                                                    <!-- Explanation -->
+                                                    @if (!string.IsNullOrWhiteSpace(v.Explanation))
+                                                    {
+                                                        <div class="mb-3">
+                                                            <small class="text-muted fw-semibold d-block mb-1">WHY IT DEVIATES</small>
+                                                            <p class="mb-0 text-body">
+                                                                <i class="bi bi-exclamation-circle me-2 text-warning"></i>@v.Explanation
+                                                            </p>
+                                                        </div>
+                                                    }
+
+                                                    <!-- Suggested rewrite -->
+                                                    @if (!string.IsNullOrWhiteSpace(v.SuggestedRewrite))
+                                                    {
+                                                        <div class="rewrite-card border rounded p-3 bg-light">
+                                                            <small class="text-muted fw-semibold d-block mb-2">
+                                                                <i class="bi bi-pencil-square me-1 text-success"></i>SUGGESTED REWRITE
+                                                            </small>
+                                                            <p class="mb-0 fst-italic text-body">
+                                                                "@v.SuggestedRewrite"
+                                                            </p>
+                                                        </div>
+                                                    }
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-success" role="alert">
+                                    <i class="bi bi-check-circle-fill me-2"></i>No violations found. The copy aligns well with the brand guidelines.
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stage-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.75em;
+    }
+
+    .copy-textarea {
+        resize: vertical;
+        min-height: 10rem;
+    }
+
+    .guidelines-textarea {
+        resize: vertical;
+        min-height: 8rem;
+    }
+
+    .settings-panel {
+        background: #f8f9fa;
+    }
+
+    .precheck-card {
+        border-style: dashed;
+        border-color: #d0d7de;
+        background: #f8fbff;
+    }
+
+    .rating-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.25);
+        flex-shrink: 0;
+    }
+
+    .violation-btn {
+        background-color: transparent;
+    }
+
+    .violation-btn:not(.collapsed) {
+        background-color: #f8f9fa;
+    }
+
+    .violation-excerpt {
+        font-size: 0.9rem;
+        line-height: 1.4;
+        font-style: italic;
+        color: #444;
+    }
+
+    .rewrite-card {
+        border-color: #d1e7dd !important;
+        font-size: 0.9rem;
+    }
+</style>
+
+@code {
+    // ── Form fields ──────────────────────────────────────────────────────────
+    private string copyText       = string.Empty;
+    private string brandGuidelines = string.Empty;
+    private string brandName      = string.Empty;
+    private string copyType       = "marketing copy";
+    private string strictness     = "standard";
+
+    // ── State ────────────────────────────────────────────────────────────────
+    private bool   isChecking   = false;
+    private string errorMessage = string.Empty;
+
+    // Stage progress: (message, index, isDone)
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+
+    // Result
+    private ConsistencyReportPayload? report = null;
+
+    // ── Analyse ──────────────────────────────────────────────────────────────
+    private async Task Analyse()
+    {
+        if (string.IsNullOrWhiteSpace(copyText) || string.IsNullOrWhiteSpace(brandGuidelines)) return;
+
+        isChecking   = true;
+        errorMessage = string.Empty;
+        report       = null;
+        stages       = new();
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post,
+                $"{baseUrl}/api/BrandChecker/analyse");
+
+            requestMsg.Content = JsonContent.Create(new
+            {
+                CopyText        = copyText.Trim(),
+                BrandGuidelines = brandGuidelines.Trim(),
+                BrandName       = brandName.Trim(),
+                CopyType        = copyType,
+                Strictness      = strictness
+            });
+
+            using var response = await Http.SendAsync(requestMsg,
+                HttpCompletionOption.ResponseHeadersRead);
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new System.IO.StreamReader(stream);
+
+            var jsonOpts       = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "complete":
+                            report = JsonSerializer.Deserialize<ConsistencyReportPayload>(data, jsonOpts);
+
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "error":
+                            var errPayload = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage   = errPayload?.Error ?? "Brand check failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isChecking = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // ── Reset ────────────────────────────────────────────────────────────────
+    private void Reset()
+    {
+        copyText        = string.Empty;
+        brandGuidelines = string.Empty;
+        brandName       = string.Empty;
+        copyType        = "marketing copy";
+        strictness      = "standard";
+        errorMessage    = string.Empty;
+        report          = null;
+        stages          = new();
+        StateHasChanged();
+    }
+
+    // ── UI helpers ───────────────────────────────────────────────────────────
+
+    private static string RatingHeaderClass(string rating) => rating?.ToLower() switch
+    {
+        "compliant" => "bg-success",
+        "minor"     => "bg-info",
+        "moderate"  => "bg-warning",
+        "major"     => "bg-danger",
+        _           => "bg-secondary"
+    };
+
+    private static string RatingIcon(string rating) => rating?.ToLower() switch
+    {
+        "compliant" => "bi-check-circle-fill",
+        "minor"     => "bi-info-circle-fill",
+        "moderate"  => "bi-exclamation-circle-fill",
+        "major"     => "bi-x-circle-fill",
+        _           => "bi-shield-exclamation"
+    };
+
+    private static string RatingLabel(string rating) =>
+        string.IsNullOrWhiteSpace(rating)
+            ? "Unknown"
+            : System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(rating.ToLower());
+
+    private static string SummaryAlertClass(string rating) => rating?.ToLower() switch
+    {
+        "compliant" => "alert-success",
+        "minor"     => "alert-info",
+        "moderate"  => "alert-warning",
+        _           => "alert-danger"
+    };
+
+    private static string SeverityBadgeClass(string severity) => severity?.ToLower() switch
+    {
+        "high"   => "bg-danger",
+        "medium" => "bg-warning text-dark",
+        "low"    => "bg-secondary",
+        _        => "bg-secondary"
+    };
+
+    private static string CategoryBadgeClass(string category) => category?.ToLower() switch
+    {
+        "tone"       => "bg-primary",
+        "vocabulary" => "bg-purple",
+        "formality"  => "bg-teal",
+        "style"      => "bg-indigo",
+        _            => "bg-secondary"
+    };
+
+    private static string SimilarityBarClass(double score) => score switch
+    {
+        >= 0.8 => "bg-success",
+        >= 0.6 => "bg-info",
+        >= 0.4 => "bg-warning",
+        _      => "bg-danger"
+    };
+
+    // ── SSE payload types ────────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message     { get; set; } = string.Empty;
+        public int    StageIndex  { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class ConsistencyReportPayload
+    {
+        public double                    SimilarityScore       { get; set; }
+        public string                    OverallRating         { get; set; } = string.Empty;
+        public string                    Summary               { get; set; } = string.Empty;
+        public List<ViolationPayload>    Violations            { get; set; } = new();
+        public bool                      ApprovedForPublishing { get; set; }
+        public DateTime                  CheckedAt             { get; set; }
+    }
+
+    private class ViolationPayload
+    {
+        public string Category        { get; set; } = string.Empty;
+        public string Severity        { get; set; } = string.Empty;
+        public string Excerpt         { get; set; } = string.Empty;
+        public string Explanation     { get; set; } = string.Empty;
+        public string SuggestedRewrite { get; set; } = string.Empty;
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+}

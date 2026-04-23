@@ -6,56 +6,56 @@ Single-turn and multi-turn LLM applications focused on text generation, transfor
 
 ## Examples
 
-### #1 — Contextual Customer Support Chatbot
+### ✅ #1 — Contextual Customer Support Chatbot
 Multi-turn support bot that maintains conversation history, classifies intent, and escalates to human agents when confidence is low.
 
 **Key patterns:** `MaintainHistory = true` on `LlmNode`, `ConditionNode` for escalation routing, `Workflow.Branch()` for handoff logic.
 
 ---
 
-### #2 — Intelligent Email Drafting Assistant
+### ✅ #2 — Intelligent Email Drafting Assistant
 Reads incoming emails, detects sentiment and urgency, and generates tone-appropriate replies.
 
 **Key patterns:** `PromptBuilderNode` with tone templates, `OutputParserNode` to extract sentiment and urgency flags, `ConditionNode` for tone selection.
 
 ---
 
-### #3 — Automated Newsletter Generator
+### ✅ #3 — Automated Newsletter Generator
 Ingests RSS feeds, clusters articles by topic, summarises insights, and generates a personalised newsletter.
 
 **Key patterns:** `HttpRequestNode` for feed fetching, `Workflow.ForEach()` over articles, `LlmNode` for per-article summarisation, `TransformNode` for final assembly.
 
 ---
 
-### #4 — Real-Time Multilingual Translation Hub
+### ✅ #4 — Real-Time Multilingual Translation Hub
 Translates text preserving cultural nuance, idiomatic expressions, and domain terminology, with back-translation quality validation.
 
 **Key patterns:** Two `LlmNode` steps (translate → back-translate), `OutputParserNode` for quality score extraction, `NodeOptions.WithRetry()` on API calls.
 
 ---
 
-### #5 — Long-Form Content Writer with SEO Optimization
+### ✅ #5 — Long-Form Content Writer with SEO Optimization
 Researches competing content via web search, then generates SEO-optimised articles with structured headings and meta descriptions.
 
 **Key patterns:** `HttpRequestNode` for search API, `PromptBuilderNode` with multi-step templates (outline → draft → meta), chained `LlmNode` calls.
 
 ---
 
-### #6 — Brand Voice Consistency Checker
+### ✅ #6 — Brand Voice Consistency Checker
 Reviews marketing copy against brand guidelines and flags tone, vocabulary, and style deviations.
 
 **Key patterns:** `EmbeddingNode` for style comparison, `OutputParserNode` to extract violation categories, `TransformNode` to format feedback.
 
 ---
 
-### #7 — Fake News & Misinformation Detector
+### ✅ #7 — Fake News & Misinformation Detector
 Cross-references article claims against verified sources, assigns a credibility score, and provides citation evidence.
 
 **Key patterns:** `HttpRequestNode` for real-time search grounding, `LlmNode` with chain-of-thought reasoning, `OutputParserNode` for structured credibility report.
 
 ---
 
-### #8 — Personalized Children's Story Generator
+### ✅ #8 — Personalized Children's Story Generator
 Creates age-appropriate, personalised stories based on a child's name, interests, and moral lessons, plus image-prompt suggestions.
 
 **Key patterns:** `PromptBuilderNode` with dynamic variables (`{{child_name}}`, `{{interest}}`), `LlmNode`, `OutputParserNode` for story + image-prompt fields.
