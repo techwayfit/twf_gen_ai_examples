@@ -1,0 +1,469 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject _021_MultiDocumentResearchSynthesizer.Services.FileTextExtractorService FileExtractor
+@inject IConfiguration Configuration
+@using System.Text.Json
+
+<!-- ══ INGEST FORM CARD ═════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-secondary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-file-earmark-plus me-2"></i>Index a Research Paper
+        </h5>
+        <small class="opacity-75">Upload a .txt or .pdf file, fill in the metadata, then click Index Document</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+            <!-- Left: metadata -->
+            <div class="col-12 col-lg-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-card-text me-2 text-secondary"></i>Metadata</h6>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Collection <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" list="collectionList"
+                           placeholder="e.g. machine-learning, biology-2024"
+                           @bind="collection" disabled="@isIngesting" maxlength="100" />
+                    <datalist id="collectionList">
+                        @foreach (var c in existingCollections)
+                        {
+                            <option value="@c" />
+                        }
+                    </datalist>
+                    <small class="text-muted">Documents in the same collection are searched together.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control"
+                           placeholder="e.g. Scaling Laws for Neural Language Models"
+                           @bind="title" disabled="@isIngesting" maxlength="200" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Authors</label>
+                    <input type="text" class="form-control"
+                           placeholder="e.g. Kaplan, J.; McCandlish, S."
+                           @bind="authors" disabled="@isIngesting" maxlength="300" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Year</label>
+                    <input type="number" class="form-control"
+                           min="1900" max="2100"
+                           @bind="year" disabled="@isIngesting" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Paper ID (optional)</label>
+                    <input type="text" class="form-control"
+                           placeholder="Auto-generated if blank"
+                           @bind="paperId" disabled="@isIngesting" maxlength="100" />
+                    <small class="text-muted">Used to identify and replace this document in the index.</small>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Chunk size (words)</label>
+                        <input type="number" class="form-control"
+                               min="50" max="2000" step="50"
+                               @bind="chunkSize" disabled="@isIngesting" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Overlap (words)</label>
+                        <input type="number" class="form-control"
+                               min="0" max="500" step="10"
+                               @bind="chunkOverlap" disabled="@isIngesting" />
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary w-100 mt-2"
+                        @onclick="Ingest"
+                        disabled="@(isIngesting || isLoadingFile || string.IsNullOrWhiteSpace(documentText) || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(collection))">
+                    @if (isIngesting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Indexing...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-cloud-upload me-2"></i>
+                        <span>Index Document</span>
+                    }
+                </button>
+            </div>
+
+            <!-- Right: document source + result -->
+            <div class="col-12 col-lg-8">
+
+                <!-- Source toggle -->
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="fw-semibold me-1">Source</span>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button"
+                                class="btn @(!useFileUpload ? "btn-secondary" : "btn-outline-secondary")"
+                                @onclick="() => { useFileUpload = false; ClearFile(); }">
+                            <i class="bi bi-textarea-t me-1"></i>Paste Text
+                        </button>
+                        <button type="button"
+                                class="btn @(useFileUpload ? "btn-secondary" : "btn-outline-secondary")"
+                                @onclick="() => { useFileUpload = true; documentText = string.Empty; }">
+                            <i class="bi bi-file-earmark-arrow-up me-1"></i>Upload File
+                        </button>
+                    </div>
+                </div>
+
+                @if (!useFileUpload)
+                {
+                    <!-- Paste mode -->
+                    <label class="form-label fw-semibold">
+                        Document Text <span class="text-danger">*</span>
+                    </label>
+                    <textarea class="form-control doc-textarea"
+                              rows="18"
+                              placeholder="Paste the full text of the research paper here..."
+                              @bind="documentText"
+                              @bind:event="oninput"
+                              disabled="@isIngesting"
+                              maxlength="@MaxDocumentChars"></textarea>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">@documentText.Length / @MaxDocumentChars.ToString("N0") characters</small>
+                        @if (documentText.Length > 0)
+                        {
+                            <small class="text-muted">~@EstimatedChunks chunk(s) estimated</small>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <!-- Upload mode -->
+                    @if (string.IsNullOrEmpty(uploadedFileName))
+                    {
+                        <div class="upload-zone border rounded-3 d-flex flex-column align-items-center
+                                    justify-content-center p-5 text-center"
+                             style="min-height:20rem; border-style:dashed !important; position:relative;">
+                            <InputFile id="fileInput" class="visually-hidden"
+                                       OnChange="OnFileSelected"
+                                       accept=".txt,.pdf"
+                                       disabled="@(isIngesting || isLoadingFile)" />
+                            <label for="fileInput" style="cursor:pointer; position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                @if (isLoadingFile)
+                                {
+                                    <span class="spinner-border text-secondary mb-3" role="status"></span>
+                                    <span class="text-muted">Extracting text...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-cloud-upload fs-1 text-secondary mb-3"></i>
+                                    <span><strong>Click to select</strong> or drag &amp; drop</span>
+                                    <small class="text-muted mt-1">.txt or .pdf &nbsp;·&nbsp; max @MaxFileSizeMb MB</small>
+                                }
+                            </label>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success d-flex align-items-center gap-3 mt-1">
+                            <i class="bi bi-file-earmark-check fs-3"></i>
+                            <div>
+                                <strong>@uploadedFileName</strong><br />
+                                <small>@documentText.Length characters &nbsp;·&nbsp; ~@EstimatedChunks chunk(s)</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger ms-auto" @onclick="ClearFile" disabled="@isIngesting">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(fileErrorMessage))
+                    {
+                        <div class="alert alert-danger mt-2" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>@fileErrorMessage
+                        </div>
+                    }
+                }
+
+                <!-- Error -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- Success -->
+                @if (ingestResult != null)
+                {
+                    <div class="alert alert-success mt-3" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-check-circle-fill me-2"></i>Document indexed successfully
+                        </h6>
+                        <p class="mb-1">
+                            <strong>Paper ID:</strong> <code>@ingestResult.PaperId</code>
+                        </p>
+                        <p class="mb-1">
+                            <strong>Chunks indexed:</strong> @ingestResult.ChunksIndexed
+                        </p>
+                        <p class="mb-0">
+                            <strong>Total index:</strong> @ingestResult.TotalDocuments document(s) /
+                            @ingestResult.TotalChunks chunk(s)
+                        </p>
+                        <hr />
+                        <small>
+                            <a href="/" class="alert-link">Go to Query page</a> to ask questions across your indexed papers.
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ CURRENT INDEX STATUS ══════════════════════════════════════════════════ -->
+@if (indexStatus != null)
+{
+    <div class="card shadow-sm">
+        <div class="card-header py-2">
+            <h6 class="mb-0"><i class="bi bi-database me-2"></i>Current Index Status</h6>
+        </div>
+        <div class="card-body py-3">
+            <div class="row text-center g-3">
+                <div class="col-6 col-md-3">
+                    <div class="fs-4 fw-bold text-primary">@indexStatus.DocumentCount</div>
+                    <small class="text-muted">Documents</small>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="fs-4 fw-bold text-secondary">@indexStatus.ChunkCount</div>
+                    <small class="text-muted">Chunks</small>
+                </div>
+            </div>
+            @if (indexStatus.ChunkCount > 0)
+            {
+                <div class="d-flex justify-content-end mt-3">
+                    <button class="btn btn-outline-danger btn-sm" @onclick="ClearIndex" disabled="@isIngesting">
+                        <i class="bi bi-trash me-1"></i>Clear Index
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<style>
+    .doc-textarea {
+        resize: vertical;
+        min-height: 20rem;
+        font-family: monospace;
+        font-size: 0.8rem;
+    }
+    .upload-zone {
+        background: #f8f9fa;
+        transition: background .15s;
+    }
+    .upload-zone:hover {
+        background: #e9ecef;
+    }
+</style>
+
+@code {
+    private long MaxFileSizeBytes  => Configuration.GetValue<long>("Upload:MaxFileSizeMb", 200) * 1024 * 1024;
+    private long MaxFileSizeMb     => Configuration.GetValue<long>("Upload:MaxFileSizeMb", 200);
+    private int  MaxDocumentChars  => Configuration.GetValue<int>("Upload:MaxDocumentChars", 2_000_000);
+
+    // ── Form fields ──────────────────────────────────────────────────────────
+    private string documentText = string.Empty;
+    private string collection   = string.Empty;
+    private string title        = string.Empty;
+    private string authors      = string.Empty;
+    private int    year         = DateTime.UtcNow.Year;
+    private string paperId      = string.Empty;
+    private int    chunkSize    = 400;
+    private int    chunkOverlap = 50;
+
+    private List<string> existingCollections = new();
+
+    // ── Upload state ─────────────────────────────────────────────────────────
+    private bool   useFileUpload    = false;
+    private string uploadedFileName = string.Empty;
+    private bool   isLoadingFile    = false;
+    private string fileErrorMessage = string.Empty;
+
+    private int EstimatedChunks => documentText.Length > 0
+        ? (int)Math.Ceiling(documentText.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length / (double)chunkSize)
+        : 0;
+
+    // ── State ────────────────────────────────────────────────────────────────
+    private bool   isIngesting  = false;
+    private string errorMessage = string.Empty;
+
+    private IngestResultPayload? ingestResult  = null;
+    private IndexStatusPayload?  indexStatus   = null;
+
+    protected override async Task OnInitializedAsync() =>
+        await RefreshStatusAsync();
+
+    // ── File upload ───────────────────────────────────────────────────────────
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        fileErrorMessage = string.Empty;
+        var file = e.File;
+
+        var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+        if (ext != ".txt" && ext != ".pdf")
+        {
+            fileErrorMessage = "Only .txt and .pdf files are supported.";
+            return;
+        }
+
+        if (file.Size > MaxFileSizeBytes)
+        {
+            fileErrorMessage = $"File exceeds the {MaxFileSizeMb} MB limit.";
+            return;
+        }
+
+        isLoadingFile = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: MaxFileSizeBytes);
+            documentText     = await FileExtractor.ExtractAsync(stream, file.Name);
+            uploadedFileName = file.Name;
+
+            // Auto-fill title from filename if the field is still empty
+            if (string.IsNullOrWhiteSpace(title))
+                title = Path.GetFileNameWithoutExtension(file.Name)
+                             .Replace('-', ' ')
+                             .Replace('_', ' ');
+        }
+        catch (Exception ex)
+        {
+            fileErrorMessage = $"Failed to read file: {ex.Message}";
+            documentText     = string.Empty;
+            uploadedFileName = string.Empty;
+        }
+        finally
+        {
+            isLoadingFile = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ClearFile()
+    {
+        uploadedFileName = string.Empty;
+        documentText     = string.Empty;
+        fileErrorMessage = string.Empty;
+    }
+
+    // ── Ingest ────────────────────────────────────────────────────────────────
+    private async Task Ingest()
+    {
+        if (string.IsNullOrWhiteSpace(documentText) || string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(collection)) return;
+
+        isIngesting  = true;
+        errorMessage = string.Empty;
+        ingestResult = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl  = Navigation.BaseUri.TrimEnd('/');
+            var response = await Http.PostAsJsonAsync($"{baseUrl}/api/Research/ingest", new
+            {
+                Text         = documentText.Trim(),
+                PaperId      = string.IsNullOrWhiteSpace(paperId) ? null : paperId.Trim(),
+                Title        = title.Trim(),
+                Authors      = authors.Trim(),
+                Year         = year,
+                ChunkSize    = chunkSize,
+                ChunkOverlap = chunkOverlap,
+                Collection   = collection.Trim(),
+            });
+
+            var jsonOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            if (response.IsSuccessStatusCode)
+            {
+                ingestResult = await response.Content.ReadFromJsonAsync<IngestResultPayload>(jsonOpts);
+                // Reset form on success
+                documentText     = string.Empty;
+                title            = string.Empty;
+                authors          = string.Empty;
+                paperId          = string.Empty;
+                year             = DateTime.UtcNow.Year;
+                uploadedFileName = string.Empty;
+                // keep collection populated for convenience
+            }
+            else
+            {
+                var err = await response.Content.ReadFromJsonAsync<ErrorPayload>(jsonOpts);
+                errorMessage = err?.Error ?? $"Ingest failed ({(int)response.StatusCode}).";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isIngesting = false;
+            await RefreshStatusAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ClearIndex()
+    {
+        try
+        {
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            await Http.DeleteAsync($"{baseUrl}/api/Research/index");
+            ingestResult = null;
+            await RefreshStatusAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error clearing index: {ex.Message}";
+        }
+    }
+
+    private async Task RefreshStatusAsync()
+    {
+        try
+        {
+            var baseUrl  = Navigation.BaseUri.TrimEnd('/');
+            var jsonOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            indexStatus = await Http.GetFromJsonAsync<IndexStatusPayload>(
+                $"{baseUrl}/api/Research/status", jsonOpts);
+
+            existingCollections = await Http.GetFromJsonAsync<List<string>>(
+                $"{baseUrl}/api/Research/collections", jsonOpts) ?? new();
+        }
+        catch { /* not critical */ }
+    }
+
+    // ── Payload types ─────────────────────────────────────────────────────────
+    private class IngestResultPayload
+    {
+        public bool   Success        { get; set; }
+        public string PaperId        { get; set; } = string.Empty;
+        public int    ChunksIndexed  { get; set; }
+        public int    TotalChunks    { get; set; }
+        public int    TotalDocuments { get; set; }
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+
+    private class IndexStatusPayload
+    {
+        public int ChunkCount    { get; set; }
+        public int DocumentCount { get; set; }
+    }
+}

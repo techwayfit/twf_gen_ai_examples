@@ -1,0 +1,36 @@
+@page "/ingest"
+
+<PageTitle>Ingest Documents — Research Synthesizer</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">Ingest Documents</h2>
+            <p class="text-muted">
+                Upload a <strong>.txt</strong> or <strong>.pdf</strong> research paper (or paste its text),
+                add metadata, and index it into the semantic store. Indexed documents are available
+                immediately for querying.
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <IngestWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-database me-2"></i>Qdrant Vector Storage</h5>
+                <p class="mb-0">
+                    Documents are stored in a Qdrant collection (<code>research_papers</code> by default).
+                    Data persists as long as your Qdrant instance is running — restarting this app does
+                    not clear the index. Configure the connection in <code>appsettings.local.json</code>
+                    under the <code>Qdrant</code> section.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

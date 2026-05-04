@@ -1,0 +1,38 @@
+@page "/"
+
+<PageTitle>Multi-Document Research Synthesizer</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">Multi-Document Research Synthesizer</h2>
+            <p class="text-muted">
+                Ask a cross-cutting research question across your indexed papers.
+                Receive a synthesized answer with inline citations and a contradiction analysis.
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <ResearchWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>How It Works</h5>
+                <p class="mb-0">
+                    This pipeline runs three stages: <strong>semantic retrieval</strong> — your question is
+                    embedded and the most relevant passages are retrieved from the indexed corpus via cosine
+                    similarity; <strong>grounded synthesis</strong> — a dedicated LLM call answers the question
+                    using only the retrieved context, with inline [source_N] citations; and
+                    <strong>contradiction detection</strong> — a second LLM pass compares cited sources to
+                    surface agreements and disagreements. Index your papers first on the
+                    <a href="/ingest">Ingest Documents</a> page.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
