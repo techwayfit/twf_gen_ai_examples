@@ -1,0 +1,41 @@
+@page "/"
+
+<PageTitle>Resume Parser &amp; Candidate Ranker</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">Resume Parser &amp; Candidate Ranker</h2>
+            <p class="text-muted">
+                Upload resumes in <strong>.txt</strong> or <strong>.pdf</strong> format alongside a job description.
+                The pipeline parses each resume, scores candidates semantically, and generates tailored
+                interview questions for your shortlist.
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <RankingWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-info-circle me-2"></i>How It Works
+                </h5>
+                <p class="mb-0">
+                    The pipeline runs three stages:
+                    <strong>profile extraction</strong> — each resume is parsed by an LLM into a structured
+                    profile (name, skills, experience, education);
+                    <strong>semantic scoring</strong> — both the job description and each profile are embedded
+                    with <code>text-embedding-3-small</code>, and cosine similarity produces a 0–1 relevance score;
+                    <strong>interview question generation</strong> — for the top-N candidates, a second LLM pass
+                    creates targeted questions grounded in their actual experience and the role requirements.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

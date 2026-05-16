@@ -1,0 +1,34 @@
+@page "/Error"
+@using Microsoft.AspNetCore.Diagnostics
+@using System.Diagnostics
+
+<PageTitle>Error</PageTitle>
+
+<h1 class="text-danger">Error.</h1>
+<h2 class="text-danger">An error occurred while processing your request.</h2>
+
+@if (ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@RequestId</code>
+    </p>
+}
+
+<h3>Development notes</h3>
+<p>
+    Check the application logs for full error details.
+    Swapping <code>app.UseExceptionHandler("/Error")</code> for
+    <code>app.UseDeveloperExceptionPage()</code> in <em>Program.cs</em>
+    will display a more detailed error page.
+</p>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId      { get; set; }
+    private bool    ShowRequestId  => !string.IsNullOrEmpty(RequestId);
+
+    protected override void OnInitialized() =>
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

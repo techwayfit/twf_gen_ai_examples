@@ -1,0 +1,731 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject _025_ResumeParserCandidateRanker.Services.FileTextExtractorService FileExtractor
+@inject IConfiguration Configuration
+@using System.Text.Json
+
+<!-- ══ INPUT FORM CARD ══════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-briefcase me-2"></i>Job Description &amp; Resumes
+        </h5>
+        <small class="opacity-75">Paste the job description, upload resume files, then click Rank Candidates</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+
+            <!-- Left: job description + settings -->
+            <div class="col-12 col-lg-4">
+                <label class="form-label fw-semibold">
+                    Job Description <span class="text-danger">*</span>
+                </label>
+                <textarea class="form-control jd-textarea"
+                          rows="10"
+                          placeholder="Paste the full job description or role requirements here..."
+                          @bind="jobDescription"
+                          @bind:event="oninput"
+                          disabled="@isRanking"
+                          maxlength="20000"></textarea>
+                <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted">@jobDescription.Length / 20,000 characters</small>
+                </div>
+
+                <div class="ranking-settings border rounded p-3 mt-3">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-sliders me-2 text-primary"></i>Ranking Settings
+                    </h6>
+
+                    <label class="form-label fw-semibold">Top-N for interview questions</label>
+                    <select class="form-select mb-3" @bind="topN" disabled="@isRanking">
+                        <option value="3">Top 3</option>
+                        <option value="5">Top 5</option>
+                        <option value="10">Top 10</option>
+                    </select>
+
+                    <label class="form-label fw-semibold">Min. similarity score</label>
+                    <select class="form-select" @bind="similarityThreshold" disabled="@isRanking">
+                        <option value="0.0">No minimum (show all)</option>
+                        <option value="0.5">≥ 0.50</option>
+                        <option value="0.6">≥ 0.60</option>
+                        <option value="0.7">≥ 0.70</option>
+                        <option value="0.8">≥ 0.80</option>
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        Candidates below this threshold are excluded from the shortlist.
+                    </small>
+                </div>
+
+                <div class="d-flex gap-2 mt-4 flex-wrap">
+                    <button class="btn btn-primary px-4"
+                            @onclick="Rank"
+                            disabled="@(isRanking || string.IsNullOrWhiteSpace(jobDescription) || uploadedResumes.Count == 0)">
+                        @if (isRanking)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Ranking...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-trophy me-2"></i>
+                            <span>Rank Candidates</span>
+                        }
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="Reset" disabled="@isRanking">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: resume upload + results -->
+            <div class="col-12 col-lg-8">
+
+                <!-- ── Resume upload ──────────────────────────────────────── -->
+                <h6 class="fw-bold mb-2">
+                    <i class="bi bi-files me-2 text-primary"></i>Resume Files
+                    <span class="text-danger">*</span>
+                </h6>
+                <small class="text-muted d-block mb-2">
+                    .txt and .pdf files supported &nbsp;·&nbsp; max @MaxFileSizeMb MB per file
+                </small>
+
+                @if (uploadedResumes.Count == 0 && !isExtractingFiles)
+                {
+                    <div class="upload-zone border rounded-3 d-flex flex-column align-items-center
+                                justify-content-center p-4 text-center mb-3"
+                         style="min-height:9rem; border-style:dashed !important; position:relative;">
+                        <InputFile id="resumeInput"
+                                   class="visually-hidden"
+                                   OnChange="OnFilesSelected"
+                                   accept=".txt,.pdf"
+                                   multiple
+                                   disabled="@isRanking" />
+                        <label for="resumeInput" style="cursor:pointer; position:absolute; inset:0;
+                               display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                            <i class="bi bi-cloud-upload fs-1 text-secondary mb-2"></i>
+                            <span><strong>Click to select</strong> or drag &amp; drop</span>
+                            <small class="text-muted mt-1">.txt or .pdf &nbsp;·&nbsp; multiple files allowed</small>
+                        </label>
+                    </div>
+                }
+                else if (isExtractingFiles)
+                {
+                    <div class="text-center py-4 mb-3">
+                        <span class="spinner-border text-primary me-2" role="status"></span>
+                        <span class="text-muted">Extracting resume text...</span>
+                    </div>
+                }
+                else
+                {
+                    <!-- Uploaded files list -->
+                    <div class="mb-3">
+                        @foreach (var (resume, i) in uploadedResumes.Select((r, i) => (r, i)))
+                        {
+                            <div class="d-flex align-items-center gap-2 p-2 border rounded mb-1 @(resume.HasError ? "border-danger bg-danger-subtle" : "bg-light")">
+                                <i class="bi @(resume.HasError ? "bi-exclamation-triangle-fill text-danger" : "bi-file-earmark-text text-secondary") flex-shrink-0"></i>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="fw-semibold text-truncate small">@resume.FileName</div>
+                                    @if (resume.HasError)
+                                    {
+                                        <small class="text-danger">@resume.ErrorMessage</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">@resume.ExtractedText.Length characters extracted</small>
+                                    }
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger flex-shrink-0"
+                                        @onclick="() => RemoveResume(i)"
+                                        disabled="@isRanking"
+                                        title="Remove">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        }
+
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <InputFile id="resumeInputAdd"
+                                       class="visually-hidden"
+                                       OnChange="OnFilesSelected"
+                                       accept=".txt,.pdf"
+                                       multiple
+                                       disabled="@isRanking" />
+                            <label for="resumeInputAdd"
+                                   class="btn btn-sm btn-outline-secondary"
+                                   style="cursor:pointer;">
+                                <i class="bi bi-plus-circle me-1"></i>Add more files
+                            </label>
+                            <small class="text-muted">@uploadedResumes.Count(r => !r.HasError) valid resume(s)</small>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(fileErrorMessage))
+                {
+                    <div class="alert alert-warning py-2 mb-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@fileErrorMessage
+                    </div>
+                }
+
+                <!-- ── Error banner ───────────────────────────────────────── -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- ── Stage progress ─────────────────────────────────────── -->
+                @if (isRanking || stages.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body py-3">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                @foreach (var (msg, idx, done) in stages)
+                                {
+                                    <span class="badge @(done ? "bg-success" : "bg-primary") stage-badge">
+                                        @if (done)
+                                        {
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        @msg
+                                    </span>
+                                    @if (idx < stages.Count - 1)
+                                    {
+                                        <i class="bi bi-arrow-right text-muted"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- ── Pre-run placeholder ────────────────────────────────── -->
+                @if (!isRanking && result == null && stages.Count == 0 && string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="card shadow-sm prerun-card">
+                        <div class="card-body py-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Ready to rank
+                            </h6>
+                            <p class="text-muted mb-2">
+                                Paste a job description on the left and upload resume files above,
+                                then click <span class="fw-semibold text-body">Rank Candidates</span>.
+                            </p>
+                            <small class="text-muted">
+                                You will see live stage progress, a ranked shortlist with semantic similarity scores,
+                                and tailored interview questions for your top candidates.
+                            </small>
+                        </div>
+                    </div>
+                }
+
+                <!-- ── Results ────────────────────────────────────────────── -->
+                @if (result != null)
+                {
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                <i class="bi bi-trophy-fill me-2 text-warning"></i>Ranked Candidates
+                            </h5>
+                            <small class="text-muted">
+                                @result.ShortlistedCount of @result.TotalCandidatesEvaluated evaluated &nbsp;·&nbsp;
+                                <i class="bi bi-stopwatch me-1"></i>@FormatElapsed(_sw.Elapsed)
+                            </small>
+                        </div>
+                    </div>
+
+                    @if (result.RankedCandidates.Count == 0)
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-funnel me-2"></i>
+                            No candidates met the minimum similarity threshold. Try lowering the filter or uploading
+                            more relevant resumes.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var candidate in result.RankedCandidates)
+                        {
+                            <div class="candidate-card card shadow-sm mb-3">
+                                <div class="card-header py-2 d-flex align-items-center justify-content-between
+                                            flex-wrap gap-2 @(candidate.Rank == 1 ? "bg-warning-subtle" : "")">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge @RankBadgeClass(candidate.Rank) fs-6">
+                                            #@candidate.Rank
+                                        </span>
+                                        <span class="fw-bold">@candidate.Profile.Name</span>
+                                        @if (!string.IsNullOrWhiteSpace(candidate.Profile.Location))
+                                        {
+                                            <small class="text-muted">
+                                                <i class="bi bi-geo-alt me-1"></i>@candidate.Profile.Location
+                                            </small>
+                                        }
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge @ScoreBadgeClass(candidate.SimilarityScore) px-3">
+                                            @((candidate.SimilarityScore * 100).ToString("F0"))% match
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="card-body py-3">
+                                    <div class="row g-3">
+
+                                        <!-- Profile details -->
+                                        <div class="col-12 col-md-6">
+                                            @if (!string.IsNullOrWhiteSpace(candidate.Profile.Summary))
+                                            {
+                                                <p class="text-muted small mb-2 fst-italic">
+                                                    "@candidate.Profile.Summary"
+                                                </p>
+                                            }
+
+                                            @if (!string.IsNullOrWhiteSpace(candidate.Profile.Email))
+                                            {
+                                                <div class="small mb-1">
+                                                    <i class="bi bi-envelope me-1 text-secondary"></i>
+                                                    <a href="mailto:@candidate.Profile.Email">@candidate.Profile.Email</a>
+                                                </div>
+                                            }
+
+                                            @if (candidate.Profile.Skills.Count > 0)
+                                            {
+                                                <div class="mt-2">
+                                                    @foreach (var skill in candidate.Profile.Skills.Take(12))
+                                                    {
+                                                        <span class="badge bg-secondary me-1 mb-1">@skill</span>
+                                                    }
+                                                    @if (candidate.Profile.Skills.Count > 12)
+                                                    {
+                                                        <span class="badge bg-light text-muted mb-1">
+                                                            +@(candidate.Profile.Skills.Count - 12) more
+                                                        </span>
+                                                    }
+                                                </div>
+                                            }
+
+                                            @if (candidate.Profile.Experience.Count > 0)
+                                            {
+                                                <div class="mt-3">
+                                                    <div class="fw-semibold small text-uppercase text-muted mb-1">
+                                                        Experience
+                                                    </div>
+                                                    @foreach (var exp in candidate.Profile.Experience.Take(3))
+                                                    {
+                                                        <div class="exp-item small mb-2">
+                                                            <span class="fw-semibold">@exp.Title</span>
+                                                            <span class="text-muted"> — @exp.Company</span>
+                                                            @if (!string.IsNullOrWhiteSpace(exp.Duration))
+                                                            {
+                                                                <span class="text-muted"> (@exp.Duration)</span>
+                                                            }
+                                                            @if (!string.IsNullOrWhiteSpace(exp.Summary))
+                                                            {
+                                                                <div class="text-muted">@exp.Summary</div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+
+                                            @if (candidate.Profile.EducationList.Count > 0)
+                                            {
+                                                <div class="mt-2">
+                                                    <div class="fw-semibold small text-uppercase text-muted mb-1">
+                                                        Education
+                                                    </div>
+                                                    @foreach (var edu in candidate.Profile.EducationList)
+                                                    {
+                                                        <div class="small text-muted">
+                                                            @edu.Degree — @edu.Institution
+                                                            @if (!string.IsNullOrWhiteSpace(edu.Year))
+                                                            {
+                                                                <span> (@edu.Year)</span>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <!-- Interview questions -->
+                                        <div class="col-12 col-md-6">
+                                            @if (candidate.InterviewQuestions.Count > 0)
+                                            {
+                                                <div class="fw-semibold small text-uppercase text-muted mb-2">
+                                                    <i class="bi bi-chat-quote me-1"></i>Interview Questions
+                                                </div>
+                                                <ol class="interview-questions small ps-3">
+                                                    @foreach (var q in candidate.InterviewQuestions)
+                                                    {
+                                                        <li class="mb-2">@q</li>
+                                                    }
+                                                </ol>
+                                            }
+                                            else
+                                            {
+                                                <div class="text-muted small fst-italic">
+                                                    Interview questions not generated for this candidate
+                                                    (outside top-@topN shortlist).
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .jd-textarea {
+        resize: vertical;
+        min-height: 14rem;
+        font-size: 0.9rem;
+    }
+
+    .ranking-settings {
+        background: #f8f9fa;
+    }
+
+    .upload-zone {
+        background: #f8f9fa;
+        transition: background .15s;
+    }
+
+    .upload-zone:hover {
+        background: #e9ecef;
+    }
+
+    .prerun-card {
+        border-style: dashed;
+        border-color: #d0d7de;
+        background: #f8fbff;
+    }
+
+    .stage-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.75em;
+    }
+
+    .candidate-card {
+        transition: box-shadow .15s;
+    }
+
+    .candidate-card:hover {
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, .1) !important;
+    }
+
+    .exp-item {
+        padding-left: 0.75rem;
+        border-left: 2px solid #dee2e6;
+    }
+
+    .interview-questions li {
+        line-height: 1.5;
+    }
+</style>
+
+@code {
+    private long MaxFileSizeMb    => Configuration.GetValue<long>("Upload:MaxFileSizeMb", 10);
+    private long MaxFileSizeBytes => MaxFileSizeMb * 1024 * 1024;
+
+    // ── Form state ────────────────────────────────────────────────────────────
+    private string jobDescription      = string.Empty;
+    private int    topN               = 5;
+    private float  similarityThreshold = 0f;
+
+    // ── Upload state ──────────────────────────────────────────────────────────
+    private bool                isExtractingFiles = false;
+    private string              fileErrorMessage  = string.Empty;
+    private List<UploadedResume> uploadedResumes   = new();
+
+    // ── Operation state ───────────────────────────────────────────────────────
+    private bool   isRanking    = false;
+    private string errorMessage = string.Empty;
+
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+    private RankingResultPayload? result = null;
+    private System.Diagnostics.Stopwatch _sw = new();
+
+    // ── File selection ────────────────────────────────────────────────────────
+    private async Task OnFilesSelected(InputFileChangeEventArgs e)
+    {
+        fileErrorMessage = string.Empty;
+
+        var files = e.GetMultipleFiles(50);
+
+        // Buffer all file bytes into memory BEFORE triggering any re-render.
+        // Calling StateHasChanged removes the InputFile element from the DOM,
+        // which disposes Blazor's browser-side _blazorFilesById map and makes
+        // subsequent OpenReadStream calls throw "null is not an object".
+        var buffered = new List<(string Name, byte[]? Data, string? Error)>();
+        foreach (var file in files)
+        {
+            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+
+            if (ext != ".txt" && ext != ".pdf")
+            {
+                buffered.Add((file.Name, null,
+                    $"Unsupported type '{ext}'. Only .txt and .pdf are accepted."));
+                continue;
+            }
+
+            if (file.Size > MaxFileSizeBytes)
+            {
+                buffered.Add((file.Name, null,
+                    $"File exceeds the {MaxFileSizeMb} MB limit."));
+                continue;
+            }
+
+            try
+            {
+                using var ms = new MemoryStream();
+                await using var stream = file.OpenReadStream(maxAllowedSize: MaxFileSizeBytes);
+                await stream.CopyToAsync(ms);
+                buffered.Add((file.Name, ms.ToArray(), null));
+            }
+            catch (Exception ex)
+            {
+                buffered.Add((file.Name, null, $"Failed to read file: {ex.Message}"));
+            }
+        }
+
+        // Safe to re-render now — InputFile is no longer needed.
+        isExtractingFiles = true;
+        await InvokeAsync(StateHasChanged);
+
+        foreach (var (name, data, readError) in buffered)
+        {
+            if (readError != null)
+            {
+                uploadedResumes.Add(new UploadedResume(name, string.Empty, readError));
+                continue;
+            }
+
+            try
+            {
+                using var ms = new MemoryStream(data!);
+                var text = await FileExtractor.ExtractAsync(ms, name);
+                uploadedResumes.Add(new UploadedResume(name, text, string.Empty));
+            }
+            catch (Exception ex)
+            {
+                uploadedResumes.Add(new UploadedResume(
+                    name,
+                    string.Empty,
+                    $"Failed to extract text: {ex.Message}"));
+            }
+        }
+
+        isExtractingFiles = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void RemoveResume(int index)
+    {
+        if (index >= 0 && index < uploadedResumes.Count)
+            uploadedResumes.RemoveAt(index);
+    }
+
+    // ── Rank ──────────────────────────────────────────────────────────────────
+    private async Task Rank()
+    {
+        var validResumes = uploadedResumes.Where(r => !r.HasError).ToList();
+        if (string.IsNullOrWhiteSpace(jobDescription) || validResumes.Count == 0) return;
+
+        isRanking    = true;
+        errorMessage = string.Empty;
+        result       = null;
+        stages       = new();
+        _sw          = System.Diagnostics.Stopwatch.StartNew();
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/Ranking/rank");
+            requestMsg.Content = JsonContent.Create(new
+            {
+                JobDescription      = jobDescription.Trim(),
+                Resumes             = validResumes.Select(r => new { r.FileName, Text = r.ExtractedText }),
+                TopN               = topN,
+                SimilarityThreshold = similarityThreshold,
+            });
+
+            using var response = await Http.SendAsync(
+                requestMsg, HttpCompletionOption.ResponseHeadersRead);
+            using var stream   = await response.Content.ReadAsStreamAsync();
+            using var reader   = new System.IO.StreamReader(stream);
+
+            var jsonOpts   = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "complete":
+                            _sw.Stop();
+                            result = JsonSerializer.Deserialize<RankingResultPayload>(data, jsonOpts);
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "error":
+                            var errPayload = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage   = errPayload?.Error ?? "Ranking failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isRanking = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // ── Reset ─────────────────────────────────────────────────────────────────
+    private void Reset()
+    {
+        jobDescription      = string.Empty;
+        topN               = 5;
+        similarityThreshold = 0f;
+        uploadedResumes     = new();
+        fileErrorMessage    = string.Empty;
+        errorMessage        = string.Empty;
+        result              = null;
+        stages              = new();
+        StateHasChanged();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private static string RankBadgeClass(int rank) => rank switch
+    {
+        1 => "bg-warning text-dark",
+        2 => "bg-secondary",
+        3 => "bg-secondary",
+        _ => "bg-light text-dark border",
+    };
+
+    private static string ScoreBadgeClass(float score) => score switch
+    {
+        >= 0.8f => "bg-success",
+        >= 0.6f => "bg-primary",
+        >= 0.4f => "bg-warning text-dark",
+        _       => "bg-secondary",
+    };
+
+    private static string FormatElapsed(TimeSpan t) => t.TotalSeconds >= 60
+        ? $"{(int)t.TotalMinutes}m {t.Seconds}s"
+        : t.TotalSeconds >= 1
+            ? $"{t.TotalSeconds:F1}s"
+            : $"{t.TotalMilliseconds:F0}ms";
+
+    // ── Local model ───────────────────────────────────────────────────────────
+    private record UploadedResume(string FileName, string ExtractedText, string ErrorMessage)
+    {
+        public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+    }
+
+    // ── SSE payload types ─────────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message    { get; set; } = string.Empty;
+        public int    StageIndex { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class RankingResultPayload
+    {
+        public List<RankedCandidatePayload> RankedCandidates        { get; set; } = new();
+        public int                          TotalCandidatesEvaluated { get; set; }
+        public int                          ShortlistedCount         { get; set; }
+        public DateTime                     EvaluatedAt              { get; set; }
+    }
+
+    private class RankedCandidatePayload
+    {
+        public int                    Rank                { get; set; }
+        public float                  SimilarityScore     { get; set; }
+        public CandidateProfilePayload Profile            { get; set; } = new();
+        public List<string>           InterviewQuestions  { get; set; } = new();
+    }
+
+    private class CandidateProfilePayload
+    {
+        public string                       FileName      { get; set; } = string.Empty;
+        public string                       Name          { get; set; } = string.Empty;
+        public string                       Email         { get; set; } = string.Empty;
+        public string                       Phone         { get; set; } = string.Empty;
+        public string                       Location      { get; set; } = string.Empty;
+        public string                       Summary       { get; set; } = string.Empty;
+        public List<string>                 Skills        { get; set; } = new();
+        public List<WorkExperiencePayload>  Experience    { get; set; } = new();
+        public List<EducationPayload>       EducationList { get; set; } = new();
+    }
+
+    private class WorkExperiencePayload
+    {
+        public string Title    { get; set; } = string.Empty;
+        public string Company  { get; set; } = string.Empty;
+        public string Duration { get; set; } = string.Empty;
+        public string Summary  { get; set; } = string.Empty;
+    }
+
+    private class EducationPayload
+    {
+        public string Degree      { get; set; } = string.Empty;
+        public string Institution { get; set; } = string.Empty;
+        public string Year        { get; set; } = string.Empty;
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+}
