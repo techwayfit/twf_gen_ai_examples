@@ -1,0 +1,1119 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+@inject _032_TextbookChapterQuestionGenerator.Services.ChapterTextExtractorService ChapterExtractor
+@inject IJSRuntime JS
+@using System.Text.Json
+@using System.Text.Json.Serialization
+
+<!-- ══ INPUT FORM CARD ══════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-journal-text me-2"></i>Chapter Text &amp; Generation Settings
+        </h5>
+        <small class="opacity-75">Paste your textbook chapter, configure question counts and Bloom's levels, then click Generate</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+
+            <!-- Left: chapter text -->
+            <div class="col-12 col-lg-5">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label fw-semibold mb-0">
+                        Chapter Text <span class="text-danger">*</span>
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        @if (isExtractingFile)
+                        {
+                            <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                            <small class="text-muted">Reading file...</small>
+                        }
+                        else
+                        {
+                            @if (!string.IsNullOrEmpty(uploadedFileName))
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <i class="bi bi-file-earmark-check me-1"></i>@uploadedFileName
+                                </span>
+                                <button class="btn btn-sm btn-outline-secondary py-0"
+                                        @onclick="ClearUpload"
+                                        disabled="@isGenerating"
+                                        title="Remove file">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            }
+                            <InputFile id="chapterFileInput"
+                                       class="visually-hidden"
+                                       OnChange="OnFileSelected"
+                                       accept=".txt,.pdf"
+                                       disabled="@isGenerating" />
+                            <label for="chapterFileInput"
+                                   class="btn btn-sm btn-outline-primary py-0 @(isGenerating ? "disabled" : "")"
+                                   style="cursor:pointer;">
+                                <i class="bi bi-upload me-1"></i>Upload PDF / TXT
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(fileErrorMessage))
+                {
+                    <div class="alert alert-warning py-2 mb-2 small" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>@fileErrorMessage
+                    </div>
+                }
+
+                <textarea class="form-control chapter-textarea"
+                          rows="16"
+                          placeholder="Paste your textbook chapter text here, or upload a .txt / .pdf file above..."
+                          @bind="chapterText"
+                          @bind:event="oninput"
+                          disabled="@isGenerating"
+                          maxlength="40000"></textarea>
+                <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted">@chapterText.Length / 40,000 characters</small>
+                </div>
+            </div>
+
+            <!-- Right: settings + results -->
+            <div class="col-12 col-lg-7">
+
+                <!-- ── Generation settings ────────────────────────────────── -->
+                <div class="generation-settings border rounded p-3 mb-3">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-sliders me-2 text-primary"></i>Question Settings
+                    </h6>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label small fw-semibold">MCQs</label>
+                            <select class="form-select form-select-sm" @bind="mcqCount" disabled="@isGenerating">
+                                <option value="0">0</option>
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label small fw-semibold">Short Answer</label>
+                            <select class="form-select form-select-sm" @bind="shortAnswerCount" disabled="@isGenerating">
+                                <option value="0">0</option>
+                                <option value="3">3</option>
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label small fw-semibold">Essays</label>
+                            <select class="form-select form-select-sm" @bind="essayCount" disabled="@isGenerating">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label small fw-semibold">True/False</label>
+                            <select class="form-select form-select-sm" @bind="trueFalseCount" disabled="@isGenerating">
+                                <option value="0">0</option>
+                                <option value="5">5</option>
+                                <option value="8">8</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <label class="form-label small fw-semibold">Word Problems</label>
+                            <select class="form-select form-select-sm" @bind="wordProblemCount" disabled="@isGenerating">
+                                <option value="0">0</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-7">
+                            <label class="form-label small fw-semibold">Bloom's Taxonomy Levels</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var level in AllBloomLevels)
+                                {
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="bloom_@level"
+                                               checked="@selectedBloomLevels.Contains(level)"
+                                               @onchange="e => ToggleBloomLevel(level, (bool)(e.Value ?? false))"
+                                               disabled="@isGenerating" />
+                                        <label class="form-check-label small" for="bloom_@level">@level</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-5">
+                            <label class="form-label small fw-semibold">Subject</label>
+                            <select class="form-select form-select-sm" @bind="subject" disabled="@isGenerating">
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="English">English</option>
+                                <option value="Social Science">Social Science</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Economics">Economics</option>
+                                <option value="General">General</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-5">
+                            <label class="form-label small fw-semibold">Difficulty</label>
+                            <select class="form-select form-select-sm" @bind="difficulty" disabled="@isGenerating">
+                                <option value="mixed">Mixed</option>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    <button class="btn btn-primary px-4"
+                            @onclick="Generate"
+                            disabled="@(isGenerating || string.IsNullOrWhiteSpace(chapterText) || TotalQuestions == 0)">
+                        @if (isGenerating)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Generating...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <span>Generate @(TotalQuestions > 0 ? $"({TotalQuestions} questions)" : "")</span>
+                        }
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="Reset" disabled="@isGenerating">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    </button>
+                </div>
+
+                <!-- ── Error banner ───────────────────────────────────────── -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- ── Stage progress ─────────────────────────────────────── -->
+                @if (isGenerating || stages.Count > 0)
+                {
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body py-3">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                @foreach (var (msg, idx, done) in stages)
+                                {
+                                    <span class="badge @(done ? "bg-success" : "bg-primary") stage-badge">
+                                        @if (done)
+                                        {
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                        }
+                                        @msg
+                                    </span>
+                                    @if (idx < stages.Count - 1)
+                                    {
+                                        <i class="bi bi-arrow-right text-muted"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- ── Pre-run placeholder ────────────────────────────────── -->
+                @if (!isGenerating && result == null && stages.Count == 0 && string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="card shadow-sm prerun-card">
+                        <div class="card-body py-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Ready to generate
+                            </h6>
+                            <p class="text-muted mb-2">
+                                Paste a textbook chapter on the left, choose your question counts and Bloom's
+                                levels above, then click <span class="fw-semibold text-body">Generate</span>.
+                            </p>
+                            <small class="text-muted">
+                                All four question types are generated in parallel. You will see live stage
+                                progress and a tabbed question bank when complete.
+                            </small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ QUESTION BANK RESULTS ════════════════════════════════════════════════ -->
+@if (result != null)
+{
+    <div class="card shadow-lg mb-4">
+        <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0">
+                    <i class="bi bi-journal-check me-2"></i>Question Bank
+                </h5>
+                <small class="opacity-75">
+                    @result.TotalQuestions questions generated &nbsp;·&nbsp;
+                    <i class="bi bi-stopwatch me-1"></i>@FormatElapsed(_sw.Elapsed)
+                </small>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                @foreach (var (type, count) in result.CountsByType.Where(x => x.Value > 0))
+                {
+                    <span class="badge bg-light text-dark">@count @TypeLabel(type)</span>
+                }
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- ── View toggle + download buttons ──────────────────────────── -->
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div class="btn-group" role="group">
+                    <button class="btn @(resultView == "worksheet" ? "btn-primary" : "btn-outline-primary")"
+                            @onclick='() => resultView = "worksheet"'>
+                        <i class="bi bi-file-earmark-ruled me-1"></i>Worksheet
+                    </button>
+                    <button class="btn @(resultView == "answers" ? "btn-primary" : "btn-outline-primary")"
+                            @onclick='() => resultView = "answers"'>
+                        <i class="bi bi-key me-1"></i>Answer Key
+                    </button>
+                </div>
+                <div class="d-flex gap-2">
+                    @if (resultView == "worksheet")
+                    {
+                        <button class="btn btn-outline-secondary btn-sm"
+                                @onclick='() => DownloadPdfAsync("worksheet-pdf-area", "worksheet.pdf")'>
+                            <i class="bi bi-download me-1"></i>Download Worksheet
+                        </button>
+                    }
+                    @if (resultView == "answers")
+                    {
+                        <button class="btn btn-outline-secondary btn-sm"
+                                @onclick='() => DownloadPdfAsync("answers-pdf-area", "answer-key.pdf")'>
+                            <i class="bi bi-download me-1"></i>Download Answer Key
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Bloom's level summary -->
+            @if (result.CountsByBloomLevel.Count > 0)
+            {
+                <div class="mb-4">
+                    <h6 class="fw-semibold mb-2 text-muted small text-uppercase">Coverage by Bloom's Level</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var (level, count) in result.CountsByBloomLevel.OrderBy(x => BloomOrder(x.Key)))
+                        {
+                            <span class="badge @BloomBadgeClass(level) px-3 py-2">
+                                @level <span class="ms-1 opacity-75">(@count)</span>
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+
+            @{
+                // Build flat numbered question list across all types
+                var allQ = BuildQuestionList(result);
+            }
+
+            <!-- ══ WORKSHEET VIEW ══════════════════════════════════════════ -->
+            <div id="worksheet-pdf-area" class="ws-page @(resultView == "worksheet" ? "" : "d-none")">
+                <div class="ws-header text-center mb-4">
+                    <h4 class="fw-bold">Student Worksheet</h4>
+                    <div class="ws-meta text-muted small">Subject: <strong>@subject</strong></div>
+                    <div class="ws-meta text-muted small">
+                        Name: _________________________________ &nbsp;&nbsp;
+                        Date: _________________ &nbsp;&nbsp;
+                        Score: ______ / @result.TotalQuestions
+                    </div>
+                    <hr />
+                </div>
+
+                @foreach (var (qn, num) in allQ.Select((q, i) => (q, i + 1)))
+                {
+                    <div class="ws-question avoid-break mb-4">
+                        @if (qn.Type == "section-header")
+                        {
+                            <div class="ws-section-heading">@qn.Label</div>
+                        }
+                        else if (qn.Type == "mcq")
+                        {
+                            var mcq = (McqPayload)qn.Data;
+                            var opts = new[] { mcq.CorrectAnswer }
+                                .Concat(mcq.Distractors)
+                                .Where(o => !string.IsNullOrWhiteSpace(o))
+                                .OrderBy(_ => Guid.NewGuid())
+                                .ToList();
+                            <p class="ws-q-text"><strong>@num.</strong> @mcq.Question</p>
+                            <div class="ws-mcq-options">
+                                @foreach (var (opt, li) in opts.Select((o, i) => (o, i)))
+                                {
+                                    <span class="ws-option">@(((char)('A' + li)).ToString()).&nbsp; @opt</span>
+                                }
+                            </div>
+                        }
+                        else if (qn.Type == "short")
+                        {
+                            var sa = (ShortAnswerPayload)qn.Data;
+                            <p class="ws-q-text"><strong>@num.</strong> @sa.Question</p>
+                            <div class="ws-answer-lines">
+                                <div class="ws-line"></div>
+                                <div class="ws-line"></div>
+                                <div class="ws-line"></div>
+                            </div>
+                        }
+                        else if (qn.Type == "essay")
+                        {
+                            var es = (EssayPayload)qn.Data;
+                            <p class="ws-q-text"><strong>@num.</strong> @es.Prompt
+                                @if (es.SuggestedWordCount > 0)
+                                {
+                                    <span class="text-muted small"> (~@es.SuggestedWordCount words)</span>
+                                }
+                            </p>
+                            <div class="ws-essay-box"></div>
+                        }
+                        else if (qn.Type == "tf")
+                        {
+                            var tf = (TrueFalsePayload)qn.Data;
+                            <p class="ws-q-text">
+                                <strong>@num.</strong>
+                                <span class="ws-tf-circles">
+                                    <span class="ws-circle">T</span>
+                                    <span class="ws-circle">F</span>
+                                </span>
+                                @tf.Statement
+                            </p>
+                        }
+                        else if (qn.Type == "wp")
+                        {
+                            var wp = (WordProblemPayload)qn.Data;
+                            <p class="ws-q-text katex-content"><strong>@num.</strong> @((MarkupString)wp.Problem)</p>
+                            @if (!string.IsNullOrWhiteSpace(wp.SvgDiagram))
+                            {
+                                <div class="my-2 text-center">@((MarkupString)wp.SvgDiagram)</div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(wp.Hint))
+                            {
+                                <p class="text-muted small fst-italic ms-3 katex-content">
+                                    Hint: @((MarkupString)wp.Hint)
+                                </p>
+                            }
+                            <div class="ws-answer-lines">
+                                <div class="ws-line"></div>
+                                <div class="ws-line"></div>
+                                <div class="ws-line"></div>
+                                <div class="ws-line"></div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- ══ ANSWER KEY VIEW ════════════════════════════════════════= -->
+            <div id="answers-pdf-area" class="ws-page @(resultView == "answers" ? "" : "d-none")">
+                <div class="ws-header text-center mb-4">
+                    <h4 class="fw-bold">Answer Key <span class="badge bg-warning text-dark ms-2 fs-6">Teacher Copy</span></h4>
+                    <div class="ws-meta text-muted small">Subject: <strong>@subject</strong></div>
+                    <div class="ws-meta text-muted small">
+                        Generated @result.GeneratedAt.ToString("d MMM yyyy, HH:mm") UTC &nbsp;·&nbsp;
+                        @result.TotalQuestions questions
+                    </div>
+                    <hr />
+                </div>
+
+                @foreach (var (qn, num) in allQ.Select((q, i) => (q, i + 1)))
+                {
+                    <div class="ws-question avoid-break mb-4">
+                        @if (qn.Type == "section-header")
+                        {
+                            <div class="ws-section-heading">@qn.Label</div>
+                        }
+                        else if (qn.Type == "mcq")
+                        {
+                            var mcq = (McqPayload)qn.Data;
+                            var opts = new[] { mcq.CorrectAnswer }
+                                .Concat(mcq.Distractors)
+                                .Where(o => !string.IsNullOrWhiteSpace(o))
+                                .OrderBy(_ => Guid.NewGuid())
+                                .ToList();
+                            var correctLetter = (char)('A' + opts.IndexOf(mcq.CorrectAnswer));
+                            <p class="ws-q-text">
+                                <strong>@num.</strong> @mcq.Question
+                                <span class="badge bg-success ms-2">@correctLetter</span>
+                                <span class="badge @BloomBadgeClass(mcq.BloomLevel) ms-1">@mcq.BloomLevel</span>
+                            </p>
+                            <div class="ws-mcq-options">
+                                @foreach (var (opt, li) in opts.Select((o, i) => (o, i)))
+                                {
+                                    var letter = (char)('A' + li);
+                                    var isCorrect = opt == mcq.CorrectAnswer;
+                                    <span class="ws-option @(isCorrect ? "ws-option-correct" : "text-muted")">
+                                        @(letter.ToString()).&nbsp; @opt
+                                        @if (isCorrect) { <i class="bi bi-check-circle-fill text-success ms-1"></i> }
+                                    </span>
+                                }
+                            </div>
+                        }
+                        else if (qn.Type == "short")
+                        {
+                            var sa = (ShortAnswerPayload)qn.Data;
+                            <p class="ws-q-text">
+                                <strong>@num.</strong> @sa.Question
+                                <span class="badge @BloomBadgeClass(sa.BloomLevel) ms-1">@sa.BloomLevel</span>
+                            </p>
+                            <div class="ak-answer-box">
+                                <div class="fw-semibold small text-muted text-uppercase mb-1">Model Answer</div>
+                                <p class="mb-1">@sa.ModelAnswer</p>
+                                @if (!string.IsNullOrWhiteSpace(sa.MarkingCriteria))
+                                {
+                                    <div class="fw-semibold small text-muted text-uppercase mb-1 mt-2">Marking Criteria</div>
+                                    <p class="mb-0 text-muted small">@sa.MarkingCriteria</p>
+                                }
+                            </div>
+                        }
+                        else if (qn.Type == "essay")
+                        {
+                            var es = (EssayPayload)qn.Data;
+                            <p class="ws-q-text">
+                                <strong>@num.</strong> @es.Prompt
+                                @if (es.SuggestedWordCount > 0)
+                                {
+                                    <span class="text-muted small"> (~@es.SuggestedWordCount words)</span>
+                                }
+                                <span class="badge @BloomBadgeClass(es.BloomLevel) ms-1">@es.BloomLevel</span>
+                            </p>
+                            @if (!string.IsNullOrWhiteSpace(es.Rubric))
+                            {
+                                <div class="ak-answer-box">
+                                    <div class="fw-semibold small text-muted text-uppercase mb-1">Rubric</div>
+                                    <p class="mb-0 small">@es.Rubric</p>
+                                </div>
+                            }
+                        }
+                        else if (qn.Type == "tf")
+                        {
+                            var tf = (TrueFalsePayload)qn.Data;
+                            <p class="ws-q-text">
+                                <strong>@num.</strong> @tf.Statement
+                                <span class="badge @(tf.IsTrue ? "bg-success" : "bg-danger") ms-2">
+                                    @(tf.IsTrue ? "TRUE" : "FALSE")
+                                </span>
+                                <span class="badge @BloomBadgeClass(tf.BloomLevel) ms-1">@tf.BloomLevel</span>
+                            </p>
+                            @if (!string.IsNullOrWhiteSpace(tf.Justification))
+                            {
+                                <p class="text-muted small ms-3 mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>@tf.Justification
+                                </p>
+                            }
+                        }
+                        else if (qn.Type == "wp")
+                        {
+                            var wp = (WordProblemPayload)qn.Data;
+                            <p class="ws-q-text katex-content">
+                                <strong>@num.</strong> @((MarkupString)wp.Problem)
+                                <span class="badge @BloomBadgeClass(wp.BloomLevel) ms-1">@wp.BloomLevel</span>
+                            </p>
+                            @if (!string.IsNullOrWhiteSpace(wp.SvgDiagram))
+                            {
+                                <div class="my-2 text-center">@((MarkupString)wp.SvgDiagram)</div>
+                            }
+                            <div class="ak-answer-box katex-content">
+                                @if (wp.SolutionSteps.Count > 0)
+                                {
+                                    <div class="fw-semibold small text-muted text-uppercase mb-1">Solution Steps</div>
+                                    <ol class="mb-1 ps-3 small">
+                                        @foreach (var step in wp.SolutionSteps)
+                                        {
+                                            <li>@((MarkupString)step)</li>
+                                        }
+                                    </ol>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(wp.FinalAnswer))
+                                {
+                                    <div class="fw-semibold small text-muted text-uppercase mb-1 mt-2">Answer</div>
+                                    <p class="mb-0">@((MarkupString)wp.FinalAnswer)</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .chapter-textarea {
+        resize: vertical;
+        min-height: 20rem;
+        font-size: 0.9rem;
+    }
+
+    .generation-settings {
+        background: #f8f9fa;
+    }
+
+    .prerun-card {
+        border-style: dashed;
+        border-color: #d0d7de;
+        background: #f8fbff;
+    }
+
+    .stage-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.75em;
+    }
+
+    .question-card {
+        transition: box-shadow .15s;
+    }
+
+    .question-card:hover {
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, .08) !important;
+    }
+
+    .answer-correct {
+        font-weight: 500;
+    }
+
+    /* ── Worksheet / Answer Key shared layout ────────────────────────────── */
+    .ws-page {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 0.97rem;
+        color: #111;
+        max-width: 794px;   /* A4 width at 96 dpi */
+        margin: 0 auto;
+        padding: 0 8px;
+    }
+
+    .ws-page > :first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .ws-header hr {
+        border-top: 2px solid #333;
+    }
+
+    .ws-meta {
+        font-family: Arial, sans-serif;
+        letter-spacing: 0.02em;
+    }
+
+    .ws-section-heading {
+        font-family: Arial, sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid #555;
+        padding-bottom: 3px;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .ws-q-text {
+        margin-bottom: 6px;
+        line-height: 1.55;
+    }
+
+    /* MCQ options — 2-column grid */
+    .ws-mcq-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 24px;
+        margin: 4px 0 0 1.6rem;
+        font-size: 0.93rem;
+    }
+
+    .ws-option { display: block; }
+    .ws-option-correct { font-weight: 600; }
+
+    /* True/False inline circles */
+    .ws-tf-circles {
+        display: inline-flex;
+        gap: 6px;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+
+    .ws-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border: 1.5px solid #555;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    /* Answer lines for short-answer / word problems */
+    .ws-answer-lines {
+        margin: 6px 0 0 1.6rem;
+    }
+
+    .ws-line {
+        border-bottom: 1px solid #aaa;
+        margin-bottom: 16px;
+        height: 0;
+    }
+
+    /* Essay response box */
+    .ws-essay-box {
+        border: 1px solid #bbb;
+        border-radius: 4px;
+        min-height: 130px;
+        margin: 6px 0 0 1.6rem;
+    }
+
+    /* Answer key answer boxes */
+    .ak-answer-box {
+        background: #f0f7ff;
+        border-left: 3px solid #0d6efd;
+        padding: 8px 12px;
+        margin: 6px 0 0 1.6rem;
+        border-radius: 0 4px 4px 0;
+        font-size: 0.9rem;
+    }
+
+    /* Prevent html2pdf from splitting a question across pages */
+    .avoid-break {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    @@media print {
+        .ws-page {
+            max-width: 100%;
+            padding: 0;
+        }
+    }
+</style>
+
+@code {
+    // ── Bloom's levels ─────────────────────────────────────────────────────────
+    private static readonly string[] AllBloomLevels =
+        ["Remember", "Understand", "Apply", "Analyse", "Evaluate", "Create"];
+
+    // ── File upload state ─────────────────────────────────────────────────────
+    private bool   isExtractingFile  = false;
+    private string uploadedFileName  = string.Empty;
+    private string fileErrorMessage  = string.Empty;
+
+    private const long MaxFileSizeBytes = 20 * 1024 * 1024; // 20 MB
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        fileErrorMessage = string.Empty;
+        var file = e.File;
+
+        var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+        if (ext != ".txt" && ext != ".pdf")
+        {
+            fileErrorMessage = $"Unsupported type '{ext}'. Only .txt and .pdf are accepted.";
+            return;
+        }
+
+        if (file.Size > MaxFileSizeBytes)
+        {
+            fileErrorMessage = "File exceeds the 20 MB limit.";
+            return;
+        }
+
+        // Buffer bytes before triggering StateHasChanged (which removes InputFile from DOM).
+        byte[] data;
+        try
+        {
+            using var ms = new MemoryStream();
+            await using var stream = file.OpenReadStream(maxAllowedSize: MaxFileSizeBytes);
+            await stream.CopyToAsync(ms);
+            data = ms.ToArray();
+        }
+        catch (Exception ex)
+        {
+            fileErrorMessage = $"Failed to read file: {ex.Message}";
+            return;
+        }
+
+        isExtractingFile = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            using var ms2 = new MemoryStream(data);
+            chapterText      = await ChapterExtractor.ExtractAsync(ms2, file.Name);
+            uploadedFileName = file.Name;
+
+            // Truncate silently at 40 000 chars to match the textarea limit.
+            if (chapterText.Length > 40_000)
+                chapterText = chapterText[..40_000];
+        }
+        catch (Exception ex)
+        {
+            fileErrorMessage = $"Failed to extract text: {ex.Message}";
+        }
+        finally
+        {
+            isExtractingFile = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ClearUpload()
+    {
+        uploadedFileName = string.Empty;
+        fileErrorMessage = string.Empty;
+        chapterText      = string.Empty;
+    }
+
+    // ── Form state ────────────────────────────────────────────────────────────
+    private string       chapterText     = string.Empty;
+    private int          mcqCount          = 5;
+    private int          shortAnswerCount  = 3;
+    private int          essayCount        = 1;
+    private int          trueFalseCount    = 5;
+    private int          wordProblemCount  = 0;
+    private HashSet<string> selectedBloomLevels = new(["Remember", "Understand", "Apply"]);
+    private string       difficulty        = "mixed";
+    private string       subject           = "Mathematics";
+
+    private int TotalQuestions => mcqCount + shortAnswerCount + essayCount + trueFalseCount + wordProblemCount;
+
+    // ── Operation state ───────────────────────────────────────────────────────
+    private bool   isGenerating = false;
+    private string errorMessage = string.Empty;
+    private string resultView   = "worksheet";   // "worksheet" | "answers"
+
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+    private QuestionBankPayload? result = null;
+    private System.Diagnostics.Stopwatch _sw = new();
+
+    private void ToggleBloomLevel(string level, bool selected)
+    {
+        if (selected) selectedBloomLevels.Add(level);
+        else          selectedBloomLevels.Remove(level);
+    }
+
+    // ── Generate ──────────────────────────────────────────────────────────────
+    private async Task Generate()
+    {
+        if (string.IsNullOrWhiteSpace(chapterText) || TotalQuestions == 0) return;
+
+        isGenerating = true;
+        errorMessage = string.Empty;
+        result       = null;
+        stages       = new();
+        _sw          = System.Diagnostics.Stopwatch.StartNew();
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/Question/generate");
+            requestMsg.Content = JsonContent.Create(new
+            {
+                ChapterText      = chapterText.Trim(),
+                Subject          = subject,
+                McqCount         = mcqCount,
+                ShortAnswerCount = shortAnswerCount,
+                EssayCount       = essayCount,
+                TrueFalseCount   = trueFalseCount,
+                WordProblemCount = wordProblemCount,
+                BloomLevels      = selectedBloomLevels.ToList(),
+                Difficulty       = difficulty,
+            });
+
+            using var response = await Http.SendAsync(
+                requestMsg, HttpCompletionOption.ResponseHeadersRead);
+            using var stream   = await response.Content.ReadAsStreamAsync();
+            using var reader   = new System.IO.StreamReader(stream);
+
+            var jsonOpts   = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "complete":
+                            _sw.Stop();
+                            result     = JsonSerializer.Deserialize<QuestionBankPayload>(data, jsonOpts);
+                            resultView = "worksheet";
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "error":
+                            var errPayload = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage   = errPayload?.Error ?? "Generation failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isGenerating = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // ── Reset ─────────────────────────────────────────────────────────────────
+    private void Reset()
+    {
+        chapterText          = string.Empty;
+        mcqCount             = 5;
+        shortAnswerCount     = 3;
+        essayCount           = 1;
+        trueFalseCount       = 5;
+        wordProblemCount     = 0;
+        selectedBloomLevels  = new(["Remember", "Understand", "Apply"]);
+        difficulty           = "mixed";
+        errorMessage         = string.Empty;
+        result               = null;
+        resultView           = "worksheet";
+        stages               = new();
+        uploadedFileName     = string.Empty;
+        fileErrorMessage     = string.Empty;
+        StateHasChanged();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private static string BloomBadgeClass(string level) => level switch
+    {
+        "Remember"  => "bg-secondary",
+        "Understand" => "bg-info text-dark",
+        "Apply"     => "bg-primary",
+        "Analyse"   => "bg-warning text-dark",
+        "Evaluate"  => "bg-danger",
+        "Create"    => "bg-dark",
+        _           => "bg-light text-dark border",
+    };
+
+    private static int BloomOrder(string level) => level switch
+    {
+        "Remember"   => 1,
+        "Understand" => 2,
+        "Apply"      => 3,
+        "Analyse"    => 4,
+        "Evaluate"   => 5,
+        "Create"     => 6,
+        _            => 99,
+    };
+
+    private static string DifficultyBadgeClass(string d) => d?.ToLower() switch
+    {
+        "easy"   => "bg-success",
+        "medium" => "bg-warning text-dark",
+        "hard"   => "bg-danger",
+        _        => "bg-light text-dark border",
+    };
+
+    private static string TypeLabel(string type) => type switch
+    {
+        "mcq"          => "MCQs",
+        "short_answer" => "Short Answer",
+        "essay"        => "Essays",
+        "true_false"   => "True/False",
+        "word_problem" => "Word Problems",
+        _              => type,
+    };
+
+    private async Task DownloadPdfAsync(string elementId, string filename)
+    {
+        try { await JS.InvokeVoidAsync("downloadPdf", elementId, filename); }
+        catch { /* JS bridge not ready */ }
+    }
+
+    // ── Build flat question list ──────────────────────────────────────────────
+    private record QuestionItem(string Type, object Data, string Label = "");
+
+    private static List<QuestionItem> BuildQuestionList(QuestionBankPayload r)
+    {
+        var list = new List<QuestionItem>();
+        if (r.Mcqs.Count > 0)
+        {
+            list.Add(new QuestionItem("section-header", new object(), "Section A – Multiple Choice"));
+            foreach (var q in r.Mcqs)          list.Add(new QuestionItem("mcq",   q));
+        }
+        if (r.TrueFalse.Count > 0)
+        {
+            list.Add(new QuestionItem("section-header", new object(), "Section B – True / False"));
+            foreach (var q in r.TrueFalse)     list.Add(new QuestionItem("tf",    q));
+        }
+        if (r.ShortAnswers.Count > 0)
+        {
+            list.Add(new QuestionItem("section-header", new object(), "Section C – Short Answer"));
+            foreach (var q in r.ShortAnswers)  list.Add(new QuestionItem("short", q));
+        }
+        if (r.WordProblems.Count > 0)
+        {
+            list.Add(new QuestionItem("section-header", new object(), "Section D – Word Problems"));
+            foreach (var q in r.WordProblems)  list.Add(new QuestionItem("wp",    q));
+        }
+        if (r.Essays.Count > 0)
+        {
+            list.Add(new QuestionItem("section-header", new object(), "Section E – Extended Response"));
+            foreach (var q in r.Essays)        list.Add(new QuestionItem("essay", q));
+        }
+        return list;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (result?.WordProblems?.Count > 0)
+        {
+            try { await JS.InvokeVoidAsync("renderKaTeX"); } catch { /* KaTeX not yet loaded */ }
+        }
+    }
+
+    private static string FormatElapsed(TimeSpan t) => t.TotalSeconds >= 60
+        ? $"{(int)t.TotalMinutes}m {t.Seconds}s"
+        : t.TotalSeconds >= 1
+            ? $"{t.TotalSeconds:F1}s"
+            : $"{t.TotalMilliseconds:F0}ms";
+
+    // ── SSE payload types ─────────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message    { get; set; } = string.Empty;
+        public int    StageIndex { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class QuestionBankPayload
+    {
+        public List<McqPayload>          Mcqs               { get; set; } = new();
+        public List<ShortAnswerPayload>  ShortAnswers       { get; set; } = new();
+        public List<EssayPayload>        Essays             { get; set; } = new();
+        public List<TrueFalsePayload>    TrueFalse          { get; set; } = new();
+        public List<WordProblemPayload>  WordProblems       { get; set; } = new();
+        public int                       TotalQuestions     { get; set; }
+        public Dictionary<string, int>   CountsByType       { get; set; } = new();
+        public Dictionary<string, int>   CountsByBloomLevel { get; set; } = new();
+        public DateTime                  GeneratedAt        { get; set; }
+    }
+
+    private class McqPayload
+    {
+        public string       Question      { get; set; } = string.Empty;
+        [JsonPropertyName("correct_answer")]
+        public string       CorrectAnswer { get; set; } = string.Empty;
+        public List<string> Distractors   { get; set; } = new();
+        [JsonPropertyName("bloom_level")]
+        public string       BloomLevel    { get; set; } = string.Empty;
+        public string       Difficulty    { get; set; } = string.Empty;
+    }
+
+    private class ShortAnswerPayload
+    {
+        public string Question        { get; set; } = string.Empty;
+        [JsonPropertyName("model_answer")]
+        public string ModelAnswer     { get; set; } = string.Empty;
+        [JsonPropertyName("marking_criteria")]
+        public string MarkingCriteria { get; set; } = string.Empty;
+        [JsonPropertyName("bloom_level")]
+        public string BloomLevel      { get; set; } = string.Empty;
+        public string Difficulty      { get; set; } = string.Empty;
+    }
+
+    private class EssayPayload
+    {
+        public string Prompt              { get; set; } = string.Empty;
+        public string Rubric              { get; set; } = string.Empty;
+        [JsonPropertyName("suggested_word_count")]
+        public int    SuggestedWordCount  { get; set; }
+        [JsonPropertyName("bloom_level")]
+        public string BloomLevel          { get; set; } = string.Empty;
+        public string Difficulty          { get; set; } = string.Empty;
+    }
+
+    private class TrueFalsePayload
+    {
+        public string Statement     { get; set; } = string.Empty;
+        [JsonPropertyName("is_true")]
+        public bool   IsTrue        { get; set; }
+        public string Justification { get; set; } = string.Empty;
+        [JsonPropertyName("bloom_level")]
+        public string BloomLevel    { get; set; } = string.Empty;
+        public string Difficulty    { get; set; } = string.Empty;
+    }
+
+    private class WordProblemPayload
+    {
+        public string       Problem       { get; set; } = string.Empty;
+        public string       Hint          { get; set; } = string.Empty;
+        [JsonPropertyName("solution_steps")]
+        public List<string> SolutionSteps { get; set; } = new();
+        [JsonPropertyName("final_answer")]
+        public string       FinalAnswer   { get; set; } = string.Empty;
+        [JsonPropertyName("svg_diagram")]
+        public string       SvgDiagram    { get; set; } = string.Empty;
+        [JsonPropertyName("bloom_level")]
+        public string       BloomLevel    { get; set; } = string.Empty;
+        public string       Difficulty    { get; set; } = string.Empty;
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+}

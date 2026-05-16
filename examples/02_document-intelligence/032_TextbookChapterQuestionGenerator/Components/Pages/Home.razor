@@ -1,0 +1,43 @@
+@page "/"
+
+<PageTitle>Textbook Chapter Question Generator</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">Textbook Chapter Question Generator</h2>
+            <p class="text-muted">
+                Paste a textbook chapter and configure question types and Bloom's Taxonomy levels.
+                The pipeline analyses the content and generates MCQs, short-answer questions, essay prompts,
+                and true/false statements — all in parallel.
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <QuestionGeneratorWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-info-circle me-2"></i>How It Works
+                </h5>
+                <p class="mb-0">
+                    The pipeline runs three stages:
+                    <strong>content analysis</strong> — the chapter is analysed by an LLM to extract key
+                    concepts and map them to Bloom's Taxonomy levels;
+                    <strong>parallel generation</strong> — <code>Task.WhenAll</code> fans out four LLM calls
+                    simultaneously, generating MCQs (with distractors), short-answer questions (with model answers
+                    and marking criteria), essay prompts (with rubrics), and true/false statements (with
+                    justifications) — all calibrated to your selected Bloom's levels;
+                    <strong>assembly</strong> — all question types are merged into a unified question bank with
+                    summary counts per type and per Bloom's level.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
