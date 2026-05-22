@@ -11,6 +11,7 @@ public class RankingController : ControllerBase
     private readonly ILogger<RankingController> _logger;
     private readonly IConfiguration             _configuration;
     private readonly RankingWorkflowService     _rankingService;
+    private readonly ResumeRewriteService       _rewriteService;
 
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -18,11 +19,13 @@ public class RankingController : ControllerBase
     public RankingController(
         ILogger<RankingController> logger,
         IConfiguration             configuration,
-        RankingWorkflowService     rankingService)
+        RankingWorkflowService     rankingService,
+        ResumeRewriteService       rewriteService)
     {
         _logger         = logger;
         _configuration  = configuration;
         _rankingService = rankingService;
+        _rewriteService = rewriteService;
     }
 
     // ── POST /api/Ranking/rank ────────────────────────────────────────────────
@@ -114,6 +117,76 @@ public class RankingController : ControllerBase
             catch { /* response may be gone */ }
         }
     }
+
+    // ── POST /api/Ranking/rewrite ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Accepts a job description and a single resume text, rewrites the resume
+    /// to maximise relevance, and streams the result as SSE.
+    ///
+    /// Event types emitted:
+    ///   stage    — { message, stageIndex, totalStages }  pipeline progress
+    ///   complete — { html }                              self-contained HTML resume
+    ///   error    — { error }                             terminal error
+    /// </summary>
+    [HttpPost("rewrite")]
+    public async Task Rewrite([FromBody] RewriteApiRequest request, CancellationToken ct)
+    {
+        Response.Headers["Content-Type"]      = "text/event-stream";
+        Response.Headers["Cache-Control"]     = "no-cache";
+        Response.Headers["X-Accel-Buffering"] = "no";
+
+        async Task SendAsync(string evt, object data)
+        {
+            var json = JsonSerializer.Serialize(data, JsonOpts);
+            await Response.WriteAsync($"event: {evt}\ndata: {json}\n\n", ct);
+            await Response.Body.FlushAsync(ct);
+        }
+
+        var openAiKey = _configuration["OpenAI:ApiKey"];
+        if (string.IsNullOrEmpty(openAiKey) || openAiKey == "your-openai-api-key-here")
+        {
+            await SendAsync("error", new { error = Constants.Messages.OpenAiKeyNotConfigured });
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.JobDescription))
+        {
+            await SendAsync("error", new { error = Constants.Messages.EmptyJobDescription });
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ResumeText))
+        {
+            await SendAsync("error", new { error = "Resume text cannot be empty." });
+            return;
+        }
+
+        var llmModel    = _configuration["OpenAI:ChatModel"]  ?? "gpt-4o-mini";
+        var llmEndpoint = _configuration["OpenAI:Endpoint"]   ?? "https://api.openai.com/v1/chat/completions";
+
+        try
+        {
+            await SendAsync("stage", new { message = "Tailoring resume to job requirements...", stageIndex = 1, totalStages = 1 });
+
+            var html = await _rewriteService.RewriteAsync(
+                jobDescription: request.JobDescription.Trim(),
+                resumeText:     request.ResumeText,
+                apiKey:         openAiKey,
+                model:          llmModel,
+                endpoint:       llmEndpoint,
+                ct:             ct);
+
+            await SendAsync("complete", new { html });
+        }
+        catch (OperationCanceledException) { /* client disconnected */ }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during resume rewrite");
+            try { await SendAsync("error", new { error = Constants.Messages.UnexpectedError }); }
+            catch { /* response may be gone */ }
+        }
+    }
 }
 
 // ── Request models ────────────────────────────────────────────────────────────
@@ -130,4 +203,11 @@ public class ResumeTextInput
 {
     public string FileName { get; set; } = string.Empty;
     public string Text     { get; set; } = string.Empty;
+}
+
+public class RewriteApiRequest
+{
+    public string JobDescription { get; set; } = string.Empty;
+    public string ResumeText     { get; set; } = string.Empty;
+    public string CandidateName  { get; set; } = string.Empty;
 }

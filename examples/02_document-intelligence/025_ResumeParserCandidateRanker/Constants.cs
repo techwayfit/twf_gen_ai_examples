@@ -39,6 +39,56 @@ Extract the following fields from this resume and return ONLY valid JSON (no mar
   ]
 }";
 
+        // ── Resume rewriting ──────────────────────────────────────────────────
+
+        public const string ResumeRewriteSystemPrompt =
+            "You are an expert resume writer and career coach. You tailor resumes to specific job descriptions " +
+            "by emphasising relevant skills, reframing experience with action verbs, and weaving in keywords " +
+            "from the job posting. You never fabricate experience or credentials — only reframe and highlight " +
+            "existing content to maximise relevance. " +
+            "Return only valid JSON with no markdown code fences or extra commentary.";
+
+        public const string ResumeRewritePrompt =
+            @"Job Description:
+{{job_description}}
+
+Original Resume:
+{{resume_text}}
+
+Rewrite this resume so it closely targets the job description above. Rules:
+- Do NOT invent experience, skills, or credentials not present in the original
+- DO reframe existing experience using terminology and keywords from the job description
+- DO reorder bullets so the most relevant achievements appear first
+- Write a concise targeted headline (role title / value proposition) and a 3–4 sentence professional summary
+- Include all skills from the original; add any skills from the job description the candidate clearly demonstrates
+- Use strong action verbs and quantify achievements where evidence exists in the original
+
+Return ONLY valid JSON (no markdown, no code fences):
+{
+  ""name"": ""Full Name"",
+  ""headline"": ""Targeted professional headline"",
+  ""contact"": {
+    ""email"": ""email or empty"",
+    ""phone"": ""phone or empty"",
+    ""location"": ""city/country or empty"",
+    ""linkedin"": ""linkedin url or empty""
+  },
+  ""summary"": ""3-4 sentence professional summary tailored to this specific role"",
+  ""skills"": [""most relevant skill first"", ""skill2""],
+  ""experience"": [
+    {
+      ""title"": ""Job Title"",
+      ""company"": ""Company Name"",
+      ""duration"": ""date range"",
+      ""bullets"": [""achievement/responsibility bullet 1"", ""bullet 2""]
+    }
+  ],
+  ""education"": [
+    { ""degree"": ""Degree"", ""institution"": ""University"", ""year"": ""year"" }
+  ],
+  ""certifications"": [""cert1"", ""cert2""]
+}";
+
         // ── Interview question generation ─────────────────────────────────────
 
         public const string InterviewQuestionsSystemPrompt =

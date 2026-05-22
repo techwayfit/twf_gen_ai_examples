@@ -38,6 +38,7 @@ builder.Services.AddTransient<FileTextExtractorService>();
 builder.Services.AddTransient<SimilarityService>();
 builder.Services.AddTransient<LlmService>();
 builder.Services.AddTransient<RankingWorkflowService>();
+builder.Services.AddTransient<ResumeRewriteService>();
 
 var app = builder.Build();
 

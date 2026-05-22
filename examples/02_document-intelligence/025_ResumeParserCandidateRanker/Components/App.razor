@@ -29,6 +29,20 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
             crossorigin="anonymous"></script>
+
+    <!-- Resume print helper: opens a new window pre-loaded with the HTML resume and triggers print -->
+    <script>
+        window.openResumePrintWindow = function (html) {
+            const win = window.open('', '_blank', 'width=960,height=700,menubar=0,toolbar=1');
+            if (!win) { alert('Please allow pop-ups for this site to print the resume.'); return; }
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            // Small delay to let the browser finish rendering before showing print dialog
+            setTimeout(() => win.print(), 600);
+        };
+    </script>
 </body>
 
 </html>
