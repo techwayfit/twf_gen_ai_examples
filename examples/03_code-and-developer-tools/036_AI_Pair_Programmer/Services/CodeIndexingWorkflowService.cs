@@ -1,0 +1,122 @@
+using _036_AI_Pair_Programmer.Models;
+using TwfAiFramework.Core;
+using TwfAiFramework.Core.Extensions;
+using TwfAiFramework.Nodes.Data;
+
+namespace _036_AI_Pair_Programmer.Services;
+
+public sealed class CodeIndexingWorkflowService(
+    ILogger<CodeIndexingWorkflowService> logger,
+    CodeChunkerService chunkerService,
+    CodeIndexStoreService indexStore,
+    QdrantVectorStoreService qdrantStore,
+    LlmService llmService)
+{
+    public async Task<IndexResult> RunAsync(
+        IndexRequest request,
+        string apiKey,
+        string embeddingModel,
+        string endpoint,
+        CancellationToken ct = default)
+    {
+        var workflow = BuildWorkflow(request, apiKey, embeddingModel, endpoint, ct);
+
+        var input = WorkflowData
+            .From("repo_path", request.RepoPath)
+            .Set("max_files", request.MaxFiles.ToString())
+            .Set("max_chunk_tokens", request.MaxChunkTokens.ToString());
+
+        var context = new WorkflowContext("CodeIndexing", logger);
+        var result = await workflow.RunAsync(input, context, ct);
+
+        if (!result.IsSuccess)
+        {
+            throw new InvalidOperationException(result.ErrorMessage ?? "Code indexing failed.");
+        }
+
+        var indexedFiles = result.Data.Get<int>("indexed_files");
+        var chunkCount = result.Data.Get<int>("chunk_count");
+
+        return new IndexResult(indexedFiles, chunkCount, DateTime.UtcNow);
+    }
+
+    private Workflow BuildWorkflow(
+        IndexRequest request,
+        string apiKey,
+        string embeddingModel,
+        string endpoint,
+        CancellationToken ct)
+    {
+        var workflow = Workflow.Create("CodebaseIndexing").UseLogger(logger);
+
+        workflow.AddNode(new FilterNode("ValidateIndexInput")
+            .RequireNonEmpty("repo_path"));
+
+        workflow.AddStep("ChunkCodeFiles", async (data, _) =>
+        {
+            var repoPath = data.GetString("repo_path") ?? string.Empty;
+            var chunks = chunkerService.BuildChunks(
+                repoPath,
+                request.Languages,
+                request.MaxChunkTokens,
+                request.MaxFiles);
+
+            data.Set("raw_chunks", chunks);
+            data.Set("chunk_count", chunks.Count);
+            data.Set("indexed_files", chunks.Select(c => c.FilePath).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+            await Task.CompletedTask;
+            return data;
+        });
+
+        workflow.ForEach("raw_chunks", "chunk", async (loop) =>
+            loop.AddStep("EmbedChunk", async (data, _) =>
+                {
+                    var chunk = data.Get<RawCodeChunk>("chunk");
+                    var embedding = await llmService.EmbedAsync(chunk.Text, apiKey, embeddingModel, endpoint, ct);
+                    
+                    var indexedChunk = new IndexedChunk(chunk.FilePath, chunk.Text, chunk.StartLine, chunk.EndLine, embedding);
+                    data.Set("indexedChunk", indexedChunk);
+                    return data;
+                })
+                .AddStep("UpsertChunk", async (data, _) =>
+                {
+                    var repoPath = data.GetString("repo_path") ?? string.Empty;
+                    var chunk = data.Get<IndexedChunk>("indexedChunk");
+                    if (chunk != null)
+                    {   
+                        indexStore.Upsert(repoPath, [chunk]);
+
+                        if (qdrantStore.IsConfigured)
+                        {
+                            await qdrantStore.UpsertAsync(repoPath, [chunk], ct);
+                        }
+                    }
+                    return data;
+                }));
+
+        workflow.AddStep("EmbedAndUpsert", async (data, _) =>
+        {
+            var repoPath = data.GetString("repo_path") ?? string.Empty;
+            var chunks = data.Get<IReadOnlyList<RawCodeChunk>>("raw_chunks") ?? [];
+            var indexedChunks = new List<IndexedChunk>(chunks.Count);
+
+            foreach (var chunk in chunks)
+            {
+                ct.ThrowIfCancellationRequested();
+                var embedding = await llmService.EmbedAsync(chunk.Text, apiKey, embeddingModel, endpoint, ct);
+                indexedChunks.Add(new IndexedChunk(chunk.FilePath, chunk.Text, chunk.StartLine, chunk.EndLine, embedding));
+            }
+
+            indexStore.Upsert(repoPath, indexedChunks);
+
+            if (qdrantStore.IsConfigured)
+            {
+                await qdrantStore.UpsertAsync(repoPath, indexedChunks, ct);
+            }
+
+            return data;
+        });
+
+        return workflow;
+    }
+}
