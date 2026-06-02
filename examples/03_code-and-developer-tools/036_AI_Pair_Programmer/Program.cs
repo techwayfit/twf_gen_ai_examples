@@ -32,6 +32,26 @@ builder.Services.AddSingleton<CodeChunkerService>();
 builder.Services.AddSingleton<IndexingJobService>();
 builder.Services.AddTransient<QdrantVectorStoreService>();
 builder.Services.AddTransient<LlmService>();
+
+// Register embedding service based on configuration
+var embeddingProvider = builder.Configuration["Embeddings:Provider"] ?? "OpenAI";
+if (embeddingProvider.Equals("Local", StringComparison.OrdinalIgnoreCase))
+{
+    // For local embeddings, we need to initialize asynchronously
+    builder.Services.AddSingleton<IEmbeddingService>(sp =>
+    {
+        var config = sp.GetRequiredService<IConfiguration>();
+        // Note: This uses synchronous-over-async which is not ideal for startup
+        // but works for singleton initialization. For production, consider using
+        // a factory pattern or async initialization framework.
+        return LocalEmbeddingService.CreateAsync(config).GetAwaiter().GetResult();
+    });
+}
+else
+{
+    builder.Services.AddTransient<IEmbeddingService, OpenAIEmbeddingService>();
+}
+
 builder.Services.AddTransient<CodeIndexingWorkflowService>();
 builder.Services.AddTransient<PairProgrammingWorkflowService>();
 builder.Services.AddHostedService<BackgroundIndexingService>();

@@ -14,7 +14,7 @@ public sealed class IndexingJobService
         _logger = logger;
     }
 
-    public string CreateJob(IndexRequest request, string apiKey, string embeddingModel, string endpoint)
+    public string CreateJob(IndexRequest request, string apiKey, string endpoint)
     {
         var jobId = Guid.NewGuid().ToString("N");
         var job = new IndexingJob
@@ -22,7 +22,6 @@ public sealed class IndexingJobService
             JobId = jobId,
             Request = request,
             ApiKey = apiKey,
-            EmbeddingModel = embeddingModel,
             Endpoint = endpoint,
             Status = IndexingJobStatus.Queued,
             CreatedAt = DateTime.UtcNow

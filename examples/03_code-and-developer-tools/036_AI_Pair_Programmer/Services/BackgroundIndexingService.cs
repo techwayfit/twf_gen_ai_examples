@@ -83,8 +83,6 @@ public sealed class BackgroundIndexingService : BackgroundService
             var result = await workflowService.RunAsync(
                 job.Request,
                 job.ApiKey,
-                job.EmbeddingModel,
-                job.Endpoint,
                 progressCallback,
                 linkedCts.Token);
 

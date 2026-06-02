@@ -14,7 +14,6 @@ public sealed class IndexingJob
     public string JobId { get; set; } = string.Empty;
     public IndexRequest Request { get; set; } = new();
     public string ApiKey { get; set; } = string.Empty;
-    public string EmbeddingModel { get; set; } = string.Empty;
     public string Endpoint { get; set; } = string.Empty;
     public IndexingJobStatus Status { get; set; } = IndexingJobStatus.Queued;
     public IndexingProgress Progress { get; set; } = new();

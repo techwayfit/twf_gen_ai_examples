@@ -11,6 +11,7 @@ public sealed class PairProgrammingWorkflowService(
     ILogger<PairProgrammingWorkflowService> logger,
     CodeIndexStoreService indexStore,
     QdrantVectorStoreService qdrantStore,
+    IEmbeddingService embeddingService,
     LlmService llmService)
 {
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
@@ -23,11 +24,10 @@ public sealed class PairProgrammingWorkflowService(
         QueryRequest request,
         string apiKey,
         string chatModel,
-        string embeddingModel,
         string endpoint,
         CancellationToken ct = default)
     {
-        var workflow = BuildWorkflow(apiKey, chatModel, embeddingModel, endpoint, ct);
+        var workflow = BuildWorkflow(apiKey, chatModel, endpoint, ct);
 
         var input = WorkflowData
             .From("repo_path", request.RepoPath)
@@ -53,7 +53,6 @@ public sealed class PairProgrammingWorkflowService(
     private Workflow BuildWorkflow(
         string apiKey,
         string chatModel,
-        string embeddingModel,
         string endpoint,
         CancellationToken ct)
     {
@@ -68,7 +67,7 @@ public sealed class PairProgrammingWorkflowService(
             var repoPath = data.GetString("repo_path") ?? string.Empty;
             var topK = int.TryParse(data.GetString("top_k"), out var parsedTopK) ? parsedTopK : 8;
             var userRequest = data.GetString("user_request") ?? string.Empty;
-            var queryEmbedding = await llmService.EmbedAsync(userRequest, apiKey, embeddingModel, endpoint, ct);
+            var queryEmbedding = await embeddingService.EmbedAsync(userRequest, ct);
 
             List<RetrievedChunk> selected = new();
             if (qdrantStore.IsConfigured)

@@ -10,28 +10,25 @@ public sealed class CodeIndexingWorkflowService(
     CodeChunkerService chunkerService,
     CodeIndexStoreService indexStore,
     QdrantVectorStoreService qdrantStore,
+    IEmbeddingService embeddingService,
     LlmService llmService)
 {
     public async Task<IndexResult> RunAsync(
         IndexRequest request,
         string apiKey,
-        string embeddingModel,
-        string endpoint,
         CancellationToken ct = default)
     {
-        return await RunAsync(request, apiKey, embeddingModel, endpoint, null, ct);
+        return await RunAsync(request, apiKey, null, ct);
     }
 
     public async Task<IndexResult> RunAsync(
         IndexRequest request,
         string apiKey,
-        string embeddingModel,
-        string endpoint,
         IProgress<(string operation, string? currentFile, int processedChunks, int totalChunks)>? progress,
         CancellationToken ct = default)
     {
         progress?.Report(("Initializing", null, 0, 0));
-        var workflow = BuildWorkflow(request, apiKey, embeddingModel, endpoint, progress, ct);
+        var workflow = BuildWorkflow(request, apiKey, progress, ct);
 
         var input = WorkflowData
             .From("repo_path", request.RepoPath)
@@ -56,8 +53,6 @@ public sealed class CodeIndexingWorkflowService(
     private Workflow BuildWorkflow(
         IndexRequest request,
         string apiKey,
-        string embeddingModel,
-        string endpoint,
         IProgress<(string operation, string? currentFile, int processedChunks, int totalChunks)>? progress,
         CancellationToken ct)
     {
@@ -90,8 +85,8 @@ public sealed class CodeIndexingWorkflowService(
             loop.AddStep("EmbedChunk", async (data, _) =>
                 {
                     var chunk = data.Get<RawCodeChunk>("__loop_item__");
-                    var embedding = await llmService.EmbedAsync(chunk.Text, apiKey, embeddingModel, endpoint, ct);
-                    
+                    var embedding = await embeddingService.EmbedAsync(chunk.Text, ct);
+
                     var indexedChunk = new IndexedChunk(chunk.FilePath, chunk.Text, chunk.StartLine, chunk.EndLine, embedding);
                     data.Set("indexedChunk", indexedChunk);
                     return data;
@@ -125,7 +120,7 @@ public sealed class CodeIndexingWorkflowService(
                 ct.ThrowIfCancellationRequested();
                 progress?.Report(("Embedding", chunk.FilePath, processedCount, totalChunks));
 
-                var embedding = await llmService.EmbedAsync(chunk.Text, apiKey, embeddingModel, endpoint, ct);
+                var embedding = await embeddingService.EmbedAsync(chunk.Text, ct);
                 indexedChunks.Add(new IndexedChunk(chunk.FilePath, chunk.Text, chunk.StartLine, chunk.EndLine, embedding));
 
                 processedCount++;

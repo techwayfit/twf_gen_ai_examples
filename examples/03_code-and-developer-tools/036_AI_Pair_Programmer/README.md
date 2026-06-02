@@ -6,7 +6,32 @@ This example builds an **AI pair programmer** using ASP.NET Core Blazor Server a
 
 Developers submit a natural-language request such as "add pagination to the user list" or "explain the authentication flow". The workflow chunks source files, creates embeddings for semantic search, retrieves top matching snippets through vector lookup, injects those snippets into a structured prompt, and uses an LLM to produce answers, implementation plans, and code patches grounded in repository context.
 
-Detailed implementation notes are available in `docs/INDEXING_AND_RETRIEVAL_FLOW.md`.
+### 📚 Documentation
+
+- **[Indexing & Retrieval Flow](docs/INDEXING_AND_RETRIEVAL_FLOW.md)** - Technical implementation details
+- **[Local vs API Embeddings](docs/LOCAL_VS_API_EMBEDDINGS.md)** - Complete comparison guide
+- **[Quick Reference](docs/QUICK_REFERENCE_EMBEDDINGS.md)** - Configuration cheat sheet
+- **[Embedding Configuration](docs/EMBEDDING_PROVIDER_CONFIGURATION.md)** - Technical setup guide
+
+### ⚡ Quick Start: Embedding Providers
+
+This application supports **two embedding providers**:
+
+1. **OpenAI (API-Based)** - High quality, cloud-based embeddings
+2. **Local (ElBruno.LocalEmbeddings)** - Free, fast, offline embeddings
+
+**Switch in 30 seconds:**
+```json
+// appsettings.local.json
+{
+  "Embeddings": { 
+    "Provider": "OpenAI",  // or "Local"
+    "EmbeddingDimension": 1536  // or 384 for Local
+  }
+}
+```
+
+See [Quick Reference](docs/QUICK_REFERENCE_EMBEDDINGS.md) for details.
 
 ## Objective
 

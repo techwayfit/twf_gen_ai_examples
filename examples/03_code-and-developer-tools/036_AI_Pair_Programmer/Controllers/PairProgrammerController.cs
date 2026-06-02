@@ -43,7 +43,7 @@ public sealed class PairProgrammerController(
             MaxFiles = Math.Clamp(request.MaxFiles, 1, 2_000)
         };
 
-        var result = await indexingService.RunAsync(sanitized, apiKey, model, endpoint, ct);
+        var result = await indexingService.RunAsync(sanitized, apiKey, ct);
         return Ok(result);
     }
 
@@ -67,7 +67,6 @@ public sealed class PairProgrammerController(
             return NotFound(new { error = Constants.Messages.RepoPathNotFound });
         }
 
-        var model = configuration["OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
         var endpoint = configuration["OpenAI:Endpoint"] ?? "https://api.openai.com/v1";
 
         var sanitized = new IndexRequest
@@ -78,7 +77,7 @@ public sealed class PairProgrammerController(
             MaxFiles = Math.Clamp(request.MaxFiles, 1, 2_000)
         };
 
-        var jobId = jobService.CreateJob(sanitized, apiKey, model, endpoint);
+        var jobId = jobService.CreateJob(sanitized, apiKey, endpoint);
         return Ok(new { jobId, message = "Indexing job submitted successfully" });
     }
 
@@ -140,7 +139,6 @@ public sealed class PairProgrammerController(
         }
 
         var chatModel = configuration["OpenAI:ChatModel"] ?? "gpt-4o-mini";
-        var embeddingModel = configuration["OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
         var endpoint = configuration["OpenAI:Endpoint"] ?? "https://api.openai.com/v1";
 
         var sanitized = new QueryRequest
@@ -157,7 +155,6 @@ public sealed class PairProgrammerController(
                 sanitized,
                 apiKey,
                 chatModel,
-                embeddingModel,
                 endpoint,
                 ct);
 

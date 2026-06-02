@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ElBruno.LocalEmbeddings" Version="1.5.0" />
     <PackageReference Include="Markdig" Version="0.40.0" />
     <PackageReference Include="TwfAiFramework" Version="2.1.0" />
   </ItemGroup>
