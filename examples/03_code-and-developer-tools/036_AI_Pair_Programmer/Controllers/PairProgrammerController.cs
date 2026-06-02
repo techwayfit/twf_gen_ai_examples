@@ -9,6 +9,7 @@ namespace _036_AI_Pair_Programmer.Controllers;
 public sealed class PairProgrammerController(
     IConfiguration configuration,
     CodeIndexingWorkflowService indexingService,
+    IndexingJobService jobService,
     PairProgrammingWorkflowService pairProgrammingService) : ControllerBase
 {
     [HttpPost("index")]
@@ -44,6 +45,73 @@ public sealed class PairProgrammerController(
 
         var result = await indexingService.RunAsync(sanitized, apiKey, model, endpoint, ct);
         return Ok(result);
+    }
+
+    [HttpPost("index/submit")]
+    public ActionResult<object> SubmitIndexJob([FromBody] IndexRequest request)
+    {
+        var apiKey = configuration["OpenAI:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "your-openai-api-key-here")
+        {
+            return BadRequest(new { error = Constants.Messages.OpenAiKeyNotConfigured });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.RepoPath))
+        {
+            return BadRequest(new { error = Constants.Messages.RepoPathRequired });
+        }
+
+        var fullPath = Path.GetFullPath(request.RepoPath.Trim());
+        if (!Directory.Exists(fullPath))
+        {
+            return NotFound(new { error = Constants.Messages.RepoPathNotFound });
+        }
+
+        var model = configuration["OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
+        var endpoint = configuration["OpenAI:Endpoint"] ?? "https://api.openai.com/v1";
+
+        var sanitized = new IndexRequest
+        {
+            RepoPath = fullPath,
+            Languages = request.Languages,
+            MaxChunkTokens = Math.Clamp(request.MaxChunkTokens, 200, 2_000),
+            MaxFiles = Math.Clamp(request.MaxFiles, 1, 2_000)
+        };
+
+        var jobId = jobService.CreateJob(sanitized, apiKey, model, endpoint);
+        return Ok(new { jobId, message = "Indexing job submitted successfully" });
+    }
+
+    [HttpGet("index/status/{jobId}")]
+    public ActionResult<IndexingJobResponse> GetIndexJobStatus(string jobId)
+    {
+        var status = jobService.GetJobStatus(jobId);
+        if (status == null)
+        {
+            return NotFound(new { error = "Job not found" });
+        }
+
+        return Ok(status);
+    }
+
+    [HttpPost("index/cancel/{jobId}")]
+    public ActionResult CancelIndexJob(string jobId)
+    {
+        var job = jobService.GetJob(jobId);
+        if (job == null)
+        {
+            return NotFound(new { error = "Job not found" });
+        }
+
+        jobService.CancelJob(jobId);
+        return Ok(new { message = "Job cancelled successfully" });
+    }
+
+    [HttpGet("index/jobs")]
+    public ActionResult<IEnumerable<IndexingJobResponse>> GetAllIndexJobs()
+    {
+        var jobs = jobService.GetAllJobs();
+        return Ok(jobs);
     }
 
     [HttpPost("query")]

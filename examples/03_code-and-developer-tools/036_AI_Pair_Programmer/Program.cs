@@ -29,10 +29,12 @@ builder.Services.AddHttpClient("qdrant", c =>
 
 builder.Services.AddSingleton<CodeIndexStoreService>();
 builder.Services.AddSingleton<CodeChunkerService>();
+builder.Services.AddSingleton<IndexingJobService>();
 builder.Services.AddTransient<QdrantVectorStoreService>();
 builder.Services.AddTransient<LlmService>();
 builder.Services.AddTransient<CodeIndexingWorkflowService>();
 builder.Services.AddTransient<PairProgrammingWorkflowService>();
+builder.Services.AddHostedService<BackgroundIndexingService>();
 
 var app = builder.Build();
 

@@ -19,7 +19,19 @@ public sealed class CodeIndexingWorkflowService(
         string endpoint,
         CancellationToken ct = default)
     {
-        var workflow = BuildWorkflow(request, apiKey, embeddingModel, endpoint, ct);
+        return await RunAsync(request, apiKey, embeddingModel, endpoint, null, ct);
+    }
+
+    public async Task<IndexResult> RunAsync(
+        IndexRequest request,
+        string apiKey,
+        string embeddingModel,
+        string endpoint,
+        IProgress<(string operation, string? currentFile, int processedChunks, int totalChunks)>? progress,
+        CancellationToken ct = default)
+    {
+        progress?.Report(("Initializing", null, 0, 0));
+        var workflow = BuildWorkflow(request, apiKey, embeddingModel, endpoint, progress, ct);
 
         var input = WorkflowData
             .From("repo_path", request.RepoPath)
@@ -37,6 +49,7 @@ public sealed class CodeIndexingWorkflowService(
         var indexedFiles = result.Data.Get<int>("indexed_files");
         var chunkCount = result.Data.Get<int>("chunk_count");
 
+        progress?.Report(("Completed", null, chunkCount, chunkCount));
         return new IndexResult(indexedFiles, chunkCount, DateTime.UtcNow);
     }
 
@@ -45,6 +58,7 @@ public sealed class CodeIndexingWorkflowService(
         string apiKey,
         string embeddingModel,
         string endpoint,
+        IProgress<(string operation, string? currentFile, int processedChunks, int totalChunks)>? progress,
         CancellationToken ct)
     {
         var workflow = Workflow.Create("CodebaseIndexing").UseLogger(logger);
@@ -54,6 +68,7 @@ public sealed class CodeIndexingWorkflowService(
 
         workflow.AddStep("ChunkCodeFiles", async (data, _) =>
         {
+            progress?.Report(("Chunking code files", null, 0, 0));
             var repoPath = data.GetString("repo_path") ?? string.Empty;
             var chunks = chunkerService.BuildChunks(
                 repoPath,
@@ -64,6 +79,9 @@ public sealed class CodeIndexingWorkflowService(
             data.Set("raw_chunks", chunks);
             data.Set("chunk_count", chunks.Count);
             data.Set("indexed_files", chunks.Select(c => c.FilePath).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+            data.Set("processed_chunks", 0);
+
+            progress?.Report(("Ready to embed", null, 0, chunks.Count));
             await Task.CompletedTask;
             return data;
         });
@@ -71,7 +89,7 @@ public sealed class CodeIndexingWorkflowService(
         workflow.ForEach("raw_chunks", "chunk", async (loop) =>
             loop.AddStep("EmbedChunk", async (data, _) =>
                 {
-                    var chunk = data.Get<RawCodeChunk>("chunk");
+                    var chunk = data.Get<RawCodeChunk>("__loop_item__");
                     var embedding = await llmService.EmbedAsync(chunk.Text, apiKey, embeddingModel, endpoint, ct);
                     
                     var indexedChunk = new IndexedChunk(chunk.FilePath, chunk.Text, chunk.StartLine, chunk.EndLine, embedding);
@@ -99,14 +117,22 @@ public sealed class CodeIndexingWorkflowService(
             var repoPath = data.GetString("repo_path") ?? string.Empty;
             var chunks = data.Get<IReadOnlyList<RawCodeChunk>>("raw_chunks") ?? [];
             var indexedChunks = new List<IndexedChunk>(chunks.Count);
+            var totalChunks = chunks.Count;
+            var processedCount = 0;
 
             foreach (var chunk in chunks)
             {
                 ct.ThrowIfCancellationRequested();
+                progress?.Report(("Embedding", chunk.FilePath, processedCount, totalChunks));
+
                 var embedding = await llmService.EmbedAsync(chunk.Text, apiKey, embeddingModel, endpoint, ct);
                 indexedChunks.Add(new IndexedChunk(chunk.FilePath, chunk.Text, chunk.StartLine, chunk.EndLine, embedding));
+
+                processedCount++;
+                progress?.Report(("Embedded", chunk.FilePath, processedCount, totalChunks));
             }
 
+            progress?.Report(("Storing embeddings", null, processedCount, totalChunks));
             indexStore.Upsert(repoPath, indexedChunks);
 
             if (qdrantStore.IsConfigured)

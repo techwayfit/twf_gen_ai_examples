@@ -149,7 +149,9 @@ public sealed class QdrantVectorStoreService(
         }
 
         var body = await response.Content.ReadAsStringAsync(ct);
-        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest && body.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+        if ((response.StatusCode == System.Net.HttpStatusCode.BadRequest || 
+             response.StatusCode == System.Net.HttpStatusCode.Conflict) && 
+            body.Contains("already exists", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }

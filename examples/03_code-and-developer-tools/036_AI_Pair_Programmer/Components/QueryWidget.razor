@@ -1,0 +1,204 @@
+@using System.Text.Json
+@using _036_AI_Pair_Programmer.Models
+@inject HttpClient Http
+
+<section class="pair-programmer">
+    <div class="panel">
+        <h3>Query Configuration</h3>
+
+        <label>Repository path</label>
+        <input @bind="_queryRequest.RepoPath" />
+
+        <label>Task type</label>
+        <select @bind="_queryRequest.TaskType">
+            <option value="explain">explain</option>
+            <option value="implement">implement</option>
+            <option value="refactor">refactor</option>
+        </select>
+
+        <label>Top K context chunks</label>
+        <input type="number" min="1" max="20" @bind="_queryRequest.TopK" />
+
+        <label>Request</label>
+        <textarea rows="6" @bind="_queryRequest.UserRequest"></textarea>
+
+        <button @onclick="QueryAsync" disabled="@_busy">Run Query</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_status))
+    {
+        <p><strong>Status:</strong> @_status</p>
+    }
+
+    @if (_queryResult is not null)
+    {
+        <section class="panel result-panel">
+            <h3>Summary</h3>
+            @if (!string.IsNullOrWhiteSpace(_queryResult.SummaryHtml))
+            {
+                <div class="summary-html">@((MarkupString)_queryResult.SummaryHtml)</div>
+            }
+            else
+            {
+                <p>@_queryResult.Summary</p>
+            }
+
+            @if (_queryResult.ImplementationPlan.Count > 0)
+            {
+                <h3>Implementation Plan</h3>
+                <ol>
+                    @foreach (var step in _queryResult.ImplementationPlan)
+                    {
+                        <li>@step</li>
+                    }
+                </ol>
+            }
+
+            @if (_queryResult.FilesToChange.Count > 0)
+            {
+                <h3>Files to Change</h3>
+                <ul>
+                    @foreach (var file in _queryResult.FilesToChange)
+                    {
+                        <li>@file</li>
+                    }
+                </ul>
+            }
+
+            @if (_queryResult.CodeBlocks.Count > 0)
+            {
+                <h3>Code Suggestions</h3>
+                @foreach (var block in _queryResult.CodeBlocks)
+                {
+                    <h4>@block.File <small>(@block.Language)</small></h4>
+                    <pre>@block.Content</pre>
+                }
+            }
+
+            @if (_queryResult.Risks.Count > 0)
+            {
+                <h3>Risks</h3>
+                <ul>
+                    @foreach (var risk in _queryResult.Risks)
+                    {
+                        <li>@risk</li>
+                    }
+                </ul>
+            }
+
+            @if (_queryResult.UsedContext.Count > 0)
+            {
+                <h3>Used Context</h3>
+                <ul>
+                    @foreach (var ctx in _queryResult.UsedContext)
+                    {
+                        <li>@ctx</li>
+                    }
+                </ul>
+            }
+        </section>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_resultJson))
+    {
+        <h3>Raw Result</h3>
+        <pre>@_resultJson</pre>
+    }
+</section>
+
+<style>
+    .pair-programmer { max-width: 960px; }
+    .panel {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: grid;
+        gap: 0.5rem;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+    button {
+        width: fit-content;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: 0;
+        background: #166534;
+        color: #fff;
+        font-weight: 600;
+    }
+    pre {
+        background: #111827;
+        color: #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .summary-html :is(h1, h2, h3, h4) {
+        margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    .summary-html p,
+    .summary-html ul,
+    .summary-html ol {
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+@code {
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
+    private readonly QueryRequest _queryRequest = new();
+
+    private string _status = string.Empty;
+    private string _resultJson = string.Empty;
+    private PairProgrammerResult? _queryResult;
+    private bool _busy;
+
+    protected override void OnInitialized()
+    {
+        _queryRequest.RepoPath = Directory.GetCurrentDirectory();
+    }
+
+    private async Task QueryAsync()
+    {
+        if (_busy) return;
+
+        _busy = true;
+        _status = "Running query...";
+        _queryResult = null;
+        _resultJson = string.Empty;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/PairProgrammer/query", _queryRequest);
+            var body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _status = "Query failed.";
+                _resultJson = body;
+                return;
+            }
+
+            _status = "Query completed.";
+            _queryResult = JsonSerializer.Deserialize<PairProgrammerResult>(body, _jsonOptions);
+            _resultJson = _queryResult is null
+                ? JsonSerializer.Serialize(JsonSerializer.Deserialize<JsonElement>(body), _jsonOptions)
+                : string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _status = "Query failed with an exception.";
+            _resultJson = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
