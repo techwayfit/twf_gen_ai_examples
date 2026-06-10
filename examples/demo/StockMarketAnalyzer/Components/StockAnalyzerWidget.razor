@@ -1,0 +1,687 @@
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Web
+
+<!-- ══ SEARCH BAR ═════════════════════════════════════════════════════════ -->
+<div class="card mb-4 slide-up" style="position: relative; z-index: 10;">
+    <div class="card-body p-4">
+        <div class="row align-items-center g-3">
+            <div class="col-12 col-lg-7">
+                <label class="form-label fw-semibold text-secondary mb-2">
+                    <i class="bi bi-search me-1"></i>Search Stock
+                </label>
+                <div class="position-relative" style="overflow: visible;">
+                    <input class="form-control form-control-lg"
+                           placeholder="Type a symbol or company name..."
+                           value="@searchQuery"
+                           @oninput="OnSearchInputChange"
+                           @onkeydown="HandleSearchKeyDown"
+                           @onfocus="ShowDropdown"
+                           disabled="@isAnalyzing"
+                           autocomplete="off"
+                           style="background: var(--bg-surface); border-color: var(--border-color); padding-left: 1rem;" />
+                    @if (isSearching)
+                    {
+                        <span class="position-absolute" style="right: 1rem; top: 50%; transform: translateY(-50%);">
+                            <span class="spinner-border spinner-border-sm" role="status" style="color: var(--accent-blue);"></span>
+                        </span>
+                    }
+
+                    @if (showDropdown && searchResults.Count > 0)
+                    {
+                        <div class="search-dropdown" style="max-height: 320px; overflow-y: auto;">
+                            @foreach (var item in searchResults)
+                            {
+                                <div class="search-item" @onclick="() => SelectSearchResult(item)">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="fw-bold" style="color: var(--accent-blue);">@item.Symbol</span>
+                                            <span class="ms-2" style="color: var(--text-secondary);">@item.Name</span>
+                                        </div>
+                                        <small style="color: var(--text-muted);">@item.Exchange</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (showDropdown && !string.IsNullOrEmpty(searchQuery) && searchResults.Count == 0 && !isSearching)
+                    {
+                        <div class="search-dropdown">
+                            <div class="px-3 py-3 text-center" style="color: var(--text-muted);">
+                                No results found
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-12 col-lg-5">
+                <div class="d-flex gap-2 align-items-end h-100" style="padding-top: 1.75rem;">
+                    <button class="btn btn-primary btn-lg px-4"
+                            @onclick="Analyze"
+                            disabled="@(isAnalyzing || string.IsNullOrWhiteSpace(selectedSymbol))"
+                            style="min-width: 140px;">
+                        @if (isAnalyzing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Analyzing...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-graph-up-arrow me-2"></i>
+                            <span>Analyze</span>
+                        }
+                    </button>
+                    <button class="btn btn-outline-secondary px-3" @onclick="Reset" disabled="@isAnalyzing">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(selectedSymbol) && result == null && !isAnalyzing)
+        {
+            <div class="mt-3 d-flex align-items-center gap-2 fade-in">
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Selected:</span>
+                <span class="fw-semibold" style="color: var(--accent-blue);">@selectedSymbol</span>
+                @if (!string.IsNullOrEmpty(selectedName))
+                {
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">&mdash; @selectedName</span>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ══ STAGE PROGRESS ════════════════════════════════════════════════════ -->
+@if (isAnalyzing || stages.Count > 0)
+{
+    <div class="card mb-4 fade-in">
+        <div class="card-body py-3 px-4">
+            <div class="d-flex gap-3 flex-wrap align-items-center">
+                @foreach (var (msg, idx, done) in stages)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="stage-indicator @(done ? "completed" : "active")">
+                            @if (done)
+                            {
+                                <i class="bi bi-check-lg"></i>
+                            }
+                            else
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                            }
+                        </div>
+                        <span style="color: @(done ? "var(--accent-green)" : "var(--accent-blue-light)"); font-size: 0.85rem; font-weight: 500;">@msg</span>
+                    </div>
+                    @if (idx < stages.Count - 1)
+                    {
+                        <div style="width: 20px; height: 1px; background: var(--border-color);"></div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ══ ERROR ══════════════════════════════════════════════════════════════ -->
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger fade-in" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+    </div>
+}
+
+<!-- ══ RESULTS ════════════════════════════════════════════════════════════ -->
+@if (result != null)
+{
+    <!-- Quote Header -->
+    <div class="card mb-4 slide-up">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="symbol-avatar @(result.Quote.Change >= 0 ? "positive" : "negative")">
+                        <i class="bi bi-activity"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0 fw-bold" style="letter-spacing: -0.02em;">@result.Symbol</h3>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">@result.Quote.Name</span>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div class="price-value">$@result.Quote.Price.ToString("N2")</div>
+                    <div class="@(result.Quote.Change >= 0 ? "change-positive" : "change-negative")" style="font-size: 0.95rem; font-weight: 500;">
+                        @(result.Quote.Change >= 0 ? "+" : "")@result.Quote.Change.ToString("N2")
+                        <span class="ms-1">(@(result.Quote.ChangePercent >= 0 ? "+" : "")@result.Quote.ChangePercent.ToString("N2")%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card mb-4 slide-up" style="animation-delay: 0.1s;">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-bar-chart" style="color: var(--accent-blue);"></i>
+                <span class="fw-semibold">Price History (@result.PriceHistory.Count points)</span>
+            </div>
+            <StockChart PriceHistory="result.PriceHistory" />
+        </div>
+    </div>
+
+    <!-- Analysis Cards -->
+    <div class="row g-4 mb-4">
+
+        <!-- Trend Analysis -->
+        <div class="col-12 col-md-4 slide-up" style="animation-delay: 0.2s;">
+            <div class="analysis-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="analysis-icon trend">
+                            <i class="bi bi-diagram-3"></i>
+                        </div>
+                        <span class="fw-semibold">Trend Analysis</span>
+                    </div>
+                    <div class="text-center mb-3">
+                        <span class="direction-badge @(GetDirectionBadgeClass(result.Trend.Direction))">
+                            @result.Trend.Direction
+                        </span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6;">@result.Trend.Summary</p>
+                    @if (result.Trend.Indicators.Any())
+                    {
+                        <div class="mt-3">
+                            <small class="fw-semibold" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.7rem;">Indicators</small>
+                            <ul class="indicator-list mt-2">
+                                @foreach (var indicator in result.Trend.Indicators)
+                                {
+                                    <li><i class="bi bi-check-circle-fill" style="color: var(--accent-blue);"></i><span>@indicator</span></li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="col-12 col-md-4 slide-up" style="animation-delay: 0.3s;">
+            <div class="analysis-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="analysis-icon recommendation">
+                            <i class="bi bi-lightbulb"></i>
+                        </div>
+                        <span class="fw-semibold">Recommendation</span>
+                    </div>
+                    <div class="text-center mb-3">
+                        <span class="direction-badge @(GetRecommendationBadgeClass(result.Recommendation.Action))">
+                            @result.Recommendation.Action
+                        </span>
+                    </div>
+                    <div class="text-center mb-3">
+                        <small style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Target Price</small>
+                        <div class="metric-value" style="color: var(--accent-green);">$@result.Recommendation.TargetPrice.ToString("N2")</div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6;">@result.Recommendation.Reasoning</p>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">Confidence</small>
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">@((result.Recommendation.Confidence * 100).ToString("N0"))%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar @(result.Recommendation.Confidence > 0.7 ? "bg-success" : result.Recommendation.Confidence > 0.4 ? "bg-warning" : "bg-danger")"
+                                 style="width: @(result.Recommendation.Confidence * 100)%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="col-12 col-md-4 slide-up" style="animation-delay: 0.4s;">
+            <div class="analysis-card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="analysis-icon risk">
+                            <i class="bi bi-shield-exclamation"></i>
+                        </div>
+                        <span class="fw-semibold">Risk Assessment</span>
+                    </div>
+                    <div class="text-center mb-3">
+                        <span class="direction-badge @(GetRiskBadgeClass(result.Risk.Level))">
+                            @result.Risk.Level
+                        </span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6;">@result.Risk.Summary</p>
+                    @if (result.Risk.Factors.Any())
+                    {
+                        <div class="mt-3">
+                            <small class="fw-semibold" style="color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.7rem;">Risk Factors</small>
+                            <ul class="indicator-list mt-2">
+                                @foreach (var factor in result.Risk.Factors)
+                                {
+                                    <li><i class="bi bi-exclamation-triangle-fill" style="color: var(--accent-yellow);"></i><span>@factor</span></li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex justify-content-center gap-3 mb-4 fade-in">
+        <button class="btn btn-outline-primary" @onclick="Analyze" disabled="@isAnalyzing">
+            <i class="bi bi-arrow-repeat me-1"></i>Re-analyze
+        </button>
+        <button class="btn btn-outline-success" @onclick="AddToWatchlist" disabled="@watchlistAdded">
+            @if (watchlistAdded)
+            {
+                <i class="bi bi-check2 me-1"></i><span>Added to Watchlist</span>
+            }
+            else
+            {
+                <i class="bi bi-star me-1"></i><span>Add to Watchlist</span>
+            }
+        </button>
+    </div>
+}
+else if (!isAnalyzing && stages.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+{
+    <!-- Empty State -->
+    <div class="card fade-in">
+        <div class="card-body empty-state py-5">
+            <div class="empty-state-icon">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <h5 class="fw-semibold mt-3" style="color: var(--text-primary);">Ready to Analyze</h5>
+            <p style="color: var(--text-muted); max-width: 400px; margin: 0.75rem auto 0;">
+                Search for a stock above, then click <strong>Analyze</strong> to get AI-powered trend analysis, recommendations, and risk assessment.
+            </p>
+        </div>
+    </div>
+}
+
+<style>
+    .symbol-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+    .symbol-avatar.positive {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--accent-green);
+    }
+    .symbol-avatar.negative {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--accent-red);
+    }
+    .price-value {
+        font-size: 2.25rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
+    }
+    .change-positive { color: var(--accent-green); }
+    .change-negative { color: var(--accent-red); }
+    .analysis-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    .analysis-icon.trend {
+        background: rgba(6, 182, 212, 0.15);
+        color: #06b6d4;
+    }
+    .analysis-icon.recommendation {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--accent-green);
+    }
+    .analysis-icon.risk {
+        background: rgba(245, 158, 11, 0.15);
+        color: var(--accent-yellow);
+    }
+    .direction-badge {
+        font-size: 1rem;
+        padding: 0.5em 1.25em;
+        font-weight: 600;
+        border-radius: 8px;
+        display: inline-block;
+    }
+    .direction-badge.bg-success { background: rgba(16, 185, 129, 0.15) !important; color: var(--accent-green); }
+    .direction-badge.bg-danger { background: rgba(239, 68, 68, 0.15) !important; color: var(--accent-red); }
+    .direction-badge.bg-warning { background: rgba(245, 158, 11, 0.15) !important; color: var(--accent-yellow); }
+    .direction-badge.bg-secondary { background: var(--bg-surface) !important; color: var(--text-secondary); }
+    .stage-indicator {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+    }
+    .stage-indicator.completed {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--accent-green);
+    }
+    .stage-indicator.active {
+        background: rgba(99, 102, 241, 0.2);
+        color: var(--accent-blue);
+    }
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto;
+    }
+</style>
+
+@code {
+    // ── Form fields ──────────────────────────────────────────────────────────
+    [Parameter]
+    public string? InitialSymbol { get; set; }
+
+    private string searchQuery = string.Empty;
+    private string selectedSymbol = string.Empty;
+    private string selectedName = string.Empty;
+
+    // ── Search state ─────────────────────────────────────────────────────────
+    private bool isSearching = false;
+    private bool showDropdown = false;
+    private List<StockSearchResult> searchResults = new();
+    private CancellationTokenSource? searchCts;
+    private Timer? searchDebounceTimer;
+
+    // ── Analysis state ───────────────────────────────────────────────────────
+    private bool   isAnalyzing   = false;
+    private bool   watchlistAdded = false;
+    private string errorMessage = string.Empty;
+
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+    private StockAnalysisResult? result = null;
+    private bool initialAnalysisTriggered = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrWhiteSpace(InitialSymbol) && !initialAnalysisTriggered)
+        {
+            initialAnalysisTriggered = true;
+            selectedSymbol = InitialSymbol.ToUpper();
+            searchQuery = selectedSymbol;
+            await Analyze();
+        }
+    }
+
+    // ── Search functionality ─────────────────────────────────────────────────
+
+    private async Task OnSearchInputChange(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? string.Empty;
+        showDropdown = !string.IsNullOrWhiteSpace(searchQuery);
+        searchCts?.Cancel();
+        searchCts = new CancellationTokenSource();
+        var ct = searchCts.Token;
+
+        searchDebounceTimer?.Dispose();
+        searchDebounceTimer = new Timer(async _ =>
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(searchQuery) || searchQuery.Length < 1)
+                {
+                    searchResults = new();
+                    isSearching = false;
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                isSearching = true;
+                await InvokeAsync(StateHasChanged);
+
+                var baseUrl = Navigation.BaseUri.TrimEnd('/');
+                var response = await Http.GetFromJsonAsync<List<StockSearchResult>>(
+                    $"{baseUrl}/api/Stock/search?q={Uri.EscapeDataString(searchQuery)}", ct);
+
+                if (!ct.IsCancellationRequested)
+                {
+                    searchResults = response ?? new();
+                    isSearching = false;
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception)
+            {
+                isSearching = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }, null, 500, Timeout.Infinite);
+    }
+
+    private void SelectSearchResult(StockSearchResult item)
+    {
+        selectedSymbol = item.Symbol;
+        selectedName = item.Name;
+        searchQuery = $"{item.Symbol} - {item.Name}";
+        showDropdown = false;
+        searchResults = new();
+        StateHasChanged();
+    }
+
+    private void ShowDropdown()
+    {
+        if (!string.IsNullOrWhiteSpace(searchQuery) && searchResults.Count > 0)
+        {
+            showDropdown = true;
+        }
+    }
+
+    private async Task HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            showDropdown = false;
+        }
+        else if (e.Key == "Enter" && !isAnalyzing)
+        {
+            showDropdown = false;
+
+            if (!string.IsNullOrEmpty(selectedSymbol))
+            {
+                await Analyze();
+            }
+            else if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                var possibleSymbol = searchQuery.Split(' ')[0].Trim().ToUpper();
+                selectedSymbol = possibleSymbol;
+                selectedName = string.Empty;
+                searchQuery = possibleSymbol;
+                await Analyze();
+            }
+        }
+    }
+
+    // ── Analyze ──────────────────────────────────────────────────────────────
+    private async Task Analyze()
+    {
+        var symbolToAnalyze = selectedSymbol;
+        if (string.IsNullOrWhiteSpace(symbolToAnalyze))
+        {
+            symbolToAnalyze = searchQuery.Split(' ')[0].Trim().ToUpper();
+        }
+
+        if (string.IsNullOrWhiteSpace(symbolToAnalyze)) return;
+
+        isAnalyzing = true;
+        errorMessage = string.Empty;
+        result       = null;
+        stages       = new();
+        watchlistAdded = false;
+        showDropdown = false;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/Stock/analyze");
+
+            requestMsg.Content = JsonContent.Create(new
+            {
+                Symbol = symbolToAnalyze.ToUpper()
+            });
+
+            using var response = await Http.SendAsync(requestMsg, HttpCompletionOption.ResponseHeadersRead);
+            using var stream   = await response.Content.ReadAsStreamAsync();
+            using var reader   = new System.IO.StreamReader(stream);
+
+            var jsonOpts       = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "complete":
+                            result = JsonSerializer.Deserialize<StockAnalysisResult>(data, jsonOpts);
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                            await InvokeAsync(StateHasChanged);
+                            break;
+
+                        case "error":
+                            var err = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage = err?.Error ?? "Analysis failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isAnalyzing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    // ── Reset ────────────────────────────────────────────────────────────────
+    private void Reset()
+    {
+        searchQuery      = string.Empty;
+        selectedSymbol   = string.Empty;
+        selectedName     = string.Empty;
+        errorMessage     = string.Empty;
+        result           = null;
+        stages           = new();
+        watchlistAdded   = false;
+        showDropdown     = false;
+        searchResults    = new();
+        StateHasChanged();
+    }
+
+    // ── Add to watchlist ─────────────────────────────────────────────────────
+    private async Task AddToWatchlist()
+    {
+        if (result == null) return;
+
+        try
+        {
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            var response = await Http.PostAsJsonAsync($"{baseUrl}/api/Watchlist",
+                new { Symbol = result.Symbol });
+
+            if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                watchlistAdded = true;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to add to watchlist: {ex.Message}");
+        }
+    }
+
+    // ── Badge helpers ────────────────────────────────────────────────────────
+    private static string GetDirectionBadgeClass(string direction) => direction.ToLower() switch
+    {
+        "bullish"  => "bg-success",
+        "bearish"  => "bg-danger",
+        _          => "bg-secondary"
+    };
+
+    private static string GetRecommendationBadgeClass(string action) => action.ToLower() switch
+    {
+        "buy"  => "bg-success",
+        "sell" => "bg-danger",
+        _      => "bg-warning"
+    };
+
+    private static string GetRiskBadgeClass(string level) => level.ToLower() switch
+    {
+        "low"    => "bg-success",
+        "high"   => "bg-danger",
+        _        => "bg-warning"
+    };
+
+    // ── SSE payload types ────────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message     { get; set; } = string.Empty;
+        public int    StageIndex  { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+}

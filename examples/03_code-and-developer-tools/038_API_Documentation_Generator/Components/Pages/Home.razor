@@ -1,0 +1,277 @@
+@page "/"
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject ILogger<Home> Logger
+
+<PageTitle>API Documentation Generator</PageTitle>
+
+<h1>API Documentation Generator</h1>
+<p class="mb-4">Scan a codebase and automatically generate OpenAPI specs and Markdown documentation for all API endpoints.</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Configuration</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Repository Path <span class="text-danger">*</span></label>
+                    <input class="form-control" @bind="request.RepoPath" placeholder="C:\path\to\repository" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">API Title</label>
+                    <input class="form-control" @bind="request.ApiTitle" placeholder="API Documentation" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">API Version</label>
+                    <input class="form-control" @bind="request.ApiVersion" placeholder="1.0.0" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Base URL</label>
+                    <input class="form-control" @bind="request.BaseUrl" placeholder="https://api.example.com" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Languages (comma-separated, empty = all)</label>
+                    <input class="form-control" @bind="languagesInput" placeholder="csharp, typescript, python" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Max Files</label>
+                    <input type="number" class="form-control" @bind="request.MaxFiles" min="1" max="2000" />
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" @bind="request.GenerateOpenApiSpec" id="genSpec" />
+                    <label class="form-check-label" for="genSpec">Generate OpenAPI Spec</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" @bind="request.GenerateMarkdown" id="genMd" />
+                    <label class="form-check-label" for="genMd">Generate Markdown Docs</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mb-4">
+            <button class="btn btn-outline-secondary" @onclick="ScanOnly" disabled="@isLoading">
+                @(isLoading && mode == "scan" ? "Scanning..." : "Scan Only")
+            </button>
+            <button class="btn btn-primary" @onclick="GenerateDocs" disabled="@isLoading">
+                @(isLoading && mode == "generate" ? "Generating..." : "Generate Documentation")
+            </button>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        @if (scanResult != null)
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Scan Results</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Files scanned:</strong> @scanResult.FilesScanned</p>
+                    <p><strong>Total functions:</strong> @scanResult.TotalFunctions</p>
+                    @if (scanResult.Files.Any())
+                    {
+                        <h6>Discovered Files:</h6>
+                        <ul class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                            @foreach (var file in scanResult.Files)
+                            {
+                                <li class="list-group-item">
+                                    <div><code>@file.Path</code> <span class="badge bg-secondary">@file.Language</span></div>
+                                    @if (file.IsController)
+                                    {
+                                        <span class="badge bg-info">Controller</span>
+                                    }
+                                    <ul class="mb-0 mt-1">
+                                        @foreach (var fn in file.Functions)
+                                        {
+                                            <li>
+                                                <small>
+                                                    <strong>@fn.Name</strong>
+                                                    @if (!string.IsNullOrEmpty(fn.HttpMethod))
+                                                    {
+                                                        <span class="badge bg-primary">@fn.HttpMethod</span>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(fn.Route))
+                                                    {
+                                                        <code>@fn.Route</code>
+                                                    }
+                                                </small>
+                                            </li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (docResult != null)
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Documentation Generated</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>API Title:</strong> @docResult.ApiTitle</p>
+                    <p><strong>Version:</strong> @docResult.ApiVersion</p>
+                    <p><strong>Endpoints documented:</strong> @docResult.EndpointsDocumented</p>
+                    <p><strong>Files scanned:</strong> @docResult.FilesScanned</p>
+                    <p><strong>Duration:</strong> @docResult.Duration</p>
+
+                    @if (docResult.Warnings.Any())
+                    {
+                        <div class="alert alert-warning">
+                            @foreach (var w in docResult.Warnings)
+                            {
+                                <div>@w</div>
+                            }
+                        </div>
+                    }
+
+                    @if (docResult.Endpoints.Any())
+                    {
+                        <h6>Endpoints:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Method</th>
+                                        <th>Path</th>
+                                        <th>Operation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ep in docResult.Endpoints)
+                                    {
+                                        <tr>
+                                            <td><span class="badge bg-success">@ep.HttpMethod</span></td>
+                                            <td><code>@ep.Path</code></td>
+                                            <td>@ep.OperationId</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(docResult.MarkdownDocumentation))
+                    {
+                        <h6 class="mt-3">Markdown Preview:</h6>
+                        <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code>@docResult.MarkdownDocumentation</code></pre>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private ScanRequest request = new();
+    private string languagesInput = string.Empty;
+    private bool isLoading = false;
+    private string mode = string.Empty;
+    private string? errorMessage;
+    private ScanResult? scanResult;
+    private ApiDocumentationResult? docResult;
+
+    private void ParseLanguages()
+    {
+        request.Languages = languagesInput
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
+    private async Task ScanOnly()
+    {
+        errorMessage = null;
+        scanResult = null;
+        isLoading = true;
+        mode = "scan";
+
+        try
+        {
+            ParseLanguages();
+            var response = await Http.PostAsJsonAsync("api/apidocs/scan", request);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                scanResult = System.Text.Json.JsonSerializer.Deserialize<ScanResult>(content, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            else
+            {
+                errorMessage = $"Error: {response.StatusCode} - {content}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Request failed: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GenerateDocs()
+    {
+        errorMessage = null;
+        docResult = null;
+        isLoading = true;
+        mode = "generate";
+
+        try
+        {
+            ParseLanguages();
+            var response = await Http.PostAsJsonAsync("api/apidocs/generate", request);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                docResult = System.Text.Json.JsonSerializer.Deserialize<ApiDocumentationResult>(content, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            else
+            {
+                errorMessage = $"Error: {response.StatusCode} - {content}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Request failed: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private class ScanResult
+    {
+        public int FilesScanned { get; set; }
+        public int TotalFunctions { get; set; }
+        public List<ScanFileResult> Files { get; set; } = new();
+    }
+
+    private class ScanFileResult
+    {
+        public string Path { get; set; } = string.Empty;
+        public string Language { get; set; } = string.Empty;
+        public bool IsController { get; set; }
+        public List<ScanFunctionResult> Functions { get; set; } = new();
+    }
+
+    private class ScanFunctionResult
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? HttpMethod { get; set; }
+        public string? Route { get; set; }
+    }
+}

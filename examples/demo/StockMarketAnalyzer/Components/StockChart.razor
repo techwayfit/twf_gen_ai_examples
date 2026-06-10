@@ -1,0 +1,70 @@
+@inject IJSRuntime JS
+@using _StockMarketAnalyzer.Models
+
+<div class="chart-container" style="height: 300px; position: relative; width: 100%;">
+    <canvas id="@_canvasId" width="800" height="300"></canvas>
+</div>
+
+@code {
+    [Parameter]
+    public List<HistoricalPrice> PriceHistory { get; set; } = new();
+
+    private string _canvasId = $"chart_{Guid.NewGuid():N}";
+    private bool _chartRendered;
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine($"[StockChart] Component initialized with canvasId={_canvasId}");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine($"[StockChart] OnParametersSetAsync called. PriceHistory.Count={PriceHistory.Count}");
+
+        // Reset the flag when parameters change (new data arrives)
+        if (PriceHistory.Count > 0 && _chartRendered)
+        {
+            Console.WriteLine("[StockChart] PriceHistory changed, destroying old chart");
+            await DestroyChart();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine($"[StockChart] OnAfterRenderAsync called. firstRender={firstRender}, PriceHistory.Count={PriceHistory.Count}, _chartRendered={_chartRendered}");
+
+        if (PriceHistory.Count > 0 && !_chartRendered)
+        {
+            try
+            {
+                Console.WriteLine($"[StockChart] Attempting to render chart with canvasId={_canvasId}");
+                await Task.Delay(100);
+
+                var labels  = PriceHistory.Select(p => p.Date.ToString("MM/dd")).ToArray();
+                var prices  = PriceHistory.Select(p => (double)p.Close).ToArray();
+                var volumes = PriceHistory.Select(p => (double)p.Volume).ToArray();
+
+                Console.WriteLine($"[StockChart] Data prepared. Labels count={labels.Length}, Prices count={prices.Length}");
+
+                await JS.InvokeVoidAsync("createStockChart", _canvasId, labels, prices, volumes);
+                _chartRendered = true;
+                Console.WriteLine("[StockChart] Chart rendered successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StockChart] JS interop failed: {ex.Message}");
+                Console.WriteLine($"[StockChart] Stack trace: {ex.StackTrace}");
+            }
+        }
+    }
+
+    public async Task DestroyChart()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("destroyChart", _canvasId);
+            _chartRendered = false;
+        }
+        catch { }
+    }
+}

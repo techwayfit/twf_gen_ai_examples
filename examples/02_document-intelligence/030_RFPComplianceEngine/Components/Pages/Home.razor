@@ -1,0 +1,41 @@
+@page "/"
+
+<PageTitle>RFP Compliance Engine</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="display-5">RFP Compliance Engine</h2>
+            <p class="text-muted">
+                Upload your RFP, company capabilities, and internal policies. The pipeline extracts requirements,
+                checks regulatory compliance, matches capabilities, detects policy conflicts, and generates a
+                compliant response with a gap report.
+            </p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <RfpComplianceWidget />
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>How It Works</h5>
+                <p class="mb-0">
+                    The pipeline runs five stages: <strong>requirements extraction</strong> — the RFP is parsed by an LLM into
+                    structured requirements with categories, priorities, and applicable compliance frameworks;
+                    <strong>document indexing</strong> — capabilities, policies, and regulations are chunked, embedded, and
+                    stored in separate Qdrant collections for semantic retrieval;
+                    <strong>per-requirement analysis</strong> — each requirement is matched against company capabilities,
+                    checked for regulatory compliance (GDPR, HIPAA, SOC 2), and aligned with internal policies using
+                    vector retrieval and LLM analysis; <strong>conflict detection</strong> — a cross-check identifies
+                    inter-policy conflicts and outdated policies; and <strong>assembly</strong> — all results are merged
+                    into a professional RFP response document and a compliance gap report.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

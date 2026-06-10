@@ -1,0 +1,437 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+@using System.Text.Json
+@using Markdig
+
+<!-- ══ INPUT FORM CARD ══════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-search me-2"></i>Query Contracts
+        </h5>
+        <small class="opacity-75">Ask a question across your indexed contract documents</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+            <!-- Left: question input -->
+            <div class="col-12 col-lg-4">
+                <label class="form-label fw-semibold">Collection</label>
+                <select class="form-select mb-3"
+                        value="@selectedCollection"
+                        @onchange="OnCollectionChanged"
+                        disabled="@isQuerying">
+                    <option value="">— contracts (default) —</option>
+                    @foreach (var col in collections)
+                    {
+                        <option value="@col">@col</option>
+                    }
+                </select>
+
+                <label class="form-label fw-semibold">
+                    Your Question <span class="text-danger">*</span>
+                </label>
+                <textarea class="form-control question-textarea"
+                          rows="6"
+                          placeholder="e.g. What are the termination clauses across all contracts?&#10;e.g. Which contracts include force majeure provisions?"
+                          @bind="question"
+                          @bind:event="oninput"
+                          disabled="@isQuerying"
+                          maxlength="2000"></textarea>
+                <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted">@question.Length / 2,000 characters</small>
+                </div>
+
+                <div class="analysis-panel border rounded p-3 mt-3">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-sliders me-2 text-primary"></i>Retrieval Settings
+                    </h6>
+
+                    <label class="form-label fw-semibold">Context chunks to retrieve</label>
+                    <select class="form-select" @bind="topK" disabled="@isQuerying">
+                        <option value="4">4 chunks (focused)</option>
+                        <option value="8">8 chunks (balanced)</option>
+                        <option value="12">12 chunks (broad)</option>
+                        <option value="16">16 chunks (comprehensive)</option>
+                    </select>
+                    <small class="text-muted d-block mt-2">More chunks increase coverage but may reduce focus.</small>
+
+                    @if (indexStatus != null)
+                    {
+                        <div class="mt-3 p-2 rounded border bg-body-tertiary">
+                            <small class="text-muted">
+                                <i class="bi bi-database me-1 text-primary"></i>
+                                <strong>@indexStatus.DocumentCount</strong> contract(s) indexed —
+                                <strong>@indexStatus.ChunkCount</strong> chunk(s) total
+                            </small>
+                        </div>
+                    }
+
+                    <div class="d-flex gap-2 mt-4 flex-wrap">
+                        <button class="btn btn-primary px-4"
+                                @onclick="QueryContracts"
+                                disabled="@(isQuerying || string.IsNullOrWhiteSpace(question))">
+                            @if (isQuerying)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Synthesizing...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-cpu me-2"></i>
+                                <span>Synthesize Answer</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="Reset" disabled="@isQuerying">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: results -->
+            <div class="col-12 col-lg-8">
+                @if (!isQuerying && result == null && stages.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="card shadow-sm mb-4 prerun-card">
+                        <div class="card-body py-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Ready to query
+                            </h6>
+                            <p class="text-muted mb-2">
+                                Type a question on the left, choose how many context chunks to retrieve,
+                                then click <span class="fw-semibold text-body">Synthesize Answer</span>.
+                            </p>
+                            <small class="text-muted d-block">
+                                Example questions: "What are the payment terms?", "Which contracts expire in 2026?",
+                                "What liability limits are specified?"
+                            </small>
+                        </div>
+                    </div>
+                }
+
+                <!-- Error -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- Stage progress -->
+                @if (isQuerying || stages.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body py-3">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                @foreach (var (msg, idx, done) in stages)
+                                {
+                                    <span class="badge @(done ? "bg-success" : "bg-primary") stage-badge">
+                                        @if (done) { <i class="bi bi-check-circle me-1"></i> }
+                                        else { <span class="spinner-border spinner-border-sm me-1" role="status"></span> }
+                                        @msg
+                                    </span>
+                                    @if (idx < stages.Count - 1) { <i class="bi bi-arrow-right text-muted"></i> }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Result -->
+                @if (result != null)
+                {
+                    <div class="card shadow-lg mb-4">
+                        <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <i class="bi bi-journal-text me-2 fs-5"></i>
+                                <span class="fw-bold fs-5">Answer</span>
+                                <small class="opacity-75 d-block mt-1">
+                                    Based on @result.RetrievedChunkCount retrieved context chunk(s)
+                                </small>
+                            </div>
+                            <small class="opacity-75">
+                                <i class="bi bi-stopwatch me-1"></i>@FormatElapsed(_sw.Elapsed)
+                            </small>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="answer-body mb-4">
+                                @((MarkupString)RenderMarkdown(result.Answer))
+                            </div>
+
+                            @if (result.Citations.Count > 0)
+                            {
+                                <h6 class="fw-bold mb-3">
+                                    <i class="bi bi-bookmark-check me-2 text-primary"></i>Sources Cited
+                                </h6>
+                                <div class="citations-list">
+                                    @foreach (var (cit, i) in result.Citations.Select((c, i) => (c, i)))
+                                    {
+                                        <div class="citation-card border rounded p-3 mb-2 bg-light">
+                                            <div class="d-flex align-items-start gap-2">
+                                                <span class="badge bg-secondary flex-shrink-0">@cit.SourceId</span>
+                                                <div>
+                                                    <div class="fw-semibold">@cit.Title</div>
+                                                    <small class="text-muted">Document: @cit.DocumentId</small>
+                                                    @if (!string.IsNullOrWhiteSpace(cit.Excerpt))
+                                                    {
+                                                        <p class="text-muted small mb-0 mt-1 fst-italic">"@cit.Excerpt"</p>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info mb-0" role="alert">
+                                    <i class="bi bi-info-circle me-2"></i>No specific sources cited for this answer.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .question-textarea {
+        resize: vertical;
+        min-height: 10rem;
+    }
+    .analysis-panel {
+        background: #f8f9fa;
+    }
+    .prerun-card {
+        border-style: dashed;
+        border-color: #d0d7de;
+        background: #f8fbff;
+    }
+    .stage-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.75em;
+    }
+    .answer-body {
+        font-size: 0.95rem;
+        line-height: 1.75;
+        color: #1a1a2e;
+    }
+    .answer-body h1, .answer-body h2 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-top: 1.4rem;
+        margin-bottom: 0.4rem;
+        padding-bottom: 0.2rem;
+        border-bottom: 1px solid #e0e0e0;
+        color: #0d3b6e;
+    }
+    .answer-body h3 { font-size: 1rem; font-weight: 600; margin-top: 1.1rem; margin-bottom: 0.3rem; color: #1b5e99; }
+    .answer-body p { margin-bottom: 0.75rem; }
+    .answer-body ul, .answer-body ol { padding-left: 1.4rem; margin-bottom: 0.75rem; }
+    .answer-body li { margin-bottom: 0.25rem; }
+    .answer-body strong { font-weight: 600; color: #111; }
+    .answer-body code { background: #f0f4f8; padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.88em; }
+    .citation-card { font-size: 0.875rem; }
+</style>
+
+@code {
+    private string question          = string.Empty;
+    private string selectedCollection = string.Empty;
+    private int    topK              = 8;
+
+    private List<string> collections = new();
+
+    private bool   isQuerying   = false;
+    private string errorMessage = string.Empty;
+
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+    private ContractQueryResultPayload? result = null;
+    private IndexStatusPayload? indexStatus = null;
+    private System.Diagnostics.Stopwatch _sw = new();
+
+    protected override async Task OnInitializedAsync() =>
+        await RefreshStatusAsync();
+
+    private async Task OnCollectionChanged(ChangeEventArgs e)
+    {
+        selectedCollection = e.Value?.ToString() ?? string.Empty;
+        await RefreshStatusAsync(includeCollections: false);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task QueryContracts()
+    {
+        if (string.IsNullOrWhiteSpace(question)) return;
+
+        isQuerying   = true;
+        errorMessage = string.Empty;
+        result       = null;
+        stages       = new();
+        _sw          = System.Diagnostics.Stopwatch.StartNew();
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/Rfp/query");
+            requestMsg.Content = JsonContent.Create(new
+            {
+                Question   = question.Trim(),
+                TopK       = topK,
+                Collection = selectedCollection,
+            });
+
+            using var response = await Http.SendAsync(requestMsg, HttpCompletionOption.ResponseHeadersRead);
+            using var stream   = await response.Content.ReadAsStreamAsync();
+            using var reader   = new System.IO.StreamReader(stream);
+
+            var jsonOpts       = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                        case "complete":
+                            _sw.Stop();
+                            result = JsonSerializer.Deserialize<ContractQueryResultPayload>(data, jsonOpts);
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                        case "error":
+                            var errPayload = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage   = errPayload?.Error ?? "Query failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isQuerying = false;
+            await RefreshStatusAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task Reset()
+    {
+        question          = string.Empty;
+        selectedCollection = string.Empty;
+        topK              = 8;
+        errorMessage      = string.Empty;
+        result            = null;
+        stages            = new();
+        await RefreshStatusAsync(includeCollections: false);
+        StateHasChanged();
+    }
+
+    private async Task RefreshStatusAsync(bool includeCollections = true)
+    {
+        try
+        {
+            var baseUrl  = Navigation.BaseUri.TrimEnd('/');
+            var jsonOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var contractsColl = System.Web.HttpUtility.UrlEncode(
+                Configuration["Qdrant:Collections:Contracts"] ?? "contracts");
+            var statusUrl = $"{baseUrl}/api/Rfp/status?collection={contractsColl}";
+
+            indexStatus = await Http.GetFromJsonAsync<IndexStatusPayload>(statusUrl, jsonOpts);
+
+            if (includeCollections)
+            {
+                collections = await Http.GetFromJsonAsync<List<string>>(
+                    $"{baseUrl}/api/Rfp/status", jsonOpts) ?? new();
+            }
+        }
+        catch { /* not critical */ }
+    }
+
+    private static string FormatElapsed(TimeSpan t) => t.TotalSeconds >= 60
+        ? $"{(int)t.TotalMinutes}m {t.Seconds}s"
+        : t.TotalSeconds >= 1
+            ? $"{t.TotalSeconds:F1}s"
+            : $"{t.TotalMilliseconds:F0}ms";
+
+    private static readonly MarkdownPipeline _mdPipeline =
+        new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+
+    private static string RenderMarkdown(string? md)
+    {
+        if (string.IsNullOrWhiteSpace(md)) return string.Empty;
+        var html = Markdig.Markdown.ToHtml(md, _mdPipeline);
+        html = System.Text.RegularExpressions.Regex.Replace(
+            html,
+            @"\[source_(\d+)\]",
+            """<sup><span class="badge text-bg-secondary" style="font-size:0.68rem;vertical-align:super;">src&thinsp;$1</span></sup>""");
+        return html;
+    }
+
+    // ── SSE payload types ─────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message    { get; set; } = string.Empty;
+        public int    StageIndex { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+
+    private class ContractQueryResultPayload
+    {
+        public string                      Answer              { get; set; } = string.Empty;
+        public List<CitationPayload>       Citations           { get; set; } = new();
+        public int                         RetrievedChunkCount { get; set; }
+        public DateTime                    QueriedAt           { get; set; }
+    }
+
+    private class CitationPayload
+    {
+        public string SourceId   { get; set; } = string.Empty;
+        public string DocumentId { get; set; } = string.Empty;
+        public string Title      { get; set; } = string.Empty;
+        public string Excerpt    { get; set; } = string.Empty;
+    }
+
+    private class IndexStatusPayload
+    {
+        public int ChunkCount    { get; set; }
+        public int DocumentCount { get; set; }
+    }
+}

@@ -177,9 +177,12 @@
             _currentJobId = submitResult.GetProperty("jobId").GetString();
             _status = $"Job submitted: {_currentJobId}. Monitoring progress...";
 
-            // Start polling for progress
+            // Start polling for progress using proper async timer callback
             _pollTimer?.Dispose();
-            _pollTimer = new System.Threading.Timer(async _ => await PollJobStatusAsync(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
+            _pollTimer = new System.Threading.Timer(_ => 
+            {
+                _ = PollJobStatusAsync(); // Fire and forget, but proper async handling
+            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
         }
         catch (Exception ex)
         {
@@ -201,6 +204,7 @@
             var response = await Http.GetAsync($"api/PairProgrammer/index/status/{_currentJobId}");
             if (!response.IsSuccessStatusCode)
             {
+                Console.WriteLine($"Failed to get job status: {response.StatusCode}");
                 return;
             }
 
@@ -209,9 +213,11 @@
 
             if (jobStatus == null)
             {
+                Console.WriteLine("Failed to deserialize job status");
                 return;
             }
 
+            // Always update progress, even if it hasn't changed
             _indexProgress = jobStatus.Progress;
 
             switch (jobStatus.Status)
@@ -258,11 +264,12 @@
                     break;
             }
 
+            // Force UI update on Blazor thread
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
-            // Silently ignore polling errors to avoid spamming logs
+            // Log but don't stop polling
             Console.WriteLine($"Polling error: {ex.Message}");
         }
     }

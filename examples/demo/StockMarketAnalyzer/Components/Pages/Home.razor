@@ -1,0 +1,29 @@
+@page "/"
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.WebUtilities
+
+<PageTitle>Stock Market Analyzer</PageTitle>
+
+<div class="mb-4 slide-up">
+    <h2 class="fw-bold" style="letter-spacing: -0.03em; font-size: 1.75rem;">
+        <i class="bi bi-graph-up-arrow me-2" style="color: var(--accent-blue);"></i>Stock Analyzer
+    </h2>
+    <p style="color: var(--text-muted); margin-bottom: 0; max-width: 600px;">
+        AI-powered trend analysis, buy/sell recommendations, and risk assessment.
+    </p>
+</div>
+
+<StockAnalyzerWidget InitialSymbol="@initialSymbol" />
+
+@code {
+    private string? initialSymbol;
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("symbol", out var sym))
+        {
+            initialSymbol = sym.FirstOrDefault();
+        }
+    }
+}

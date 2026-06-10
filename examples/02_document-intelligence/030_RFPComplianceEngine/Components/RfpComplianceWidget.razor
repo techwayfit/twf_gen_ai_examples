@@ -1,0 +1,769 @@
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject _030_RFPComplianceEngine.Services.FileTextExtractorService FileExtractor
+@inject IConfiguration Configuration
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using Markdig
+
+<!-- ══ INPUT FORM CARD ══════════════════════════════════════════════════════ -->
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-file-earmark-check me-2"></i>RFP Compliance Analysis
+        </h5>
+        <small class="opacity-75">Paste your RFP, company capabilities, and policies — then click Analyze</small>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4">
+
+            <!-- Left: document inputs -->
+            <div class="col-12 col-lg-5">
+                <!-- RFP Text -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fw-semibold mb-0">
+                            RFP Document <span class="text-danger">*</span>
+                        </label>
+                        <InputFile id="rfpFileInput" class="visually-hidden"
+                                   OnChange="e => OnFileSelected(e, v => rfpText = v, n => rfpFileName = n)"
+                                   accept=".txt,.pdf" disabled="@isAnalyzing" />
+                        <label for="rfpFileInput"
+                               class="btn btn-sm btn-outline-primary py-0 @(isAnalyzing ? "disabled" : "")"
+                               style="cursor:pointer;">
+                            <i class="bi bi-upload me-1"></i>Upload
+                        </label>
+                    </div>
+                    @if (!string.IsNullOrEmpty(rfpFileName))
+                    {
+                        <div class="badge bg-success-subtle text-success border border-success-subtle mb-1">
+                            <i class="bi bi-file-earmark-check me-1"></i>@rfpFileName
+                            <button class="btn btn-sm btn-link p-0 ms-1" @onclick="() => { rfpText = string.Empty; rfpFileName = string.Empty; }"><i class="bi bi-x"></i></button>
+                        </div>
+                    }
+                    <textarea class="form-control doc-textarea" rows="10"
+                              placeholder="Paste RFP document text here..."
+                              @bind="rfpText" @bind:event="oninput" disabled="@isAnalyzing" maxlength="100000"></textarea>
+                    <small class="text-muted">@rfpText.Length characters</small>
+                </div>
+
+                <!-- Capabilities Text -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fw-semibold mb-0">
+                            Company Capabilities <span class="text-danger">*</span>
+                        </label>
+                        <InputFile id="capsFileInput" class="visually-hidden"
+                                   OnChange="e => OnFileSelected(e, v => capabilitiesText = v, n => capsFileName = n)"
+                                   accept=".txt,.pdf" disabled="@isAnalyzing" />
+                        <label for="capsFileInput"
+                               class="btn btn-sm btn-outline-primary py-0 @(isAnalyzing ? "disabled" : "")"
+                               style="cursor:pointer;">
+                            <i class="bi bi-upload me-1"></i>Upload
+                        </label>
+                    </div>
+                    @if (!string.IsNullOrEmpty(capsFileName))
+                    {
+                        <div class="badge bg-success-subtle text-success border border-success-subtle mb-1">
+                            <i class="bi bi-file-earmark-check me-1"></i>@capsFileName
+                            <button class="btn btn-sm btn-link p-0 ms-1" @onclick="() => { capabilitiesText = string.Empty; capsFileName = string.Empty; }"><i class="bi bi-x"></i></button>
+                        </div>
+                    }
+                    <textarea class="form-control doc-textarea" rows="6"
+                              placeholder="Paste company capabilities, certifications, past performance..."
+                              @bind="capabilitiesText" @bind:event="oninput" disabled="@isAnalyzing" maxlength="100000"></textarea>
+                </div>
+
+                <!-- Policies Text -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold mb-1">Internal Policies (optional)</label>
+                    <textarea class="form-control doc-textarea" rows="4"
+                              placeholder="Paste internal policy documents..."
+                              @bind="policiesText" @bind:event="oninput" disabled="@isAnalyzing" maxlength="100000"></textarea>
+                </div>
+
+                <!-- Regulations Text -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold mb-1">Regulatory Frameworks (optional)</label>
+                    <textarea class="form-control doc-textarea" rows="4"
+                              placeholder="Paste regulatory framework excerpts (GDPR, HIPAA, SOC2...)..."
+                              @bind="regulationsText" @bind:event="oninput" disabled="@isAnalyzing" maxlength="100000"></textarea>
+                </div>
+            </div>
+
+            <!-- Right: settings + results -->
+            <div class="col-12 col-lg-7">
+                <!-- Settings -->
+                <div class="analysis-panel border rounded p-3 mb-3">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-sliders me-2 text-primary"></i>Analysis Settings
+                    </h6>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Compliance Frameworks</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var fw in AllFrameworks)
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="fw_@fw" checked="@selectedFrameworks.Contains(fw)"
+                                           @onchange="e => ToggleFramework(fw, (bool)(e.Value ?? false))"
+                                           disabled="@isAnalyzing" />
+                                    <label class="form-check-label small" for="fw_@fw">@fw</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-primary px-4"
+                                @onclick="Analyze"
+                                disabled="@(isAnalyzing || string.IsNullOrWhiteSpace(rfpText) || string.IsNullOrWhiteSpace(capabilitiesText))">
+                            @if (isAnalyzing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Analyzing...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-cpu me-2"></i>
+                                <span>Analyze RFP</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="Reset" disabled="@isAnalyzing">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
+                    </div>
+                }
+
+                <!-- Stage progress -->
+                @if (isAnalyzing || stages.Count > 0)
+                {
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body py-3">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                @foreach (var (msg, idx, done) in stages)
+                                {
+                                    <span class="badge @(done ? "bg-success" : "bg-primary") stage-badge">
+                                        @if (done) { <i class="bi bi-check-circle me-1"></i> }
+                                        else { <span class="spinner-border spinner-border-sm me-1" role="status"></span> }
+                                        @msg
+                                    </span>
+                                    @if (idx < stages.Count - 1) { <i class="bi bi-arrow-right text-muted"></i> }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Pre-run placeholder -->
+                @if (!isAnalyzing && result == null && stages.Count == 0 && string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="card shadow-sm prerun-card">
+                        <div class="card-body py-4">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>Ready to analyze
+                            </h6>
+                            <p class="text-muted mb-2">
+                                Paste your RFP, capabilities, and policies on the left, select compliance
+                                frameworks, then click <span class="fw-semibold text-body">Analyze RFP</span>.
+                            </p>
+                            <small class="text-muted">
+                                The pipeline will extract requirements, check compliance, match capabilities,
+                                and generate a response document with a gap report.
+                            </small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ RESULTS ══════════════════════════════════════════════════════════════ -->
+@if (result != null)
+{
+    <!-- Summary badges -->
+    <div class="card shadow-lg mb-4">
+        <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Analysis Complete</h5>
+                <small class="opacity-75">
+                    @result.Requirements.Count requirements &nbsp;·&nbsp;
+                    <i class="bi bi-stopwatch me-1"></i>@FormatElapsed(_sw.Elapsed)
+                </small>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="badge bg-light text-dark">@result.ComplianceResults.Count compliance checks</span>
+                <span class="badge bg-light text-dark">@result.PolicyResults.Count policy checks</span>
+                @if (result.PolicyConflicts.Conflicts.Count > 0)
+                {
+                    <span class="badge bg-warning text-dark">@result.PolicyConflicts.Conflicts.Count conflicts</span>
+                }
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Tab navigation -->
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "requirements" ? "active" : "")"
+                            @onclick='() => activeTab = "requirements"'>
+                        <i class="bi bi-list-check me-1"></i>Requirements
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "compliance" ? "active" : "")"
+                            @onclick='() => activeTab = "compliance"'>
+                        <i class="bi bi-shield-check me-1"></i>Compliance Gaps
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "policy" ? "active" : "")"
+                            @onclick='() => activeTab = "policy"'>
+                        <i class="bi bi-book me-1"></i>Policy Report
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "response" ? "active" : "")"
+                            @onclick='() => activeTab = "response"'>
+                        <i class="bi bi-file-earmark-text me-1"></i>Drafted Response
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(activeTab == "gaps" ? "active" : "")"
+                            @onclick='() => activeTab = "gaps"'>
+                        <i class="bi bi-exclamation-triangle me-1"></i>Gap Report
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab: Requirements -->
+            @if (activeTab == "requirements")
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Priority</th>
+                                <th>Frameworks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var req in result.Requirements)
+                            {
+                                <tr>
+                                    <td><code>@req.Id</code></td>
+                                    <td>@req.Description</td>
+                                    <td><span class="badge bg-info text-dark">@req.Category</span></td>
+                                    <td><span class="badge @PriorityBadge(req.Priority)">@req.Priority</span></td>
+                                    <td>
+                                        @foreach (var fw in req.ComplianceFrameworks)
+                                        {
+                                            <span class="badge bg-secondary me-1">@fw</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <!-- Tab: Compliance Gaps -->
+            @if (activeTab == "compliance")
+            {
+                @foreach (var comp in result.ComplianceResults)
+                {
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>@comp.RequirementId</strong>
+                            <span class="badge @ComplianceBadge(comp.OverallCompliance)">@comp.OverallCompliance</span>
+                        </div>
+                        <div class="card-body">
+                            @if (comp.Findings.Count > 0)
+                            {
+                                @foreach (var f in comp.Findings)
+                                {
+                                    <div class="alert @(f.Status == "non_compliant" ? "alert-danger" : f.Status == "partial" ? "alert-warning" : "alert-success") mb-2 py-2">
+                                        <div class="d-flex justify-content-between">
+                                            <strong>@f.Framework — @f.Clause</strong>
+                                            <span class="badge @RiskBadge(f.RiskLevel)">@f.RiskLevel</span>
+                                        </div>
+                                        <p class="mb-1 small">@f.Issue</p>
+                                        <p class="mb-0 small text-muted"><i class="bi bi-lightbulb me-1"></i>@f.Recommendation</p>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-success mb-0 py-2">
+                                    <i class="bi bi-check-circle me-1"></i>No compliance issues found.
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(comp.Summary))
+                            {
+                                <p class="text-muted small mt-2 mb-0">@comp.Summary</p>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
+            <!-- Tab: Policy Report -->
+            @if (activeTab == "policy")
+            {
+                @foreach (var pol in result.PolicyResults)
+                {
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>@pol.RequirementId</strong>
+                            <span class="badge @(pol.Alignment == "aligned" ? "bg-success" : pol.Alignment == "partial" ? "bg-warning" : "bg-danger")">@pol.Alignment</span>
+                        </div>
+                        <div class="card-body">
+                            @foreach (var cit in pol.Citations)
+                            {
+                                <div class="border-start border-3 border-primary ps-3 mb-2">
+                                    <div class="fw-semibold small">@cit.PolicyTitle <code>(@cit.PolicyId)</code> — Section @cit.Section</div>
+                                    <p class="text-muted small mb-0 fst-italic">"@cit.Excerpt"</p>
+                                </div>
+                            }
+                            @if (pol.Conflicts.Count > 0)
+                            {
+                                <div class="alert alert-warning mt-2 mb-0 py-2 small">
+                                    <i class="bi bi-exclamation-triangle me-1"></i><strong>Conflicts:</strong> @string.Join("; ", pol.Conflicts)
+                                </div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(pol.Recommendations))
+                            {
+                                <p class="text-muted small mt-2 mb-0"><i class="bi bi-lightbulb me-1"></i>@pol.Recommendations</p>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Policy conflicts summary -->
+                @if (result.PolicyConflicts.Conflicts.Count > 0 || result.PolicyConflicts.OutdatedPolicies.Count > 0)
+                {
+                    <h6 class="fw-bold mt-4 mb-3"><i class="bi bi-arrow-left-right me-2 text-warning"></i>Policy Conflicts &amp; Outdated Policies</h6>
+                    @foreach (var c in result.PolicyConflicts.Conflicts)
+                    {
+                        <div class="alert alert-warning py-2 mb-2">
+                            <strong>@c.PolicyA</strong> vs <strong>@c.PolicyB</strong>
+                            <span class="badge @RiskBadge(c.Severity) ms-2">@c.Severity</span>
+                            <p class="mb-0 small mt-1">@c.Description</p>
+                        </div>
+                    }
+                    @foreach (var o in result.PolicyConflicts.OutdatedPolicies)
+                    {
+                        <div class="alert alert-info py-2 mb-2">
+                            <i class="bi bi-clock-history me-1"></i>
+                            <strong>@o.PolicyTitle</strong> <code>(@o.PolicyId)</code> — last reviewed @o.LastReviewed
+                            <p class="mb-0 small mt-1">@o.Recommendation</p>
+                        </div>
+                    }
+                }
+            }
+
+            <!-- Tab: Drafted Response -->
+            @if (activeTab == "response")
+            {
+                <div class="answer-body">
+                    @((MarkupString)RenderMarkdown(result.DraftedResponse))
+                </div>
+            }
+
+            <!-- Tab: Gap Report -->
+            @if (activeTab == "gaps")
+            {
+                <div class="alert @(result.GapReport.OverallRisk == "critical" ? "alert-danger" : result.GapReport.OverallRisk == "high" ? "alert-warning" : "alert-info") mb-3">
+                    <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Overall Risk: @result.GapReport.OverallRisk</h6>
+                    <p class="mb-1">@result.GapReport.ExecutiveSummary</p>
+                    <small>
+                        <strong>@result.GapReport.Compliant</strong> compliant ·
+                        <strong>@result.GapReport.PartiallyCompliant</strong> partially compliant ·
+                        <strong>@result.GapReport.NonCompliant</strong> non-compliant
+                    </small>
+                </div>
+
+                @if (result.GapReport.CriticalGaps.Count > 0)
+                {
+                    <h6 class="fw-bold mb-2">Critical Gaps</h6>
+                    @foreach (var gap in result.GapReport.CriticalGaps)
+                    {
+                        <div class="card mb-2">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>@gap.RequirementId</strong> — <span class="badge bg-secondary">@gap.Framework</span>
+                                        <span class="badge @RiskBadge(gap.RiskLevel) ms-1">@gap.RiskLevel</span>
+                                    </div>
+                                    <small class="text-muted">@gap.EstimatedEffort</small>
+                                </div>
+                                <p class="mb-1 small mt-1">@gap.Gap</p>
+                                <p class="mb-0 small text-muted"><i class="bi bi-lightbulb me-1"></i>@gap.Remediation</p>
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (!string.IsNullOrWhiteSpace(result.GapReport.RemediationRoadmap))
+                {
+                    <h6 class="fw-bold mt-3 mb-2">Remediation Roadmap</h6>
+                    <div class="border-start border-3 border-primary ps-3">
+                        @((MarkupString)RenderMarkdown(result.GapReport.RemediationRoadmap))
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+<style>
+    .doc-textarea {
+        resize: vertical;
+        min-height: 8rem;
+        font-size: 0.85rem;
+    }
+    .analysis-panel {
+        background: #f8f9fa;
+    }
+    .prerun-card {
+        border-style: dashed;
+        border-color: #d0d7de;
+        background: #f8fbff;
+    }
+    .stage-badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.75em;
+    }
+    .answer-body {
+        font-size: 0.95rem;
+        line-height: 1.75;
+    }
+    .answer-body h1, .answer-body h2 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-top: 1.2rem;
+        margin-bottom: 0.4rem;
+        border-bottom: 1px solid #e0e0e0;
+        color: #0d3b6e;
+    }
+    .answer-body p { margin-bottom: 0.75rem; }
+    .answer-body ul, .answer-body ol { padding-left: 1.4rem; margin-bottom: 0.75rem; }
+    .answer-body strong { font-weight: 600; color: #111; }
+</style>
+
+@code {
+    private static readonly string[] AllFrameworks = ["GDPR", "HIPAA", "SOC2", "FDA", "ISO27001", "PCI-DSS"];
+
+    private string rfpText           = string.Empty;
+    private string capabilitiesText  = string.Empty;
+    private string policiesText      = string.Empty;
+    private string regulationsText   = string.Empty;
+    private HashSet<string> selectedFrameworks = new(["GDPR", "SOC2"]);
+
+    private string rfpFileName  = string.Empty;
+    private string capsFileName = string.Empty;
+
+    private bool   isAnalyzing = false;
+    private string errorMessage = string.Empty;
+    private string activeTab    = "requirements";
+
+    private List<(string Msg, int Idx, bool Done)> stages = new();
+    private RfpComplianceResultPayload? result = null;
+    private System.Diagnostics.Stopwatch _sw = new();
+
+    private void ToggleFramework(string fw, bool selected)
+    {
+        if (selected) selectedFrameworks.Add(fw);
+        else          selectedFrameworks.Remove(fw);
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e, Action<string> setText, Action<string> setName)
+    {
+        var file = e.File;
+        var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+        if (ext != ".txt" && ext != ".pdf") return;
+
+        var maxBytes = Configuration.GetValue<long>("Upload:MaxFileSizeMb", 200) * 1024 * 1024;
+        if (file.Size > maxBytes) return;
+
+        try
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: maxBytes);
+            var text = await FileExtractor.ExtractAsync(stream, file.Name);
+            setText(text);
+            setName(file.Name);
+        }
+        catch { /* ignore */ }
+    }
+
+    private async Task Analyze()
+    {
+        if (string.IsNullOrWhiteSpace(rfpText) || string.IsNullOrWhiteSpace(capabilitiesText)) return;
+
+        isAnalyzing = true;
+        errorMessage = string.Empty;
+        result       = null;
+        stages       = new();
+        _sw          = System.Diagnostics.Stopwatch.StartNew();
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl    = Navigation.BaseUri.TrimEnd('/');
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/Rfp/analyze");
+            requestMsg.Content = JsonContent.Create(new
+            {
+                RfpText          = rfpText.Trim(),
+                CapabilitiesText = capabilitiesText.Trim(),
+                PoliciesText     = policiesText.Trim(),
+                RegulationsText  = regulationsText.Trim(),
+                Frameworks       = selectedFrameworks.ToList(),
+            });
+
+            using var response = await Http.SendAsync(requestMsg, HttpCompletionOption.ResponseHeadersRead);
+            using var stream   = await response.Content.ReadAsStreamAsync();
+            using var reader   = new System.IO.StreamReader(stream);
+
+            var jsonOpts   = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            string? pendingEvt = null;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (line == null) break;
+
+                if (line.StartsWith("event: "))
+                {
+                    pendingEvt = line[7..].Trim();
+                }
+                else if (line.StartsWith("data: "))
+                {
+                    var data = line[6..];
+                    switch (pendingEvt)
+                    {
+                        case "stage":
+                            var stageEvt = JsonSerializer.Deserialize<StageEventPayload>(data, jsonOpts);
+                            if (stageEvt != null)
+                            {
+                                for (int i = 0; i < stages.Count; i++)
+                                    stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                                stages.Add((stageEvt.Message, stageEvt.StageIndex, false));
+                            }
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                        case "complete":
+                            _sw.Stop();
+                            result     = JsonSerializer.Deserialize<RfpComplianceResultPayload>(data, jsonOpts);
+                            activeTab  = "requirements";
+                            for (int i = 0; i < stages.Count; i++)
+                                stages[i] = (stages[i].Msg, stages[i].Idx, true);
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                        case "error":
+                            var errPayload = JsonSerializer.Deserialize<ErrorPayload>(data, jsonOpts);
+                            errorMessage   = errPayload?.Error ?? "Analysis failed.";
+                            await InvokeAsync(StateHasChanged);
+                            break;
+                    }
+                    pendingEvt = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isAnalyzing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void Reset()
+    {
+        rfpText          = string.Empty;
+        capabilitiesText = string.Empty;
+        policiesText     = string.Empty;
+        regulationsText  = string.Empty;
+        rfpFileName      = string.Empty;
+        capsFileName     = string.Empty;
+        selectedFrameworks = new(["GDPR", "SOC2"]);
+        errorMessage     = string.Empty;
+        result           = null;
+        activeTab        = "requirements";
+        stages           = new();
+        StateHasChanged();
+    }
+
+    private static string PriorityBadge(string p) => p?.ToLower() switch
+    {
+        "critical" => "bg-danger",
+        "high"     => "bg-warning text-dark",
+        "medium"   => "bg-info text-dark",
+        "low"      => "bg-secondary",
+        _          => "bg-light text-dark border"
+    };
+
+    private static string ComplianceBadge(string c) => c?.ToLower() switch
+    {
+        "compliant"         => "bg-success",
+        "partial"           => "bg-warning text-dark",
+        "non_compliant"     => "bg-danger",
+        _                   => "bg-light text-dark border"
+    };
+
+    private static string RiskBadge(string r) => r?.ToLower() switch
+    {
+        "critical" => "bg-danger",
+        "high"     => "bg-warning text-dark",
+        "medium"   => "bg-info text-dark",
+        "low"      => "bg-secondary",
+        _          => "bg-light text-dark border"
+    };
+
+    private static string FormatElapsed(TimeSpan t) => t.TotalSeconds >= 60
+        ? $"{(int)t.TotalMinutes}m {t.Seconds}s"
+        : t.TotalSeconds >= 1
+            ? $"{t.TotalSeconds:F1}s"
+            : $"{t.TotalMilliseconds:F0}ms";
+
+    private static readonly MarkdownPipeline _mdPipeline =
+        new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+
+    private static string RenderMarkdown(string? md)
+    {
+        if (string.IsNullOrWhiteSpace(md)) return string.Empty;
+        return Markdig.Markdown.ToHtml(md, _mdPipeline);
+    }
+
+    // ── SSE payload types ─────────────────────────────────────────────────
+    private class StageEventPayload
+    {
+        public string Message    { get; set; } = string.Empty;
+        public int    StageIndex { get; set; }
+        public int    TotalStages { get; set; }
+    }
+
+    private class ErrorPayload
+    {
+        public string Error { get; set; } = string.Empty;
+    }
+
+    private class RfpComplianceResultPayload
+    {
+        public List<RfpRequirementPayload>       Requirements       { get; set; } = new();
+        public List<ComplianceCheckPayload>      ComplianceResults  { get; set; } = new();
+        public List<PolicyCheckPayload>          PolicyResults      { get; set; } = new();
+        public PolicyConflictReportPayload       PolicyConflicts    { get; set; } = new();
+        public string                            DraftedResponse    { get; set; } = string.Empty;
+        public GapReportPayload                  GapReport          { get; set; } = new();
+        public DateTime                          AnalyzedAt         { get; set; }
+    }
+
+    private class RfpRequirementPayload
+    {
+        public string       Id                   { get; set; } = string.Empty;
+        public string       Description          { get; set; } = string.Empty;
+        public string       Category             { get; set; } = string.Empty;
+        public string       Priority             { get; set; } = string.Empty;
+        public List<string> ComplianceFrameworks { get; set; } = new();
+    }
+
+    private class ComplianceCheckPayload
+    {
+        public string                   RequirementId     { get; set; } = string.Empty;
+        public string                   OverallCompliance { get; set; } = string.Empty;
+        public List<ComplianceFindingPayload> Findings    { get; set; } = new();
+        public string                   Summary           { get; set; } = string.Empty;
+    }
+
+    private class ComplianceFindingPayload
+    {
+        public string Framework      { get; set; } = string.Empty;
+        public string Clause         { get; set; } = string.Empty;
+        public string Status         { get; set; } = string.Empty;
+        public string Issue          { get; set; } = string.Empty;
+        public string RiskLevel      { get; set; } = string.Empty;
+        public string Recommendation { get; set; } = string.Empty;
+    }
+
+    private class PolicyCheckPayload
+    {
+        public string                    RequirementId { get; set; } = string.Empty;
+        public string                    Alignment     { get; set; } = string.Empty;
+        public List<PolicyCitationPayload> Citations   { get; set; } = new();
+        public List<string>              Conflicts     { get; set; } = new();
+        public string                    Recommendations { get; set; } = string.Empty;
+    }
+
+    private class PolicyCitationPayload
+    {
+        public string PolicyId    { get; set; } = string.Empty;
+        public string PolicyTitle { get; set; } = string.Empty;
+        public string Section     { get; set; } = string.Empty;
+        public string Excerpt     { get; set; } = string.Empty;
+        public string Alignment   { get; set; } = string.Empty;
+    }
+
+    private class PolicyConflictReportPayload
+    {
+        public List<PolicyConflictPayload>  Conflicts        { get; set; } = new();
+        public List<OutdatedPolicyPayload>  OutdatedPolicies { get; set; } = new();
+        public List<string>                 CoverageGaps     { get; set; } = new();
+    }
+
+    private class PolicyConflictPayload
+    {
+        public string PolicyA     { get; set; } = string.Empty;
+        public string PolicyB     { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Severity    { get; set; } = string.Empty;
+    }
+
+    private class OutdatedPolicyPayload
+    {
+        public string PolicyId      { get; set; } = string.Empty;
+        public string PolicyTitle   { get; set; } = string.Empty;
+        public string LastReviewed  { get; set; } = string.Empty;
+        public string Recommendation { get; set; } = string.Empty;
+    }
+
+    private class GapReportPayload
+    {
+        public string               ExecutiveSummary    { get; set; } = string.Empty;
+        public string               OverallRisk         { get; set; } = string.Empty;
+        public int                  TotalRequirements   { get; set; }
+        public int                  Compliant           { get; set; }
+        public int                  PartiallyCompliant  { get; set; }
+        public int                  NonCompliant        { get; set; }
+        public List<CriticalGapPayload> CriticalGaps    { get; set; } = new();
+        public string               RemediationRoadmap  { get; set; } = string.Empty;
+    }
+
+    private class CriticalGapPayload
+    {
+        public string RequirementId   { get; set; } = string.Empty;
+        public string Framework       { get; set; } = string.Empty;
+        public string Gap             { get; set; } = string.Empty;
+        public string RiskLevel       { get; set; } = string.Empty;
+        public string Remediation     { get; set; } = string.Empty;
+        public string EstimatedEffort { get; set; } = string.Empty;
+    }
+}

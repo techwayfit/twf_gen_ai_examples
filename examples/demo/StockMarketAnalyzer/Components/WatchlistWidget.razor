@@ -1,0 +1,327 @@
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using System.Text.Json
+@using _StockMarketAnalyzer.Models
+@using Microsoft.AspNetCore.Components.Web
+
+<!-- ══ ADD STOCK ══════════════════════════════════════════════════════════ -->
+<div class="card mb-4 slide-up">
+    <div class="card-body p-4">
+        <div class="row align-items-center g-3">
+            <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold text-secondary mb-2">
+                    <i class="bi bi-plus-circle me-1"></i>Add Stock to Watchlist
+                </label>
+                <input class="form-control form-control-lg"
+                       placeholder="Enter ticker symbol (e.g. NFLX)"
+                       @bind="newSymbol"
+                       @bind:event="oninput"
+                       @onkeydown="HandleAddKeyDown"
+                       disabled="@isAdding"
+                       style="background: var(--bg-surface); border-color: var(--border-color);" />
+            </div>
+            <div class="col-12 col-md-3">
+                <button class="btn btn-primary btn-lg w-100"
+                        @onclick="AddSymbol"
+                        disabled="@(isAdding || string.IsNullOrWhiteSpace(newSymbol))">
+                    @if (isAdding)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Adding...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-plus-lg me-2"></i>
+                        <span>Add</span>
+                    }
+                </button>
+            </div>
+            <div class="col-12 col-md-3">
+                <button class="btn btn-outline-secondary btn-lg w-100" @onclick="RefreshPrices" disabled="@isRefreshing">
+                    @if (isRefreshing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Refreshing...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        <span>Refresh</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ STATUS MESSAGE ═════════════════════════════════════════════════════ -->
+@if (!string.IsNullOrEmpty(statusMessage))
+{
+    <div class="alert @(statusIsError ? "alert-danger" : "alert-success") fade-in" role="alert">
+        <i class="bi @(statusIsError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill") me-2"></i>@statusMessage
+        <button type="button" class="btn-close" @onclick="() => statusMessage = string.Empty" style="filter: brightness(0) invert(1); opacity: 0.5;"></button>
+    </div>
+}
+
+<!-- ══ EMPTY STATE ════════════════════════════════════════════════════════ -->
+@if (!isRefreshing && watchlist != null && watchlist.Items.Count == 0)
+{
+    <div class="card fade-in">
+        <div class="card-body empty-state py-5">
+            <div class="empty-state-icon">
+                <i class="bi bi-star"></i>
+            </div>
+            <h5 class="fw-semibold mt-3" style="color: var(--text-primary);">Your Watchlist is Empty</h5>
+            <p style="color: var(--text-muted); max-width: 360px; margin: 0.75rem auto 0;">
+                Add a stock symbol above to start tracking your favorite stocks.
+            </p>
+        </div>
+    </div>
+}
+
+<!-- ══ WATCHLIST TABLE ════════════════════════════════════════════════════ -->
+@if (watchlist != null && watchlist.Items.Count > 0)
+{
+    <div class="card slide-up">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="padding: 1rem 1.25rem;">Symbol</th>
+                            <th>Name</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end">Change</th>
+                            <th class="text-center" style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in watchlist.Items.OrderByDescending(i => i.LastChangePercent ?? 0))
+                        {
+                            <tr>
+                                <td style="padding: 1rem 1.25rem;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="watchlist-symbol-avatar @(item.LastChange >= 0 ? "positive" : "negative")">
+                                            @item.Symbol.Substring(0, Math.Min(2, item.Symbol.Length))
+                                        </div>
+                                        <span class="fw-bold" style="font-size: 0.95rem;">@item.Symbol</span>
+                                    </div>
+                                </td>
+                                <td style="color: var(--text-secondary);">@item.Name</td>
+                                <td class="text-end">
+                                    @if (item.LastPrice.HasValue)
+                                    {
+                                        <span class="fw-semibold">$@item.LastPrice.Value.ToString("N2")</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color: var(--text-muted);">--</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (item.LastChange.HasValue && item.LastChangePercent.HasValue)
+                                    {
+                                        <span class="change-badge @(item.LastChange >= 0 ? "positive" : "negative")">
+                                            @(item.LastChange >= 0 ? "+" : "")@item.LastChange.Value.ToString("N2")
+                                            <span class="ms-1">(@(item.LastChangePercent >= 0 ? "+" : "")@item.LastChangePercent.Value.ToString("N2")%)</span>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color: var(--text-muted);">--</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                @onclick="() => AnalyzeSymbol(item.Symbol)"
+                                                title="Analyze this stock">
+                                            <i class="bi bi-graph-up"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @onclick="() => RemoveSymbol(item.Symbol)"
+                                                title="Remove from watchlist">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-3 fade-in">
+        <small style="color: var(--text-muted);">
+            Last updated: @watchlist.LastUpdated.ToLocalTime().ToString("MMM dd, yyyy HH:mm")
+        </small>
+    </div>
+}
+
+<style>
+    .watchlist-symbol-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .watchlist-symbol-avatar.positive {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--accent-green);
+    }
+    .watchlist-symbol-avatar.negative {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--accent-red);
+    }
+    .change-badge {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    .change-badge.positive { color: var(--accent-green); }
+    .change-badge.negative { color: var(--accent-red); }
+</style>
+
+@code {
+    private Watchlist? watchlist;
+    private string newSymbol = string.Empty;
+    private string statusMessage = string.Empty;
+    private bool statusIsError = false;
+    private bool isRefreshing = false;
+    private bool isAdding = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWatchlist();
+    }
+
+    private async Task LoadWatchlist()
+    {
+        try
+        {
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            watchlist = await Http.GetFromJsonAsync<Watchlist>($"{baseUrl}/api/Watchlist");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load watchlist: {ex.Message}");
+            watchlist = new Watchlist();
+        }
+    }
+
+    private async Task RefreshPrices()
+    {
+        isRefreshing = true;
+        statusMessage = string.Empty;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            var response = await Http.PostAsync($"{baseUrl}/api/Watchlist/refresh", null);
+            if (response.IsSuccessStatusCode)
+            {
+                watchlist = await response.Content.ReadFromJsonAsync<Watchlist>();
+                statusMessage = "Prices refreshed successfully.";
+                statusIsError = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Failed to refresh prices: {ex.Message}";
+            statusIsError = true;
+        }
+        finally
+        {
+            isRefreshing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task AddSymbol()
+    {
+        if (string.IsNullOrWhiteSpace(newSymbol)) return;
+
+        isAdding = true;
+        statusMessage = string.Empty;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            var response = await Http.PostAsJsonAsync($"{baseUrl}/api/Watchlist",
+                new { Symbol = newSymbol.Trim().ToUpper() });
+
+            if (response.IsSuccessStatusCode)
+            {
+                statusMessage = $"{newSymbol.Trim().ToUpper()} added to watchlist.";
+                statusIsError = false;
+                newSymbol = string.Empty;
+                await LoadWatchlist();
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                statusMessage = $"{newSymbol.Trim().ToUpper()} is already in your watchlist.";
+                statusIsError = true;
+            }
+            else
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                statusMessage = $"Failed to add: {body}";
+                statusIsError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+            statusIsError = true;
+        }
+        finally
+        {
+            isAdding = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task RemoveSymbol(string symbol)
+    {
+        try
+        {
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            var response = await Http.DeleteAsync($"{baseUrl}/api/Watchlist/{symbol}");
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadWatchlist();
+                statusMessage = $"{symbol} removed from watchlist.";
+                statusIsError = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Failed to remove {symbol}: {ex.Message}";
+            statusIsError = true;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void AnalyzeSymbol(string symbol)
+    {
+        Navigation.NavigateTo($"/?symbol={symbol}");
+    }
+
+    private async Task HandleAddKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isAdding && !string.IsNullOrWhiteSpace(newSymbol))
+        {
+            await AddSymbol();
+        }
+    }
+}
