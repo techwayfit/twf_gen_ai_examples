@@ -139,10 +139,12 @@ Teaches through Socratic questions, adapts difficulty based on student responses
 
 ---
 
-### #20 — Sales Call Script Generator & Objection Handler
+### ✅ #20 — Sales Call Script Generator & Objection Handler
 Generates personalised cold call scripts and anticipates objections with evidence-based rebuttals.
 
 **Key patterns:** `HttpRequestNode` for CRM data, `PromptBuilderNode` with prospect-persona template, `Workflow.Parallel()` for script + objection-handler generation.
+
+**Python implementation:** `020_SalesCallScriptGenerator_Python/`
 
 ---
 

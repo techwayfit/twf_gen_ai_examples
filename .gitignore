@@ -63,3 +63,6 @@ appsettings.local.json
 .vs/
 
 *.user
+.env
+__pycache__/
+.venv/

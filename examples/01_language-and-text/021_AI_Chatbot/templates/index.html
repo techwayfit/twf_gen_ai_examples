@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>021 AI Chatbot</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --accent: #1d4ed8;
+      --accent2: #0f766e;
+      --line: #e5e7eb;
+      --danger: #b91c1c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at top left, #eff6ff, #f9fafb 45%, #ecfeff);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(31, 41, 55, 0.06);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 16px 20px;
+      background: linear-gradient(90deg, #dbeafe, #ccfbf1);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .panel {
+      display: none;
+      padding: 16px;
+    }
+
+    .panel.active { display: block; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    textarea, input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.95rem;
+      color: var(--ink);
+      background: white;
+    }
+
+    textarea { min-height: 96px; resize: vertical; }
+
+    button.primary {
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      color: white;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.secondary {
+      background: var(--accent2);
+      border: 1px solid var(--accent2);
+      color: white;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .stream-box {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fcfcfd;
+      min-height: 120px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .status {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .error {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .image-box {
+      margin-top: 10px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      min-height: 300px;
+      display: grid;
+      place-items: center;
+      background: #f8fafc;
+      overflow: hidden;
+    }
+
+    .image-box img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 12px; }
+      .header h1 { font-size: 1.02rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <h1>021 AI Chatbot</h1>
+        <p>Streaming text chat ({{ chat_model }}) and streaming image events ({{ image_model }})</p>
+      </div>
+
+      <div class="tabs">
+        <button id="tab-chat" class="tab-btn active" type="button">Chat</button>
+        <button id="tab-image" class="tab-btn" type="button">Image</button>
+      </div>
+
+      <section id="panel-chat" class="panel active">
+        <label for="chatInput">Message</label>
+        <textarea id="chatInput" placeholder="Ask anything..."></textarea>
+        <div class="row">
+          <button id="chatSend" class="primary" type="button">Send Chat (Stream)</button>
+          <span id="chatStatus" class="status"></span>
+        </div>
+        <div id="chatOutput" class="stream-box"></div>
+      </section>
+
+      <section id="panel-image" class="panel">
+        <label for="imageInput">Image Prompt</label>
+        <textarea id="imageInput" placeholder="Generate an image of..."></textarea>
+        <div class="row">
+          <label for="imageSize">Size</label>
+          <select id="imageSize" style="max-width: 180px;">
+            <option value="1024x1024">1024x1024</option>
+            <option value="1024x1536">1024x1536</option>
+            <option value="1536x1024">1536x1024</option>
+          </select>
+          <button id="imageSend" class="secondary" type="button">Generate Image (Stream)</button>
+        </div>
+        <span id="imageStatus" class="status"></span>
+        <div id="imageOutput" class="image-box"><span class="status">No image yet</span></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const tabChat = document.getElementById('tab-chat');
+    const tabImage = document.getElementById('tab-image');
+    const panelChat = document.getElementById('panel-chat');
+    const panelImage = document.getElementById('panel-image');
+
+    tabChat.addEventListener('click', () => {
+      tabChat.classList.add('active');
+      tabImage.classList.remove('active');
+      panelChat.classList.add('active');
+      panelImage.classList.remove('active');
+    });
+
+    tabImage.addEventListener('click', () => {
+      tabImage.classList.add('active');
+      tabChat.classList.remove('active');
+      panelImage.classList.add('active');
+      panelChat.classList.remove('active');
+    });
+
+    async function consumeSseResponse(response, handlers) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        let split = buffer.split('\n\n');
+        buffer = split.pop() || '';
+
+        for (const chunk of split) {
+          const lines = chunk.split('\n');
+          let eventName = 'message';
+          let data = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) eventName = line.slice(7).trim();
+            if (line.startsWith('data: ')) data += line.slice(6);
+          }
+
+          let parsed = {};
+          try { parsed = JSON.parse(data || '{}'); } catch { parsed = { raw: data }; }
+          if (handlers[eventName]) handlers[eventName](parsed);
+        }
+      }
+    }
+
+    const chatInput = document.getElementById('chatInput');
+    const chatOutput = document.getElementById('chatOutput');
+    const chatStatus = document.getElementById('chatStatus');
+    const chatSend = document.getElementById('chatSend');
+
+    chatSend.addEventListener('click', async () => {
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      chatOutput.textContent = '';
+      chatStatus.textContent = 'Connecting...';
+      chatSend.disabled = true;
+
+      try {
+        const response = await fetch('/api/chat/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error('Unable to open chat stream.');
+        }
+
+        await consumeSseResponse(response, {
+          status: (data) => { chatStatus.textContent = data.message || ''; },
+          token: (data) => {
+            chatOutput.textContent += (data.text || '');
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+          },
+          error: (data) => {
+            chatStatus.innerHTML = `<span class="error">${data.message || 'Unknown error'}</span>`;
+          },
+          done: () => { chatStatus.textContent = 'Done'; }
+        });
+      } catch (err) {
+        chatStatus.innerHTML = `<span class="error">${err.message}</span>`;
+      } finally {
+        chatSend.disabled = false;
+      }
+    });
+
+    const imageInput = document.getElementById('imageInput');
+    const imageOutput = document.getElementById('imageOutput');
+    const imageStatus = document.getElementById('imageStatus');
+    const imageSize = document.getElementById('imageSize');
+    const imageSend = document.getElementById('imageSend');
+
+    imageSend.addEventListener('click', async () => {
+      const message = imageInput.value.trim();
+      if (!message) return;
+
+      imageSend.disabled = true;
+      imageStatus.textContent = 'Connecting...';
+      imageOutput.innerHTML = '<span class="status">Waiting for image stream...</span>';
+
+      try {
+        const response = await fetch('/api/image/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, size: imageSize.value, progressive: true })
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error('Unable to open image stream.');
+        }
+
+        await consumeSseResponse(response, {
+          status: (data) => { imageStatus.textContent = data.message || ''; },
+          image: (data) => {
+            const src = data.data_url || data.url;
+            const stage = data.stage || 'preview';
+            if (src) {
+              imageOutput.innerHTML = `<div style="padding:8px;color:#6b7280;font-size:0.88rem;">Stage: ${stage}</div><img alt="Generated" src="${src}" />`;
+            }
+          },
+          error: (data) => {
+            imageStatus.innerHTML = `<span class="error">${data.message || 'Unknown error'}</span>`;
+          },
+          done: () => { imageStatus.textContent = 'Done'; }
+        });
+      } catch (err) {
+        imageStatus.innerHTML = `<span class="error">${err.message}</span>`;
+      } finally {
+        imageSend.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

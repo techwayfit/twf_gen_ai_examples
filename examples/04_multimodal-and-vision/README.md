@@ -44,6 +44,8 @@ Analyses user-generated content (images, text, video thumbnails) for policy viol
 ### #56 — Restaurant Menu Analyzer & Nutrition Estimator
 Analyses menu photos, identifies dishes, estimates nutrition, detects allergens, and generates personalised meal recommendations.
 
+Python implementation: [056_RestaurantMenuAnalyzer](056_RestaurantMenuAnalyzer/README.md)
+
 **Key patterns:** `HttpRequestNode` for food-recognition VLM API, `OutputParserNode` for dish + nutrition extraction, `ConditionNode` for dietary-constraint filtering.
 
 ---
@@ -71,6 +73,8 @@ Processes photos of handwritten student work, transcribes content, grades with p
 
 ### #60 — Satellite Image Change Detector
 Analyses satellite imagery over time to detect changes (construction, deforestation, flooding) and generates change reports.
+
+Python implementation: [060_SatelliteImageChangeDetector](060_SatelliteImageChangeDetector/README.md)
 
 **Key patterns:** `Workflow.Parallel()` for before/after image analysis, `LlmNode` for change comparison reasoning, `OutputParserNode` for structured change report, `HttpRequestNode` for alert dispatch.
 

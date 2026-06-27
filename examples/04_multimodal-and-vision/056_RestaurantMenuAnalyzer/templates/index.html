@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>056 Restaurant Menu Analyzer</title>
+  <style>
+    :root {
+      --bg: #f7f4ee;
+      --card: rgba(255, 252, 246, 0.94);
+      --ink: #2c241b;
+      --muted: #736456;
+      --accent: #9a3412;
+      --accent-soft: #f97316;
+      --line: #eadfce;
+      --panel: #fffdf8;
+      --danger: #b91c1c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(249, 115, 22, 0.15), transparent 32%),
+        linear-gradient(135deg, #f9f5ef, #efe6d6 55%, #f7efe3);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(154, 52, 18, 0.92), rgba(120, 53, 15, 0.88));
+      color: #fff7ed;
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 24px 50px rgba(120, 53, 15, 0.2);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      letter-spacing: 0.02em;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      max-width: 760px;
+      line-height: 1.5;
+      color: rgba(255, 247, 237, 0.88);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(44, 36, 27, 0.08);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 0;
+    }
+
+    .pane {
+      padding: 18px;
+      border-right: 1px solid var(--line);
+    }
+
+    .pane:last-child {
+      border-right: 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 0.96rem;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 14px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+      color: #fff;
+      padding: 12px 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    .status {
+      margin-top: 12px;
+      color: var(--muted);
+      min-height: 1.2em;
+    }
+
+    .preview {
+      margin-top: 14px;
+      min-height: 280px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px dashed var(--line);
+      background: var(--panel);
+      display: grid;
+      place-items: center;
+    }
+
+    .preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .preview span { color: var(--muted); }
+
+    .result {
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .panel h2, .panel h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .muted { color: var(--muted); }
+    .error { color: var(--danger); font-weight: 700; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #fff0e2;
+      color: #9a3412;
+      font-size: 0.84rem;
+    }
+
+    .dish {
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .dish:first-child { border-top: 0; padding-top: 0; }
+
+    .dish-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    .dish-name { font-weight: 700; }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    @media (max-width: 860px) {
+      body { padding: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      .pane { border-right: 0; border-bottom: 1px solid var(--line); }
+      .pane:last-child { border-bottom: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <h1>056 Restaurant Menu Analyzer</h1>
+      <p>Analyze a menu photo, estimate calories and allergens, and surface menu picks aligned with a diner's dietary needs using {{ vision_model }}.</p>
+    </section>
+
+    <section class="card grid">
+      <div class="pane">
+        <label for="imageUrl">Public menu image URL</label>
+        <input id="imageUrl" type="url" placeholder="https://images.example.com/menu.jpg" />
+
+        <label for="dietaryNotes" style="margin-top: 14px;">Dietary notes</label>
+        <textarea id="dietaryNotes" placeholder="Peanut allergy, low carb, high protein, vegetarian options preferred"></textarea>
+
+        <button id="analyzeBtn" type="button">Analyze Menu</button>
+        <div id="status" class="status"></div>
+
+        <div id="preview" class="preview"><span>Image preview appears here</span></div>
+      </div>
+
+      <div class="pane">
+        <div id="result" class="result">
+          <div class="panel">
+            <h2>No analysis yet</h2>
+            <p class="muted">Submit a menu image to extract dishes, estimate allergens, and generate recommendations.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const imageUrlInput = document.getElementById('imageUrl');
+    const dietaryNotesInput = document.getElementById('dietaryNotes');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const statusEl = document.getElementById('status');
+    const previewEl = document.getElementById('preview');
+    const resultEl = document.getElementById('result');
+
+    imageUrlInput.addEventListener('input', () => {
+      const url = imageUrlInput.value.trim();
+      previewEl.innerHTML = url ? `<img src="${url}" alt="Menu preview">` : '<span>Image preview appears here</span>';
+    });
+
+    async function consumeSseResponse(response, handlers) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split('\n\n');
+        buffer = chunks.pop() || '';
+
+        for (const chunk of chunks) {
+          const lines = chunk.split('\n');
+          let eventName = 'message';
+          let data = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) eventName = line.slice(6).trim();
+            if (line.startsWith('data:')) data += line.slice(5).trim();
+          }
+
+          if (!data) continue;
+
+          let parsed;
+          try {
+            parsed = JSON.parse(data);
+          } catch {
+            parsed = { message: data };
+          }
+
+          if (handlers[eventName]) handlers[eventName](parsed);
+        }
+      }
+    }
+
+    function renderMenuAnalysis(payload) {
+      const dishes = Array.isArray(payload.dishes) ? payload.dishes : [];
+      const recommendations = Array.isArray(payload.recommendations) ? payload.recommendations : [];
+      const cautions = Array.isArray(payload.cautions) ? payload.cautions : [];
+
+      const dishHtml = dishes.length
+        ? dishes.map((dish) => `
+            <div class="dish">
+              <div class="dish-head">
+                <span class="dish-name">${dish.name || 'Unnamed dish'}</span>
+                <span class="muted">${dish.estimated_calories || 'Calories n/a'}</span>
+              </div>
+              <div class="muted">${dish.section || 'Section unavailable'}</div>
+              <p>${dish.description || dish.notes || 'No description available.'}</p>
+              <div class="chips">
+                ${(dish.dietary_labels || []).map((label) => `<span class="chip">${label}</span>`).join('')}
+                ${(dish.allergens || []).map((item) => `<span class="chip">Allergen: ${item}</span>`).join('')}
+              </div>
+            </div>
+          `).join('')
+        : '<p class="muted">No dishes extracted.</p>';
+
+      const recommendationHtml = recommendations.length
+        ? `<ul>${recommendations.map((item) => `<li><strong>${item.audience || 'Recommended'}</strong>: ${(item.dishes || []).join(', ') || 'No dish names'}${item.rationale ? ` - ${item.rationale}` : ''}</li>`).join('')}</ul>`
+        : '<p class="muted">No recommendations generated.</p>';
+
+      const cautionHtml = cautions.length
+        ? `<ul>${cautions.map((item) => `<li>${item}</li>`).join('')}</ul>`
+        : '<p class="muted">No cautions flagged.</p>';
+
+      resultEl.innerHTML = `
+        <div class="panel">
+          <h2>${payload.restaurant_name || 'Unknown menu'}</h2>
+          <p>${payload.summary || 'No summary provided.'}</p>
+          <div class="chips">
+            <span class="chip">Confidence: ${payload.confidence || 'medium'}</span>
+            <span class="chip">Dietary Notes: ${payload.dietary_notes || 'None'}</span>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Dishes</h3>
+          ${dishHtml}
+        </div>
+        <div class="panel">
+          <h3>Recommendations</h3>
+          ${recommendationHtml}
+        </div>
+        <div class="panel">
+          <h3>Cautions</h3>
+          ${cautionHtml}
+        </div>
+      `;
+    }
+
+    analyzeBtn.addEventListener('click', async () => {
+      const imageUrl = imageUrlInput.value.trim();
+      const dietaryNotes = dietaryNotesInput.value.trim();
+
+      if (!imageUrl) {
+        statusEl.innerHTML = '<span class="error">Provide a public image URL first.</span>';
+        return;
+      }
+
+      analyzeBtn.disabled = true;
+      statusEl.textContent = 'Submitting menu for analysis...';
+      resultEl.innerHTML = '<div class="panel"><p class="muted">Waiting for model response...</p></div>';
+
+      try {
+        const response = await fetch('/api/menu/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: imageUrl, dietary_notes: dietaryNotes })
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        await consumeSseResponse(response, {
+          status: (payload) => { statusEl.textContent = payload.message || 'Working...'; },
+          result: (payload) => { renderMenuAnalysis(payload); },
+          error: (payload) => { statusEl.innerHTML = `<span class="error">${payload.message || 'Unknown error'}</span>`; },
+          done: () => { analyzeBtn.disabled = false; }
+        });
+      } catch (error) {
+        statusEl.innerHTML = `<span class="error">${error.message}</span>`;
+        analyzeBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
