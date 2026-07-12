@@ -16,14 +16,18 @@ class AIMessageService:
         )
 
     def stream_message(self, user_message: str) -> Iterator[str]:
+        messages = [
+            {"role": "system", "content": "You are a concise and helpful AI assistant."},
+            {"role": "user", "content": user_message},
+        ]
+        yield from self.stream_messages(messages)
+
+    def stream_messages(self, messages: list[dict]) -> Iterator[str]:
         client = self._get_client()
         try:
             stream = client.chat.completions.create(
                 model=Settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
-                messages=[
-                    {"role": "system", "content": "You are a concise and helpful AI assistant."},
-                    {"role": "user", "content": user_message},
-                ],
+                messages=messages,
                 temperature=0.5,
                 stream=True,
             )

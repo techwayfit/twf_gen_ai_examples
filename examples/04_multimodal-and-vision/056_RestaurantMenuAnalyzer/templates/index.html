@@ -78,6 +78,32 @@
       border-right: 1px solid var(--line);
     }
 
+    .source-help {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .upload-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .upload-row input[type="file"] {
+      flex: 1;
+      min-width: 220px;
+      padding: 9px 12px;
+    }
+
+    .selected-source {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
     .pane:last-child {
       border-right: 0;
     }
@@ -219,6 +245,13 @@
       <div class="pane">
         <label for="imageUrl">Public menu image URL</label>
         <input id="imageUrl" type="url" placeholder="https://images.example.com/menu.jpg" />
+        <p class="source-help">You can also upload an image file or paste a copied image. Uploaded or pasted images take priority over the URL field.</p>
+
+        <label for="imageFile" style="margin-top: 14px;">Upload image file</label>
+        <div class="upload-row">
+          <input id="imageFile" type="file" accept="image/*" />
+        </div>
+        <div id="selectedSource" class="selected-source">No local image selected.</div>
 
         <label for="dietaryNotes" style="margin-top: 14px;">Dietary notes</label>
         <textarea id="dietaryNotes" placeholder="Peanut allergy, low carb, high protein, vegetarian options preferred"></textarea>
@@ -242,15 +275,102 @@
 
   <script>
     const imageUrlInput = document.getElementById('imageUrl');
+    const imageFileInput = document.getElementById('imageFile');
     const dietaryNotesInput = document.getElementById('dietaryNotes');
     const analyzeBtn = document.getElementById('analyzeBtn');
     const statusEl = document.getElementById('status');
     const previewEl = document.getElementById('preview');
     const resultEl = document.getElementById('result');
+    const selectedSourceEl = document.getElementById('selectedSource');
+
+    const imageState = {
+      dataUrl: '',
+      name: '',
+      source: 'url'
+    };
+
+    function setPreviewFromUrl(url, label) {
+      previewEl.innerHTML = url ? `<img src="${url}" alt="Menu preview">` : '<span>Image preview appears here</span>';
+      selectedSourceEl.textContent = label || 'No local image selected.';
+    }
+
+    function clearLocalImage(keepPreview = false) {
+      imageState.dataUrl = '';
+      imageState.name = '';
+      imageState.source = 'url';
+      imageFileInput.value = '';
+      if (!keepPreview) {
+        const url = imageUrlInput.value.trim();
+        setPreviewFromUrl(url, 'No local image selected.');
+      }
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Unable to read the selected image file.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function selectImageFile(file, sourceLabel) {
+      if (!file || !file.type.startsWith('image/')) {
+        throw new Error('Please choose a valid image file.');
+      }
+
+      const dataUrl = await fileToDataUrl(file);
+      imageState.dataUrl = dataUrl;
+      imageState.name = file.name || sourceLabel;
+      imageState.source = sourceLabel;
+      setPreviewFromUrl(dataUrl, `${sourceLabel}: ${imageState.name}`);
+    }
 
     imageUrlInput.addEventListener('input', () => {
       const url = imageUrlInput.value.trim();
-      previewEl.innerHTML = url ? `<img src="${url}" alt="Menu preview">` : '<span>Image preview appears here</span>';
+      if (!imageState.dataUrl) {
+        setPreviewFromUrl(url, 'No local image selected.');
+      }
+    });
+
+    imageFileInput.addEventListener('change', async () => {
+      const file = imageFileInput.files && imageFileInput.files[0];
+      if (!file) {
+        clearLocalImage();
+        return;
+      }
+
+      try {
+        await selectImageFile(file, 'Uploaded file');
+        imageUrlInput.value = '';
+      } catch (error) {
+        statusEl.innerHTML = `<span class="error">${error.message}</span>`;
+        clearLocalImage();
+      }
+    });
+
+    document.addEventListener('paste', async (event) => {
+      const clipboardItems = event.clipboardData && Array.from(event.clipboardData.items || []);
+      const imageItem = clipboardItems && clipboardItems.find((item) => item.type.startsWith('image/'));
+      if (!imageItem) {
+        return;
+      }
+
+      const file = imageItem.getAsFile();
+      if (!file) {
+        return;
+      }
+
+      event.preventDefault();
+
+      try {
+        await selectImageFile(file, 'Pasted image');
+        imageUrlInput.value = '';
+        imageFileInput.value = '';
+        statusEl.textContent = 'Image pasted from clipboard.';
+      } catch (error) {
+        statusEl.innerHTML = `<span class="error">${error.message}</span>`;
+      }
     });
 
     async function consumeSseResponse(response, handlers) {
@@ -313,7 +433,14 @@
         : '<p class="muted">No dishes extracted.</p>';
 
       const recommendationHtml = recommendations.length
-        ? `<ul>${recommendations.map((item) => `<li><strong>${item.audience || 'Recommended'}</strong>: ${(item.dishes || []).join(', ') || 'No dish names'}${item.rationale ? ` - ${item.rationale}` : ''}</li>`).join('')}</ul>`
+        ? `<ul>${recommendations.map((item) => {
+            const dishes = Array.isArray(item.dishes) ? item.dishes : [];
+            const dishItems = dishes.length
+              ? dishes.map((dish) => `<li>${dish}</li>`).join('')
+              : '<li>No dish names</li>';
+
+            return `<li><strong>${item.audience || 'Recommended'}</strong>${item.rationale ? ` - ${item.rationale}` : ''}<ul>${dishItems}</ul></li>`;
+          }).join('')}</ul>`
         : '<p class="muted">No recommendations generated.</p>';
 
       const cautionHtml = cautions.length
@@ -329,13 +456,14 @@
             <span class="chip">Dietary Notes: ${payload.dietary_notes || 'None'}</span>
           </div>
         </div>
-        <div class="panel">
-          <h3>Dishes</h3>
-          ${dishHtml}
-        </div>
+        
         <div class="panel">
           <h3>Recommendations</h3>
           ${recommendationHtml}
+        </div>
+        <div class="panel">
+          <h3>Dishes</h3>
+          ${dishHtml}
         </div>
         <div class="panel">
           <h3>Cautions</h3>
@@ -347,9 +475,10 @@
     analyzeBtn.addEventListener('click', async () => {
       const imageUrl = imageUrlInput.value.trim();
       const dietaryNotes = dietaryNotesInput.value.trim();
+      const hasLocalImage = Boolean(imageState.dataUrl);
 
-      if (!imageUrl) {
-        statusEl.innerHTML = '<span class="error">Provide a public image URL first.</span>';
+      if (!imageUrl && !hasLocalImage) {
+        statusEl.innerHTML = '<span class="error">Provide a public image URL, upload an image file, or paste an image first.</span>';
         return;
       }
 
@@ -361,7 +490,12 @@
         const response = await fetch('/api/menu/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image_url: imageUrl, dietary_notes: dietaryNotes })
+          body: JSON.stringify({
+            image_url: hasLocalImage ? '' : imageUrl,
+            image_data_url: hasLocalImage ? imageState.dataUrl : '',
+            image_name: hasLocalImage ? imageState.name : '',
+            dietary_notes: dietaryNotes
+          })
         });
 
         if (!response.ok || !response.body) {

@@ -132,15 +132,175 @@
 
     button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .stream-box {
-      margin-top: 10px;
-      border: 1px solid var(--line);
+    .stop-btn {
+      background: var(--danger);
+      border: 1px solid var(--danger);
+      color: white;
       border-radius: 10px;
-      padding: 12px;
-      background: #fcfcfd;
-      min-height: 120px;
-      white-space: pre-wrap;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      display: none;
+    }
+
+    .prompt-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      padding: 4px 0;
+    }
+    .prompt-toggle:hover { color: var(--ink); }
+    .prompt-editor { display: none; margin-bottom: 8px; }
+    .prompt-editor.open { display: block; }
+    .prompt-editor textarea {
+      width: 100%;
+      min-height: 52px;
+      font-size: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      resize: vertical;
+    }
+
+    .img-upload-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .img-upload-wrap input[type="file"] { display: none; }
+    .img-upload-btn {
+      border: 1px dashed var(--line);
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .img-upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .img-preview {
+      display: none;
+      position: relative;
+      max-width: 120px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .img-preview img { max-width: 100%; height: auto; display: block; }
+    .img-preview .img-remove {
+      position: absolute;
+      top: 2px; right: 2px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      line-height: 20px;
+      text-align: center;
+    }
+
+    .msg-assistant pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+    }
+    .msg-assistant code {
+      background: #e2e8f0;
+      color: #1e293b;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+    .msg-assistant pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .msg-assistant h1, .msg-assistant h2, .msg-assistant h3 {
+      margin: 8px 0 4px;
+      line-height: 1.3;
+    }
+    .msg-assistant h1 { font-size: 1.2rem; }
+    .msg-assistant h2 { font-size: 1.08rem; }
+    .msg-assistant h3 { font-size: 1rem; }
+    .msg-assistant ul { margin: 4px 0; padding-left: 20px; }
+    .msg-assistant li { margin: 2px 0; }
+    .msg-assistant a { color: var(--accent); text-decoration: underline; }
+    .msg-assistant br { content: ""; display: block; margin: 4px 0; }
+
+    .conv-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 200px;
+      max-height: 460px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+
+    .msg-user, .msg-assistant {
+      border-radius: 10px;
+      padding: 10px 14px;
+      max-width: 88%;
       line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .msg-user {
+      align-self: flex-end;
+      background: #dbeafe;
+      color: #1e3a5f;
+    }
+    .msg-assistant {
+      align-self: flex-start;
+      background: #f0fdf4;
+      color: #14532d;
+      border: 1px solid #bbf7d0;
+    }
+    .msg-assistant .gen-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--accent2);
+      background: white;
+      color: var(--accent2);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .msg-assistant .gen-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .msg-assistant .msg-image {
+      margin-top: 8px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f8fafc;
+      max-width: 100%;
+    }
+    .msg-assistant .msg-image img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+    .msg-assistant .msg-image .stage-label {
+      padding: 4px 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: #f1f5f9;
+      border-bottom: 1px dashed var(--line);
     }
 
     .status {
@@ -191,13 +351,30 @@
       </div>
 
       <section id="panel-chat" class="panel active">
+        <div id="chatConversation" class="conv-box"></div>
+        <hr style="margin:10px 0;border:none;border-top:1px solid var(--line);" />
+
+        <button id="promptToggle" class="prompt-toggle" type="button">▸ Edit system prompt</button>
+        <div id="promptEditor" class="prompt-editor">
+          <textarea id="systemPromptInput" placeholder="Custom system prompt..."></textarea>
+        </div>
+
+        <div class="img-upload-wrap">
+          <label class="img-upload-btn" for="chatImageInput">+ Add Image</label>
+          <input id="chatImageInput" type="file" accept="image/*" />
+          <div id="imgPreview" class="img-preview">
+            <button class="img-remove" id="imgRemove" type="button">&times;</button>
+            <img id="imgPreviewImg" alt="" />
+          </div>
+        </div>
+
         <label for="chatInput">Message</label>
-        <textarea id="chatInput" placeholder="Ask anything..."></textarea>
+        <textarea id="chatInput" placeholder="Share a URL or ask anything..."></textarea>
         <div class="row">
-          <button id="chatSend" class="primary" type="button">Send Chat (Stream)</button>
+          <button id="chatSend" class="primary" type="button">Send</button>
+          <button id="chatStop" class="stop-btn" type="button">Stop</button>
           <span id="chatStatus" class="status"></span>
         </div>
-        <div id="chatOutput" class="stream-box"></div>
       </section>
 
       <section id="panel-image" class="panel">
@@ -269,45 +446,262 @@
       }
     }
 
+    // --- Markdown renderer ---
+    function escapeHtml(text) {
+      const d = document.createElement('div');
+      d.appendChild(document.createTextNode(text));
+      return d.innerHTML;
+    }
+
+    function renderMarkdown(text) {
+      let html = escapeHtml(text);
+      const codeBlocks = [];
+      html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, (m, lang, code) => {
+        codeBlocks.push(`<pre><code>${code}</code></pre>`);
+        return `%%CB${codeBlocks.length - 1}%%`;
+      });
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/((?:<li>[\s\S]*?<\/li>\n?)+)/g, '<ul>$1</ul>');
+      html = html.replace(/\n/g, '<br>');
+      html = html.replace(/%%CB(\d+)%%/g, (m, idx) => codeBlocks[parseInt(idx)] || m);
+      return html;
+    }
+
+    // --- Session tracking for compact_chat ---
+    let sessionId = localStorage.getItem('chat_session_id');
+    if (!sessionId) {
+      sessionId = 's' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      localStorage.setItem('chat_session_id', sessionId);
+    }
+
+    // --- System prompt editor ---
+    const promptToggle = document.getElementById('promptToggle');
+    const promptEditor = document.getElementById('promptEditor');
+    const systemPromptInput = document.getElementById('systemPromptInput');
+    let promptOpen = false;
+
+    const savedPrompt = localStorage.getItem('chat_system_prompt') || '';
+    systemPromptInput.value = savedPrompt;
+
+    promptToggle.addEventListener('click', () => {
+      promptOpen = !promptOpen;
+      promptEditor.classList.toggle('open', promptOpen);
+      promptToggle.textContent = promptOpen ? '▾ Edit system prompt' : '▸ Edit system prompt';
+    });
+    systemPromptInput.addEventListener('input', () => {
+      localStorage.setItem('chat_system_prompt', systemPromptInput.value);
+    });
+
+    // --- Image upload ---
+    const chatImageInput = document.getElementById('chatImageInput');
+    const imgPreview = document.getElementById('imgPreview');
+    const imgPreviewImg = document.getElementById('imgPreviewImg');
+    const imgRemove = document.getElementById('imgRemove');
+    let uploadedImageData = null;
+    let uploadedImageType = '';
+
+    chatImageInput.addEventListener('change', () => {
+      const file = chatImageInput.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) return;
+      uploadedImageType = file.type;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target.result.split(',')[1];
+        uploadedImageData = base64;
+        imgPreviewImg.src = e.target.result;
+        imgPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+    imgRemove.addEventListener('click', () => {
+      uploadedImageData = null;
+      uploadedImageType = '';
+      chatImageInput.value = '';
+      imgPreview.style.display = 'none';
+      imgPreviewImg.src = '';
+    });
+
+    // --- Chat DOM refs ---
+    const chatConv = document.getElementById('chatConversation');
     const chatInput = document.getElementById('chatInput');
-    const chatOutput = document.getElementById('chatOutput');
     const chatStatus = document.getElementById('chatStatus');
     const chatSend = document.getElementById('chatSend');
+    const chatStop = document.getElementById('chatStop');
 
-    chatSend.addEventListener('click', async () => {
+    let currentController = null;
+
+    function setStreaming(streaming) {
+      chatSend.style.display = streaming ? 'none' : 'inline-block';
+      chatStop.style.display = streaming ? 'inline-block' : 'none';
+      chatSend.disabled = streaming;
+    }
+
+    function addMsg(role, content, asHtml) {
+      const el = document.createElement('div');
+      el.className = role === 'user' ? 'msg-user' : 'msg-assistant';
+      if (role === 'user') {
+        el.textContent = content || '';
+      } else {
+        el.dataset.fullResponse = (typeof content === 'string') ? content : '';
+        el.innerHTML = asHtml ? (content || '') : escapeHtml(content || '');
+      }
+      chatConv.appendChild(el);
+      chatConv.scrollTop = chatConv.scrollHeight;
+      return el;
+    }
+
+    function addGenBtn(assistantEl) {
+      const btn = document.createElement('button');
+      btn.className = 'gen-btn';
+      btn.textContent = 'Generate Image';
+      btn.addEventListener('click', async () => {
+        const prompt = assistantEl.dataset.fullResponse || assistantEl.textContent;
+        if (!prompt) return;
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+
+        const oldImg = assistantEl.querySelector('.msg-image');
+        if (oldImg) oldImg.remove();
+
+        const imgBox = document.createElement('div');
+        imgBox.className = 'msg-image';
+        imgBox.innerHTML = '<div class="stage-label">Generating...</div>';
+        assistantEl.appendChild(imgBox);
+
+        try {
+          const resp = await fetch('/api/image/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: prompt, size: '1024x1024', progressive: true })
+          });
+          if (!resp.ok || !resp.body) throw new Error('Image stream failed');
+
+          await consumeSseResponse(resp, {
+            status: (d) => {
+              const lbl = imgBox.querySelector('.stage-label');
+              if (lbl) lbl.textContent = d.message || '';
+            },
+            image: (d) => {
+              const src = d.data_url || d.url;
+              if (src) {
+                const stage = d.stage || 'preview';
+                imgBox.innerHTML = `<div class="stage-label">Stage: ${stage}</div><img alt="${stage}" src="${src}" />`;
+              }
+            },
+            error: (d) => {
+              imgBox.innerHTML = `<div class="stage-label" style="color:var(--danger);">Error: ${d.message || 'Unknown'}</div>`;
+            },
+            done: () => {
+              const lbl = imgBox.querySelector('.stage-label');
+              if (lbl) lbl.textContent = 'Done';
+              btn.textContent = 'Generate Image';
+              btn.disabled = false;
+            }
+          });
+        } catch (err) {
+          imgBox.innerHTML = `<div class="stage-label" style="color:var(--danger);">${err.message}</div>`;
+          btn.textContent = 'Generate Image';
+          btn.disabled = false;
+        }
+      });
+      assistantEl.appendChild(btn);
+    }
+
+    async function doChat() {
       const message = chatInput.value.trim();
-      if (!message) return;
+      if (!message && !uploadedImageData) return;
 
-      chatOutput.textContent = '';
+      const systemPrompt = systemPromptInput.value.trim();
+
       chatStatus.textContent = 'Connecting...';
-      chatSend.disabled = true;
+      setStreaming(true);
+
+      // Build request body
+      const body = { message: message || '(see attached image)', session_id: sessionId };
+      if (systemPrompt) body.system_prompt = systemPrompt;
+      if (uploadedImageData) {
+        body.image_data = uploadedImageData;
+        body.image_type = uploadedImageType;
+      }
+
+      // Add user bubble
+      addMsg('user', message || '(image attached)');
+      chatInput.value = '';
+      imgRemove.click();
+
+      // Create assistant bubble placeholder
+      const assistantEl = addMsg('assistant', '<em>Waiting for response...</em>', true);
+
+      currentController = new AbortController();
 
       try {
         const response = await fetch('/api/chat/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message })
+          body: JSON.stringify(body),
+          signal: currentController.signal
         });
 
         if (!response.ok || !response.body) {
           throw new Error('Unable to open chat stream.');
         }
 
+        let fullText = '';
+        assistantEl.innerHTML = '';
+
         await consumeSseResponse(response, {
           status: (data) => { chatStatus.textContent = data.message || ''; },
           token: (data) => {
-            chatOutput.textContent += (data.text || '');
-            chatOutput.scrollTop = chatOutput.scrollHeight;
+            const text = data.text || '';
+            fullText += text;
+            assistantEl.dataset.fullResponse = fullText;
+            assistantEl.innerHTML = renderMarkdown(fullText);
+            chatConv.scrollTop = chatConv.scrollHeight;
           },
           error: (data) => {
+            assistantEl.innerHTML = '<strong style="color:var(--danger);">Error:</strong> ' + escapeHtml(data.message || 'Unknown error');
             chatStatus.innerHTML = `<span class="error">${data.message || 'Unknown error'}</span>`;
           },
-          done: () => { chatStatus.textContent = 'Done'; }
+          done: () => {
+            chatStatus.textContent = 'Done';
+            addGenBtn(assistantEl);
+          }
         });
       } catch (err) {
-        chatStatus.innerHTML = `<span class="error">${err.message}</span>`;
+        if (err.name === 'AbortError') {
+          chatStatus.textContent = 'Stopped';
+          if (assistantEl.dataset.fullResponse) addGenBtn(assistantEl);
+        } else {
+          assistantEl.innerHTML = '<strong style="color:var(--danger);">Error:</strong> ' + escapeHtml(err.message);
+          chatStatus.innerHTML = `<span class="error">${err.message}</span>`;
+        }
       } finally {
-        chatSend.disabled = false;
+        currentController = null;
+        setStreaming(false);
+      }
+    }
+
+    chatSend.addEventListener('click', doChat);
+
+    chatStop.addEventListener('click', () => {
+      if (currentController) {
+        currentController.abort();
+        chatStatus.textContent = 'Stopping...';
+      }
+    });
+
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        doChat();
       }
     });
 

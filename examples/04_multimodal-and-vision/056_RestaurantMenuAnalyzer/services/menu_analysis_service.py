@@ -16,7 +16,7 @@ class MenuAnalysisService:
             api_version=Settings.AZURE_OPENAI_API_VERSION,
         )
 
-    def analyze_menu(self, image_url: str, dietary_notes: str) -> dict[str, Any]:
+    def analyze_menu(self, image_reference: str, dietary_notes: str, image_name: str = "") -> dict[str, Any]:
         client = self._get_client()
         system_prompt = (
             "You analyze restaurant menu photos for diners. "
@@ -34,7 +34,7 @@ class MenuAnalysisService:
                         "role": "user",
                         "content": [
                             {"type": "text", "text": user_prompt},
-                            {"type": "image_url", "image_url": {"url": image_url}},
+                            {"type": "image_url", "image_url": {"url": image_reference}},
                         ],
                     },
                 ],
@@ -54,7 +54,7 @@ class MenuAnalysisService:
             raise RuntimeError("Expected a JSON string response from the model.")
 
         parsed = json.loads(content)
-        return self._normalize_output(parsed, image_url, dietary_notes)
+        return self._normalize_output(parsed, image_reference, dietary_notes, image_name)
 
     @staticmethod
     def _build_user_prompt(dietary_notes: str) -> str:
@@ -68,9 +68,12 @@ class MenuAnalysisService:
         )
 
     @staticmethod
-    def _normalize_output(parsed: dict[str, Any], image_url: str, dietary_notes: str) -> dict[str, Any]:
+    def _normalize_output(parsed: dict[str, Any], image_reference: str, dietary_notes: str, image_name: str = "") -> dict[str, Any]:
+        is_data_url = image_reference.startswith("data:")
         return {
-            "image_url": image_url,
+            "image_url": "" if is_data_url else image_reference,
+            "image_name": image_name,
+            "image_source": image_name or ("Uploaded or pasted image" if is_data_url else image_reference),
             "dietary_notes": dietary_notes,
             "restaurant_name": parsed.get("restaurant_name", "Unknown menu"),
             "summary": parsed.get("summary", "No summary provided."),

@@ -7,6 +7,8 @@ A Python FastAPI app that analyzes a restaurant menu photo from a public image U
 3. Dietary labels such as vegetarian, vegan, halal-friendly, and gluten-aware.
 4. Personalized recommendations based on dietary notes.
 
+You can submit the image as a public URL, upload a local image file, or paste an image from the clipboard in the browser UI.
+
 ## Stack
 
 - FastAPI
@@ -51,7 +53,7 @@ The default `PORT` in `.env.example` is `8056`, so `uvicorn` can also be started
 ## API endpoint
 
 - POST /api/menu/stream
-  - body: `{ "image_url": "...", "dietary_notes": "nut allergy, high protein" }`
+  - body: `{ "image_url": "...", "image_data_url": "data:image/...", "dietary_notes": "nut allergy, high protein" }`
   - stream events: `status`, `result`, `error`, `done`
 
 ## Notes
